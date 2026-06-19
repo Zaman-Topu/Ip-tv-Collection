@@ -161,7 +161,7 @@ heroPlayBtn.addEventListener('click', () => {
 });
 
 // Playback Logic
-function openPlayer(channel, useProxy = false, isHistoryBack = false) {
+function openPlayer(channel, useProxyIndex = 0, isHistoryBack = false) {
   playerTitle.innerText = channel.name;
   
   // Hide Home, Show Player
@@ -201,8 +201,16 @@ function openPlayer(channel, useProxy = false, isHistoryBack = false) {
   });
   
   let playUrl = channel.url;
-  if (useProxy) {
-    playUrl = `https://corsproxy.io/?${encodeURIComponent(channel.url)}`;
+  
+  const proxies = [
+    '', // Direct
+    'https://api.allorigins.win/raw?url=',
+    'https://corsproxy.io/?'
+  ];
+  let currentProxyIndex = useProxyIndex || 0;
+  
+  if (currentProxyIndex > 0) {
+    playUrl = proxies[currentProxyIndex] + encodeURIComponent(channel.url);
   }
 
   if (Hls.isSupported()) {
@@ -210,18 +218,25 @@ function openPlayer(channel, useProxy = false, isHistoryBack = false) {
       hlsInstance.destroy();
     }
     
-    // Faster Startup Config for Live Streams
+    // Faster Startup Config for Live Streams with Fast-Fail for dead links
     hlsInstance = new Hls({
       maxMaxBufferLength: 30,
       maxBufferSize: 30 * 1000 * 1000,
       enableWorker: true,
       lowLatencyMode: true,
-      backBufferLength: 90
+      backBufferLength: 90,
+      manifestLoadingMaxRetry: 1,
+      manifestLoadingTimeOut: 4000,
+      levelLoadingMaxRetry: 1,
+      fragLoadingMaxRetry: 1
     });
     hlsInstance.loadSource(playUrl);
     hlsInstance.attachMedia(videoEl);
     
     hlsInstance.on(Hls.Events.MANIFEST_PARSED, (event, data) => {
+      bufferingSpinner.classList.add('hidden');
+      errorOverlay.style.display = 'none';
+      
       // Populate Quality Menu
       qualityMenu.innerHTML = '';
       const autoBtn = document.createElement('button');
@@ -243,15 +258,16 @@ function openPlayer(channel, useProxy = false, isHistoryBack = false) {
     
     hlsInstance.on(Hls.Events.ERROR, (event, data) => {
       if (data.fatal) {
-        if (!useProxy && data.type === Hls.ErrorTypes.NETWORK_ERROR) {
-          // Attempt proxy fallback for CORS issues
-          console.log("Network error (likely CORS). Trying proxy...");
+        bufferingSpinner.classList.add('hidden');
+        if (data.type === Hls.ErrorTypes.NETWORK_ERROR && currentProxyIndex < proxies.length - 1) {
+          // Attempt next proxy fallback
+          console.log(`Network error. Trying proxy ${currentProxyIndex + 1}...`);
           errorOverlay.style.display = 'block';
-          errorOverlay.innerHTML = `<h3 class="text-netflix-red text-2xl font-bold mb-2">Stream Blocked</h3><p class="text-gray-300">Attempting proxy fallback...</p>`;
-          setTimeout(() => openPlayer(channel, true), 1000);
+          errorOverlay.innerHTML = `<h3 class="text-netflix-red text-2xl font-bold mb-2">Bypassing Security...</h3><p class="text-gray-300">Trying proxy server ${currentProxyIndex + 1} to bypass CORS...</p>`;
+          setTimeout(() => openPlayer(channel, currentProxyIndex + 1), 500);
         } else {
           errorOverlay.style.display = 'block';
-          errorOverlay.innerHTML = `<h3 class="text-netflix-red text-2xl font-bold mb-2">Stream Offline</h3><p class="text-gray-300">This channel is currently down or requires an external player.</p>`;
+          errorOverlay.innerHTML = `<h3 class="text-netflix-red text-2xl font-bold mb-2">Stream Offline / Expired</h3><p class="text-gray-300 text-sm">This channel link is dead or its security token has expired (common for Toffee/Binge). Please try a different channel.</p>`;
           hlsInstance.destroy();
         }
       }
