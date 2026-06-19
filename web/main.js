@@ -281,6 +281,22 @@ function openPlayer(channel, useProxyIndex = 0, isHistoryBack = false) {
   // Handle MPEG-DASH Streams
   if (playUrl.includes('.mpd') || playUrl.includes('.mp4')) {
     dashInstance = dashjs.MediaPlayer().create();
+    
+    // Intercept requests to route them through our CORS proxy
+    if (currentProxyIndex > 0) {
+      dashInstance.extend("RequestModifier", function () {
+        return {
+          modifyRequestURL: function (url) {
+            // Avoid double-proxying
+            if (!url.startsWith(proxies[currentProxyIndex])) {
+              return proxies[currentProxyIndex] + encodeURIComponent(url);
+            }
+            return url;
+          }
+        };
+      });
+    }
+
     dashInstance.initialize(videoEl, playUrl, true);
     
     dashInstance.on(dashjs.MediaPlayer.events.PLAYBACK_STARTED, () => {
