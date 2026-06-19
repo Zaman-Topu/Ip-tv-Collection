@@ -278,32 +278,21 @@ function openPlayer(channel, useProxyIndex = 0, isHistoryBack = false) {
     dashInstance = null;
   }
 
-  // Handle MPEG-DASH Streams
-  if (playUrl.includes('.mpd') || playUrl.includes('.mp4')) {
-    dashInstance = MediaPlayer().create();
-    
-    // Intercept requests to route them through our CORS proxy
-    if (currentProxyIndex > 0) {
-      dashInstance.extend("RequestModifier", function () {
-        return {
-          modifyRequestURL: function (url) {
-            // Avoid double-proxying
-            if (!url.startsWith(proxies[currentProxyIndex])) {
-              return proxies[currentProxyIndex] + encodeURIComponent(url);
-            }
-            return url;
-          }
-        };
-      });
+  // Handle MPEG-DASH Streams (.mpd only)
+  if (playUrl.includes('.mpd')) {
+    // Detect CENC (DRM) streams - these cannot play in browser without a license key
+    if (playUrl.includes('cenc') || playUrl.includes('/enc/')) {
+      bufferingSpinner.classList.add('hidden');
+      errorOverlay.style.display = 'block';
+      errorOverlay.innerHTML = `<h3 class="text-netflix-red text-2xl font-bold mb-2">DRM Protected Stream</h3><p class="text-gray-300 text-sm">This channel is encrypted (DRM/CENC). It requires a paid license key and cannot be played in a browser without it.</p>`;
+      return;
     }
 
+    dashInstance = MediaPlayer().create();
     dashInstance.updateSettings({
       streaming: {
-        retryAttempts: {
-          MPD: 0,
-          MediaSegment: 0,
-          InitializationSegment: 0
-        }
+        retryAttempts: { MPD: 1, MediaSegment: 1, InitializationSegment: 1 },
+        retryIntervals: { MPD: 500, MediaSegment: 500, InitializationSegment: 500 }
       }
     });
 
@@ -312,18 +301,26 @@ function openPlayer(channel, useProxyIndex = 0, isHistoryBack = false) {
     dashInstance.on(MediaPlayer.events.PLAYBACK_STARTED, () => {
       bufferingSpinner.classList.add('hidden');
       errorOverlay.style.display = 'none';
-      qualityMenu.innerHTML = ''; // Basic support for now
+      qualityMenu.innerHTML = '';
     });
     
     dashInstance.on(MediaPlayer.events.ERROR, (e) => {
       console.error('DASH Error', e);
-      if (currentProxyIndex < proxies.length - 1) {
-        openPlayer(channel, currentProxyIndex + 1, true);
-      } else {
-        bufferingSpinner.classList.add('hidden');
-        errorOverlay.style.display = 'flex';
-      }
+      bufferingSpinner.classList.add('hidden');
+      errorOverlay.style.display = 'block';
+      errorOverlay.innerHTML = `<h3 class="text-netflix-red text-2xl font-bold mb-2">Stream Offline</h3><p class="text-gray-300 text-sm">This DASH stream is offline or geo-blocked. Please try a different channel.</p>`;
     });
+    
+    // Failsafe timeout - if nothing plays in 15s, show error
+    errorTimeout = setTimeout(() => {
+      if (dashInstance) {
+        dashInstance.destroy();
+        dashInstance = null;
+      }
+      bufferingSpinner.classList.add('hidden');
+      errorOverlay.style.display = 'block';
+      errorOverlay.innerHTML = `<h3 class="text-netflix-red text-2xl font-bold mb-2">Connection Timeout</h3><p class="text-gray-300 text-sm">Stream did not respond. It may be offline or geo-blocked.</p>`;
+    }, 15000);
     return;
   }
 
@@ -359,7 +356,19 @@ function openPlayer(channel, useProxyIndex = 0, isHistoryBack = false) {
     hlsInstance.loadSource(playUrl);
     hlsInstance.attachMedia(videoEl);
     
+    // Failsafe timeout - if nothing loads in 15s, show error
+    errorTimeout = setTimeout(() => {
+      if (hlsInstance) {
+        hlsInstance.destroy();
+        hlsInstance = null;
+      }
+      bufferingSpinner.classList.add('hidden');
+      errorOverlay.style.display = 'block';
+      errorOverlay.innerHTML = `<h3 class="text-netflix-red text-2xl font-bold mb-2">Connection Timeout</h3><p class="text-gray-300 text-sm">Stream did not respond within 15 seconds. It may be offline, expired, or geo-blocked. Try another channel.</p>`;
+    }, 15000);
+    
     hlsInstance.on(Hls.Events.MANIFEST_PARSED, (event, data) => {
+      clearTimeout(errorTimeout);
       bufferingSpinner.classList.add('hidden');
       errorOverlay.style.display = 'none';
       
@@ -417,6 +426,8 @@ function closePlayer() {
   playerView.classList.remove('block');
   homeView.classList.remove('hidden');
   homeView.classList.add('block');
+  
+  clearTimeout(errorTimeout);
   
   if (hlsInstance) {
     hlsInstance.destroy();
