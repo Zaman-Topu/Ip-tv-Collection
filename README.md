@@ -1,5 +1,4 @@
 <div align="center">
-  <img src="https://raw.githubusercontent.com/Zaman-Topu/Ip-tv-Collection/main/assets/banner.png" alt="IPTV Pro Collection" width="100%" onerror="this.style.display='none'">
   <h1>📺 Ultimate IPTV Pro Collection</h1>
   <p><b>The most comprehensive, deduplicated, and auto-categorized IPTV M3U Playlist.</b></p>
   
@@ -18,6 +17,16 @@ This playlist is perfectly formatted for **TiviMate**, **IPTV Smarters Pro**, **
 ```http
 https://raw.githubusercontent.com/Zaman-Topu/Ip-tv-Collection/main/FINAL_IPTV_COMPLETE.m3u
 ```
+
+---
+
+## 📡 Live Channel Status
+
+*This status is automatically updated every night at 12:00 AM (BST) by GitHub Actions.*
+
+<!-- STATS:START -->
+> **Status:** Pending first scan...
+<!-- STATS:END -->
 
 ---
 

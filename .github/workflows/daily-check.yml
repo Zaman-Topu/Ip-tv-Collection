@@ -1,0 +1,46 @@
+name: Daily IPTV Status Check
+
+on:
+  schedule:
+    # 18:00 UTC is 12:00 AM BST (Bangladesh Standard Time)
+    - cron: '0 18 * * *'
+  workflow_dispatch:
+    # Allows manual trigger from the GitHub Actions tab
+
+jobs:
+  check-channels:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+          cache: 'pip'
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install aiohttp
+
+      - name: Run Status Checker Script
+        run: python scripts/update_stats.py
+
+      - name: Commit and Push Changes
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add README.md
+          
+          # Only commit if there are changes
+          if git diff --staged --quiet; then
+            echo "No changes in channel status to commit."
+          else
+            git commit -m "docs(readme): auto-update daily channel status chart"
+            git push
+          fi
