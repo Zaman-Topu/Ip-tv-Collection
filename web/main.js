@@ -64,6 +64,25 @@ class CustomProxyLoader extends Hls.DefaultConfig.loader {
     if (context.url && !context.url.startsWith('https://corsproxy.io/?url=')) {
       context.url = `https://corsproxy.io/?url=${encodeURIComponent(context.url)}`;
     }
+
+    // Wrap onSuccess to rewrite response.url back to original URL so relative paths resolve correctly
+    const originalOnSuccess = callbacks.onSuccess;
+    callbacks.onSuccess = function(response, stats, context, networkDetails) {
+      if (response && response.url && response.url.includes('corsproxy.io/?url=')) {
+        try {
+          const parsed = new URL(response.url);
+          const orig = parsed.searchParams.get('url');
+          if (orig) {
+            // Create a shallow copy to bypass read-only property restrictions
+            response = { ...response, url: orig };
+          }
+        } catch (e) {
+          console.warn("Error parsing proxied response URL:", e);
+        }
+      }
+      originalOnSuccess(response, stats, context, networkDetails);
+    };
+
     super.load(context, config, callbacks);
   }
 }
@@ -406,7 +425,13 @@ function renderQueueList() {
   if (!activePlayingChannel) return;
 
   // Filter by group (same category)
-  const relatedChannels = allTvChannels.filter(ch => ch.group === activePlayingChannel.group);
+  let relatedChannels = allTvChannels.filter(ch => ch.group === activePlayingChannel.group);
+  
+  // Pull the active playing channel to the front of the list
+  relatedChannels = [
+    activePlayingChannel,
+    ...relatedChannels.filter(ch => ch.url !== activePlayingChannel.url)
+  ];
   
   // Limit to 40 related channels
   const queueLimit = 40;
