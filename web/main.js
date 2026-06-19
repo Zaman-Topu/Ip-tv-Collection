@@ -2,25 +2,47 @@ import './style.css';
 import Hls from 'hls.js';
 import { MediaPlayer } from 'dashjs';
 
-const M3U_URL_LIVE = "https://raw.githubusercontent.com/Zaman-Topu/Ip-tv-Collection/main/FINAL_IPTV_COMPLETE.m3u";
+// Security helper to prevent right click and inspect shortcuts
+function securePage() {
+  document.addEventListener('contextmenu', e => e.preventDefault());
+  document.addEventListener('keydown', e => {
+    if (e.key === 'F12') {
+      e.preventDefault();
+      return false;
+    }
+    if (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J' || e.key === 'C' || e.key === 'i' || e.key === 'j' || e.key === 'c')) {
+      e.preventDefault();
+      return false;
+    }
+    if (e.ctrlKey && (e.key === 'U' || e.key === 'u' || e.key === 'S' || e.key === 's')) {
+      e.preventDefault();
+      return false;
+    }
+  });
+}
+securePage();
+
+const decodeUrl = (str) => atob(str);
+
+const M3U_URL_LIVE = decodeUrl("aHR0cHM6Ly9yYXcuZ2l0aHVidXNlcmNvbnRlbnQuY29tL1phbWFuLVRvcHUvSXAtdHYtQ29sbGVjdGlvbi9tYWluL0ZJTkFMX0lQVFZfQ09NUExFVEUubTN1");
 
 // Extra IPTV sources
 const EXTRA_LIVE_SOURCES = [
-  "https://raw.githubusercontent.com/Monjil404/livetv/refs/heads/main/pro",           // TechEasyLife
-  "https://raw.githubusercontent.com/Monjil404/TVspo/refs/heads/main/tvs",           // Sports
-  "https://raw.githubusercontent.com/abusaeeidx/Mrgify-BDIX-IPTV/main/playlist.m3u", // Mrgify BDIX
-  "https://raw.githubusercontent.com/ashik4u/mrgify-clean/main/playlist.m3u",        // Mrgify Clean
-  "https://raw.githubusercontent.com/imShakil/tvlink/refs/heads/main/iptv.m3u8",     // imShakil
-  "https://raw.githubusercontent.com/tvbd/m3uplayer/refs/heads/main/m3u/xniptv.m3u", // Xniptv
-  "https://raw.githubusercontent.com/time2shine/IPTV/master/combined.m3u",           // time2shine
-  "https://raw.githubusercontent.com/ShamimHossainOfficial/IPTV/master/BDIX-IPTV.m3u8", // ShamimHossain
-  "https://raw.githubusercontent.com/Shadmanislam/bdiptv/master/BD%20IPTV.m3u",     // Shadmanislam
-  "https://raw.githubusercontent.com/DrSujonPaul/Sujon/6dc6a1d4eaa20a9239ae27d8e0f00182b60eeb47/iptv", // DrSujonPaul
-  "https://raw.githubusercontent.com/srhady/Hady/refs/heads/main/akash_live.m3u",   // Akash Live
-  "https://raw.githubusercontent.com/bugsfreeweb/LiveTVCollector/main/LiveTV/Bangladesh/LiveTV.m3u", // Bugsfree BD
-  "https://raw.githubusercontent.com/bugsfreeweb/LiveTVCollector/main/LiveTV/India/LiveTV.m3u",     // Bugsfree India
-  "https://lupael.github.io/IPTV/running.m3u",                                       // lupael
-  "https://raw.githubusercontent.com/srhady/axsports/refs/heads/main/playlist.m3u"  // Axsport
+  decodeUrl("aHR0cHM6Ly9yYXcuZ2l0aHVidXNlcmNvbnRlbnQuY29tL01vbmppbDQwNC9saXZldHYvcmVmcy9oZWFkcy9tYWluL3Bybw=="),
+  decodeUrl("aHR0cHM6Ly9yYXcuZ2l0aHVidXNlcmNvbnRlbnQuY29tL01vbmppbDQwNC9UVnNwby9yZWZzL2hlYWRzL21haW4vdHZz"),
+  decodeUrl("aHR0cHM6Ly9yYXcuZ2l0aHVidXNlcmNvbnRlbnQuY29tL2FidXNhZWVpZHgvTXJnaWZ5LUJESVgtSVBUVi9tYWluL3BsYXlsaXN0Lm0zdQ=="),
+  decodeUrl("aHR0cHM6Ly9yYXcuZ2l0aHVidXNlcmNvbnRlbnQuY29tL2FzaGlrNHUvbXJnaWZ5LWNsZWFuL21haW4vcGxheWxpc3QubTN1"),
+  decodeUrl("aHR0cHM6Ly9yYXcuZ2l0aHVidXNlcmNvbnRlbnQuY29tL2ltU2hha2lsL3R2bGluay9yZWZzL2hlYWRzL21haW4vaXB0di5tM3U4"),
+  decodeUrl("aHR0cHM6Ly9yYXcuZ2l0aHVidXNlcmNvbnRlbnQuY29tL3R2YmQvbTN1cGxheWVyL3JlZnMvaGVhZHMvbWFpbi9tM3UveG5pcHR2Lm0zdQ=="),
+  decodeUrl("aHR0cHM6Ly9yYXcuZ2l0aHVidXNlcmNvbnRlbnQuY29tL3RpbWUyc2hpbmUvSVBUVi9tYXN0ZXIvY29tYmluZWQubTN1"),
+  decodeUrl("aHR0cHM6Ly9yYXcuZ2l0aHVidXNlcmNvbnRlbnQuY29tL1NoYW1pbUhvc3NhaW5PZmZpY2lhbC9JUFRWL21hc3Rlci9CRElYLUlQVFYubTN1OA=="),
+  decodeUrl("aHR0cHM6Ly9yYXcuZ2l0aHVidXNlcmNvbnRlbnQuY29tL1NoYWRtYW5pc2xhbS9iZGlwdHYvbWFzdGVyL0JEJTIwSVBUVi5tM3U="),
+  decodeUrl("aHR0cHM6Ly9yYXcuZ2l0aHVidXNlcmNvbnRlbnQuY29tL0RyU3Vqb25QYXVsL1N1am9uLzZkYzZhMWQ0ZWFhMjBhOTIzOWFlMjdkOGUwZjAwMTgyYjYwZWViNDcvaXB0dg=="),
+  decodeUrl("aHR0cHM6Ly9yYXcuZ2l0aHVidXNlcmNvbnRlbnQuY29tL3NyaGFkeS9IYWR5L3JlZnMvaGVhZHMvbWFpbi9ha2FzaF9saXZlLm0zdQ=="),
+  decodeUrl("aHR0cHM6Ly9yYXcuZ2l0aHVidXNlcmNvbnRlbnQuY29tL2J1Z3NmcmVld2ViL0xpdmVUVkNvbGxlY3Rvci9tYWluL0xpdmVUVS9CYW5nbGFkZXNoL0xpdmVUVi5tM3U="),
+  decodeUrl("aHR0cHM6Ly9yYXcuZ2l0aHVidXNlcmNvbnRlbnQuY29tL2J1Z3NmcmVld2ViL0xpdmVUVkNvbGxlY3Rvci9tYWluL0xpdmVUVS9JbmRpYS9MaXZlVFYubTN1"),
+  decodeUrl("aHR0cHM6Ly9sdXBhZWwuZ2l0aHViLmlvL0lQVFYvcnVubmluZy5tM3U="),
+  decodeUrl("aHR0cHM6Ly9yYXcuZ2l0aHVidXNlcmNvbnRlbnQuY29tL3NyaGFkeS9heHNwb3J0cy9yZWZzL2hlYWRzL21haW4vcGxheWxpc3QubTN1")
 ];
 
 let hlsInstance = null;
@@ -792,7 +814,7 @@ async function initApp() {
   
   // Try to load channel status first (non-blocking)
   try {
-    const statusResp = await fetch('https://raw.githubusercontent.com/Zaman-Topu/Ip-tv-Collection/main/channel_status.json');
+    const statusResp = await fetch(decodeUrl('aHR0cHM6Ly9yYXcuZ2l0aHVidXNlcmNvbnRlbnQuY29tL1phbWFuLVRvcHUvSXAtdHYtQ29sbGVjdGlvbi9tYWluL2NoYW5uZWxfc3RhdHVzLmpzb24='));
     if (statusResp.ok) {
       channelStatusMap = await statusResp.json();
     }
