@@ -33,6 +33,7 @@ const progressContainer = document.getElementById('progress-container');
 const timeDisplay = document.getElementById('current-time');
 const bufferingSpinner = document.getElementById('buffering-spinner');
 const centerPlayOverlay = document.getElementById('center-play-overlay');
+const errorOverlay = document.getElementById('player-error');
 
 // UI Elements
 const container = document.getElementById('category-container');
