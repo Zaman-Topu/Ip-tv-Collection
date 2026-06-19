@@ -284,7 +284,12 @@ function openPlayer(channel, useProxyIndex = 0, isHistoryBack = false) {
         qualityMenu.appendChild(btn);
       });
       
-      videoEl.play().catch(e => console.warn('Auto-play prevented:', e));
+      videoEl.play().catch(e => {
+        console.warn('Auto-play prevented:', e);
+        centerPlayOverlay.classList.remove('hidden');
+        playIcon.classList.remove('hidden');
+        pauseIcon.classList.add('hidden');
+      });
     });
     
     hlsInstance.on(Hls.Events.ERROR, (event, data) => {
@@ -376,7 +381,10 @@ videoEl.addEventListener('play', () => {
 videoEl.addEventListener('pause', () => {
   playIcon.classList.remove('hidden');
   pauseIcon.classList.add('hidden');
-  centerPlayOverlay.classList.remove('hidden');
+  // Don't show play overlay if we are loading a new stream
+  if (bufferingSpinner.classList.contains('hidden')) {
+    centerPlayOverlay.classList.remove('hidden');
+  }
 });
 
 videoEl.addEventListener('waiting', () => {
