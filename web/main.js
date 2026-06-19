@@ -27,6 +27,7 @@ let hlsInstance = null;
 let dashInstance = null;
 let errorTimeout = null;
 const videoEl = document.getElementById('video-player');
+const videoContainer = document.getElementById('video-container');
 const playerContainer = document.getElementById('player-container');
 const queueList = document.getElementById('player-queue-list');
 const queueCountEl = document.getElementById('queue-count');
@@ -44,6 +45,7 @@ const playIcon = document.getElementById('play-icon');
 const pauseIcon = document.getElementById('pause-icon');
 const muteBtn = document.getElementById('mute-btn');
 const muteIcon = document.getElementById('mute-icon');
+const volIcon = document.getElementById('vol-icon');
 const volumeSlider = document.getElementById('volume-slider');
 const fullscreenBtn = document.getElementById('fullscreen-btn');
 const fsEnter = document.getElementById('fs-enter');
@@ -52,6 +54,19 @@ const timeDisplay = document.getElementById('current-time');
 const bufferingSpinner = document.getElementById('buffering-spinner');
 const centerPlayOverlay = document.getElementById('center-play-overlay');
 const errorOverlay = document.getElementById('player-error');
+
+// Custom Proxy Loader class for Hls.js
+class CustomProxyLoader extends Hls.DefaultConfig.loader {
+  constructor(config) {
+    super(config);
+  }
+  load(context, config, callbacks) {
+    if (context.url && !context.url.startsWith('https://corsproxy.io/?url=')) {
+      context.url = `https://corsproxy.io/?url=${encodeURIComponent(context.url)}`;
+    }
+    super.load(context, config, callbacks);
+  }
+}
 
 // Filter UI Elements
 const searchInput = document.getElementById('search-input');
@@ -385,12 +400,21 @@ function renderGrid() {
   }
 }
 
-// Render player queue sidebar list
+// Render player queue sidebar list (limited to 40 related channels to avoid lag)
 function renderQueueList() {
   queueList.innerHTML = '';
-  queueCountEl.innerText = currentFilteredChannels.length;
+  if (!activePlayingChannel) return;
 
-  currentFilteredChannels.forEach(ch => {
+  // Filter by group (same category)
+  const relatedChannels = allTvChannels.filter(ch => ch.group === activePlayingChannel.group);
+  
+  // Limit to 40 related channels
+  const queueLimit = 40;
+  const queuedChannels = relatedChannels.slice(0, queueLimit);
+  
+  queueCountEl.innerText = queuedChannels.length;
+
+  queuedChannels.forEach(ch => {
     const item = document.createElement('div');
     const isPlaying = activePlayingChannel && activePlayingChannel.url === ch.url;
     
@@ -411,8 +435,8 @@ function renderQueueList() {
   });
 }
 
-// Open video player (split layout)
-function openPlayer(channel) {
+// Open video player (split layout) with automatic CORS proxy fallback support
+function openPlayer(channel, useProxy = false) {
   activePlayingChannel = channel;
   
   // Show player, scroll to it smoothly
@@ -457,6 +481,15 @@ function openPlayer(channel) {
       }
     });
 
+    if (useProxy) {
+      dashInstance.addRequestInterceptor((request) => {
+        if (request.url && !request.url.startsWith('https://corsproxy.io/?url=')) {
+          request.url = `https://corsproxy.io/?url=${encodeURIComponent(request.url)}`;
+        }
+        return Promise.resolve(request);
+      });
+    }
+
     dashInstance.initialize(videoEl, playUrl, true);
     
     dashInstance.on(MediaPlayer.events.PLAYBACK_STARTED, () => {
@@ -466,8 +499,17 @@ function openPlayer(channel) {
     
     dashInstance.on(MediaPlayer.events.ERROR, (e) => {
       console.error('DASH Error', e);
-      bufferingSpinner.classList.add('hidden');
-      errorOverlay.classList.remove('hidden');
+      if (!useProxy) {
+        console.log('Retrying DASH playback with CORS proxy fallback...');
+        if (dashInstance) {
+          dashInstance.destroy();
+          dashInstance = null;
+        }
+        openPlayer(channel, true);
+      } else {
+        bufferingSpinner.classList.add('hidden');
+        errorOverlay.classList.remove('hidden');
+      }
     });
     
     errorTimeout = setTimeout(() => {
@@ -479,8 +521,13 @@ function openPlayer(channel) {
         dashInstance.destroy();
         dashInstance = null;
       }
-      bufferingSpinner.classList.add('hidden');
-      errorOverlay.classList.remove('hidden');
+      if (!useProxy) {
+        console.log('Timeout. Retrying DASH playback with CORS proxy fallback...');
+        openPlayer(channel, true);
+      } else {
+        bufferingSpinner.classList.add('hidden');
+        errorOverlay.classList.remove('hidden');
+      }
     }, 15000);
     
     videoEl.addEventListener('playing', () => clearTimeout(errorTimeout), { once: true });
@@ -489,13 +536,17 @@ function openPlayer(channel) {
 
   // Handle HLS (.m3u8)
   if (Hls.isSupported()) {
-    hlsInstance = new Hls({
+    const hlsConfig = {
       maxMaxBufferLength: 15,
       enableWorker: true,
       lowLatencyMode: true,
       manifestLoadingTimeOut: 5000,
       fragLoadingMaxRetry: 1
-    });
+    };
+    if (useProxy) {
+      hlsConfig.loader = CustomProxyLoader;
+    }
+    hlsInstance = new Hls(hlsConfig);
     hlsInstance.loadSource(playUrl);
     hlsInstance.attachMedia(videoEl);
     
@@ -508,8 +559,13 @@ function openPlayer(channel) {
         hlsInstance.destroy();
         hlsInstance = null;
       }
-      bufferingSpinner.classList.add('hidden');
-      errorOverlay.classList.remove('hidden');
+      if (!useProxy) {
+        console.log('Timeout. Retrying HLS playback with CORS proxy fallback...');
+        openPlayer(channel, true);
+      } else {
+        bufferingSpinner.classList.add('hidden');
+        errorOverlay.classList.remove('hidden');
+      }
     }, 15000);
     
     videoEl.addEventListener('playing', () => clearTimeout(errorTimeout), { once: true });
@@ -526,15 +582,38 @@ function openPlayer(channel) {
     
     hlsInstance.on(Hls.Events.ERROR, (event, data) => {
       if (data.fatal) {
-        bufferingSpinner.classList.add('hidden');
-        errorOverlay.classList.remove('hidden');
-        hlsInstance.destroy();
+        console.warn('HLS Fatal Error:', data);
+        if (!useProxy) {
+          console.log('Fatal HLS Error. Retrying with CORS proxy fallback...');
+          hlsInstance.destroy();
+          hlsInstance = null;
+          openPlayer(channel, true);
+        } else {
+          bufferingSpinner.classList.add('hidden');
+          errorOverlay.classList.remove('hidden');
+          hlsInstance.destroy();
+        }
       }
     });
   } else if (videoEl.canPlayType('application/vnd.apple.mpegurl')) {
     // Safari fallback
-    videoEl.src = playUrl;
+    const finalUrl = useProxy ? `https://corsproxy.io/?url=${encodeURIComponent(playUrl)}` : playUrl;
+    videoEl.src = finalUrl;
+    
+    const handleNativeError = () => {
+      videoEl.removeEventListener('error', handleNativeError);
+      if (!useProxy) {
+        console.log('Native playback error. Retrying with proxy...');
+        openPlayer(channel, true);
+      } else {
+        bufferingSpinner.classList.add('hidden');
+        errorOverlay.classList.remove('hidden');
+      }
+    };
+    videoEl.addEventListener('error', handleNativeError);
+    
     videoEl.addEventListener('loadedmetadata', () => {
+      videoEl.removeEventListener('error', handleNativeError);
       videoEl.play();
     });
   }
@@ -558,7 +637,7 @@ function closePlayer() {
   }
   videoEl.pause();
   videoEl.src = '';
-  history.pushState(null, '', '/Ip-tv-Collection/');
+  history.pushState(null, '', window.location.pathname);
 }
 
 closePlayerBtn.onclick = closePlayer;
@@ -659,10 +738,24 @@ clearCountryFilterBtn.onclick = () => {
   applyFilters();
 };
 
+// Handle URL play query parameters on page load
+function handleUrlParams() {
+  if (activePlayingChannel) return;
+  const params = new URLSearchParams(window.location.search);
+  const channelName = params.get('play');
+  if (channelName) {
+    const decodedName = decodeURIComponent(channelName);
+    const channel = allTvChannels.find(ch => ch.name.toLowerCase() === decodedName.toLowerCase());
+    if (channel) {
+      openPlayer(channel);
+    }
+  }
+}
+
 // Handle Browser Back/Forward history buttons
 window.addEventListener('popstate', (event) => {
   if (event.state && event.state.channel) {
-    openPlayer(event.state.channel);
+    openPlayer(event.state.channel, false);
   } else {
     closePlayer();
   }
@@ -693,6 +786,9 @@ async function initApp() {
     
     populateFilters();
     applyFilters();
+    
+    // Auto-play channel from URL parameter if specified
+    handleUrlParams();
 
     // Step 2: Load extra sources in background
     Promise.all(EXTRA_LIVE_SOURCES.map(url => loadPlaylist(url))).then(extraResults => {
@@ -708,10 +804,14 @@ async function initApp() {
         allTvChannels = [...allTvChannels, ...newChannels];
         populateFilters();
         applyFilters();
+        
+        // Re-check URL parameter auto-play (in case target channel was in the extra playlist)
+        handleUrlParams();
       }
     });
   } else {
     applyFilters();
+    handleUrlParams();
   }
 }
 
