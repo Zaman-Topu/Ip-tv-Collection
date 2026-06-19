@@ -1,6 +1,6 @@
 import './style.css';
 import Hls from 'hls.js';
-import dashjs from 'dashjs';
+import { MediaPlayer } from 'dashjs';
 
 const M3U_URL_LIVE = "https://raw.githubusercontent.com/Zaman-Topu/Ip-tv-Collection/main/FINAL_IPTV_COMPLETE.m3u";
 const M3U_URL_MOVIES = "https://raw.githubusercontent.com/Zaman-Topu/Ip-tv-Collection/main/FINAL_MOVIES_COMPLETE.m3u";
@@ -280,7 +280,7 @@ function openPlayer(channel, useProxyIndex = 0, isHistoryBack = false) {
 
   // Handle MPEG-DASH Streams
   if (playUrl.includes('.mpd') || playUrl.includes('.mp4')) {
-    dashInstance = dashjs.MediaPlayer().create();
+    dashInstance = MediaPlayer().create();
     
     // Intercept requests to route them through our CORS proxy
     if (currentProxyIndex > 0) {
@@ -309,13 +309,13 @@ function openPlayer(channel, useProxyIndex = 0, isHistoryBack = false) {
 
     dashInstance.initialize(videoEl, playUrl, true);
     
-    dashInstance.on(dashjs.MediaPlayer.events.PLAYBACK_STARTED, () => {
+    dashInstance.on(MediaPlayer.events.PLAYBACK_STARTED, () => {
       bufferingSpinner.classList.add('hidden');
       errorOverlay.style.display = 'none';
       qualityMenu.innerHTML = ''; // Basic support for now
     });
     
-    dashInstance.on(dashjs.MediaPlayer.events.ERROR, (e) => {
+    dashInstance.on(MediaPlayer.events.ERROR, (e) => {
       console.error('DASH Error', e);
       if (currentProxyIndex < proxies.length - 1) {
         openPlayer(channel, currentProxyIndex + 1, true);
