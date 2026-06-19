@@ -5,13 +5,13 @@
   --font-primary: "Space Grotesk", "Inter", sans-serif;
   
   /* Typography Scale */
-  --text-xs: 9px;
-  --text-sm: 10px;
-  --text-md: 11px;
-  --text-lg: 12px;
-  --text-xl: 14px;
-  --text-2xl: 16px;
-  --text-3xl: 36px;
+  --text-xs: 11px;
+  --text-sm: 12px;
+  --text-md: 13px;
+  --text-lg: 14px;
+  --text-xl: 16px;
+  --text-2xl: 18px;
+  --text-3xl: 42px;
 
   /* Colors */
   --color-text-primary: lab(3.03701 -0.419587 -2.08024);

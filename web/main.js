@@ -372,13 +372,13 @@ function renderGrid() {
     const status = channelStatusMap[ch.url] || 'unknown';
     let badgeHtml = '';
     if (status === 'active') {
-      badgeHtml = '<div class="absolute top-2 left-2 bg-text-tertiary text-white text-[8px] font-bold px-1.5 py-0.5 rounded tracking-wide z-10 uppercase">🔴 Live</div>';
+      badgeHtml = '<div class="absolute top-2 left-2 bg-text-tertiary text-white text-[10px] font-bold px-1.5 py-0.5 rounded tracking-wide z-10 uppercase">🔴 Live</div>';
     } else if (status === 'isp_bdix') {
-      badgeHtml = '<div class="absolute top-2 left-2 bg-blue-500 text-white text-[8px] font-bold px-1.5 py-0.5 rounded tracking-wide z-10 uppercase">🔵 BDIX</div>';
+      badgeHtml = '<div class="absolute top-2 left-2 bg-blue-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded tracking-wide z-10 uppercase">🔵 BDIX</div>';
     } else if (status === 'blocked') {
-      badgeHtml = '<div class="absolute top-2 left-2 bg-yellow-500 text-black text-[8px] font-bold px-1.5 py-0.5 rounded tracking-wide z-10 uppercase">🟡 Geo</div>';
+      badgeHtml = '<div class="absolute top-2 left-2 bg-yellow-500 text-black text-[10px] font-bold px-1.5 py-0.5 rounded tracking-wide z-10 uppercase">🟡 Geo</div>';
     } else if (status === 'down') {
-      badgeHtml = '<div class="absolute top-2 left-2 bg-red-600 text-white text-[8px] font-bold px-1.5 py-0.5 rounded tracking-wide z-10 uppercase">🔴 Off</div>';
+      badgeHtml = '<div class="absolute top-2 left-2 bg-red-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded tracking-wide z-10 uppercase">🔴 Off</div>';
     }
 
     const card = document.createElement('div');
@@ -393,8 +393,8 @@ function renderGrid() {
         <img src="${ch.logo}" class="max-w-full max-h-12 object-contain transition-transform duration-300 group-hover:scale-105" loading="lazy" onerror="this.src='https://via.placeholder.com/150/ffffff/000000?text=${encodeURIComponent(ch.name)}'">
       </div>
       <div class="w-full text-center border-t border-border-default pt-2 mt-1">
-        <div class="text-[10px] font-bold text-text-primary truncate tracking-tight uppercase">${ch.name}</div>
-        <div class="text-[8px] font-medium text-text-secondary truncate tracking-tight uppercase mt-0.5">${ch.country} • ${ch.server}</div>
+        <div class="text-[12px] font-bold text-text-primary truncate tracking-tight uppercase">${ch.name}</div>
+        <div class="text-[10px] font-medium text-text-secondary truncate tracking-tight uppercase mt-0.5">${ch.country} • ${ch.server}</div>
       </div>
     `;
 
@@ -469,8 +469,8 @@ function renderQueueList() {
     item.innerHTML = `
       <img src="${ch.logo}" class="w-10 h-7 object-contain bg-white border border-border-default rounded" onerror="this.src='https://via.placeholder.com/150/ffffff/000000?text=TV'">
       <div class="flex-1 min-w-0">
-        <div class="text-[10px] font-bold text-text-primary truncate uppercase">${ch.name}</div>
-        <div class="text-[8px] font-medium text-text-secondary truncate uppercase mt-0.5">${ch.country} • ${ch.server}</div>
+        <div class="text-[12px] font-bold text-text-primary truncate uppercase">${ch.name}</div>
+        <div class="text-[10px] font-medium text-text-secondary truncate uppercase mt-0.5">${ch.country} • ${ch.server}</div>
       </div>
       ${isPlaying ? '<span class="text-text-tertiary text-xs">▶</span>' : ''}
     `;
