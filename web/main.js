@@ -311,8 +311,13 @@ function openPlayer(channel, useProxyIndex = 0, isHistoryBack = false) {
       errorOverlay.innerHTML = `<h3 class="text-netflix-red text-2xl font-bold mb-2">Stream Offline</h3><p class="text-gray-300 text-sm">This DASH stream is offline or geo-blocked. Please try a different channel.</p>`;
     });
     
-    // Failsafe timeout - if nothing plays in 15s, show error
+    // Failsafe timeout - if nothing plays in 20s, show error
     errorTimeout = setTimeout(() => {
+      // Don't show error if video is actually playing!
+      if (!videoEl.paused || videoEl.readyState >= 3) {
+        clearTimeout(errorTimeout);
+        return;
+      }
       if (dashInstance) {
         dashInstance.destroy();
         dashInstance = null;
@@ -320,7 +325,10 @@ function openPlayer(channel, useProxyIndex = 0, isHistoryBack = false) {
       bufferingSpinner.classList.add('hidden');
       errorOverlay.style.display = 'block';
       errorOverlay.innerHTML = `<h3 class="text-netflix-red text-2xl font-bold mb-2">Connection Timeout</h3><p class="text-gray-300 text-sm">Stream did not respond. It may be offline or geo-blocked.</p>`;
-    }, 15000);
+    }, 20000);
+    
+    // Also clear timeout when video actually starts playing
+    videoEl.addEventListener('playing', () => clearTimeout(errorTimeout), { once: true });
     return;
   }
 
@@ -356,16 +364,24 @@ function openPlayer(channel, useProxyIndex = 0, isHistoryBack = false) {
     hlsInstance.loadSource(playUrl);
     hlsInstance.attachMedia(videoEl);
     
-    // Failsafe timeout - if nothing loads in 15s, show error
+    // Failsafe timeout - if nothing loads in 20s, show error
     errorTimeout = setTimeout(() => {
+      // Don't show error if video is actually playing!
+      if (!videoEl.paused || videoEl.readyState >= 3) {
+        clearTimeout(errorTimeout);
+        return;
+      }
       if (hlsInstance) {
         hlsInstance.destroy();
         hlsInstance = null;
       }
       bufferingSpinner.classList.add('hidden');
       errorOverlay.style.display = 'block';
-      errorOverlay.innerHTML = `<h3 class="text-netflix-red text-2xl font-bold mb-2">Connection Timeout</h3><p class="text-gray-300 text-sm">Stream did not respond within 15 seconds. It may be offline, expired, or geo-blocked. Try another channel.</p>`;
-    }, 15000);
+      errorOverlay.innerHTML = `<h3 class="text-netflix-red text-2xl font-bold mb-2">Connection Timeout</h3><p class="text-gray-300 text-sm">Stream did not respond within 20 seconds. It may be offline, expired, or geo-blocked. Try another channel.</p>`;
+    }, 20000);
+    
+    // Also clear timeout when video actually starts playing
+    videoEl.addEventListener('playing', () => clearTimeout(errorTimeout), { once: true });
     
     hlsInstance.on(Hls.Events.MANIFEST_PARSED, (event, data) => {
       clearTimeout(errorTimeout);
