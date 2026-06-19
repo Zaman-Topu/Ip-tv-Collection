@@ -199,19 +199,28 @@ function isPrivateIp(urlStr) {
 }
 
 // Display error messages inside the video player
-function showPlayerError(isPrivate) {
+function showPlayerError(streamUrl) {
   bufferingSpinner.classList.add('hidden');
   errorOverlay.classList.remove('hidden');
   
   const titleEl = errorOverlay.querySelector('h3');
   const descEl = errorOverlay.querySelector('p');
   if (titleEl && descEl) {
+    const isPrivate = isPrivateIp(streamUrl);
+    const isHttp = (streamUrl || '').startsWith('http:');
+    
     if (isPrivate) {
       titleEl.innerText = "BDIX / Private ISP Stream";
       descEl.innerHTML = `
         This stream is hosted on a private local IP (BDIX). To play it:<br>
         <span class="text-text-tertiary font-bold">1. You must be on the host ISP network.</span><br>
         <span class="text-text-tertiary font-bold">2. Click the lock/tune icon in the address bar &rarr; Site Settings &rarr; set "Insecure content" to "Allow", then refresh.</span>
+      `;
+    } else if (isHttp && window.location.protocol === 'https:') {
+      titleEl.innerText = "Mixed Content Blocked";
+      descEl.innerHTML = `
+        This stream uses HTTP, which is blocked on secure HTTPS sites by default. To play:<br>
+        <span class="text-text-tertiary font-bold">Click the lock/tune icon in the address bar &rarr; Site Settings &rarr; set "Insecure content" to "Allow", then refresh the page.</span>
       `;
     } else {
       titleEl.innerText = "Stream Offline";
@@ -609,7 +618,7 @@ function openPlayer(channel, useProxy = false) {
         }
         openPlayer(channel, true);
       } else {
-        showPlayerError(isPrivate);
+        showPlayerError(playUrl);
       }
     });
     
@@ -626,7 +635,7 @@ function openPlayer(channel, useProxy = false) {
         console.log('Timeout. Retrying DASH playback with CORS proxy fallback...');
         openPlayer(channel, true);
       } else {
-        showPlayerError(isPrivate);
+        showPlayerError(playUrl);
       }
     }, 15000);
     
@@ -663,7 +672,7 @@ function openPlayer(channel, useProxy = false) {
         console.log('Timeout. Retrying HLS playback with CORS proxy fallback...');
         openPlayer(channel, true);
       } else {
-        showPlayerError(isPrivate);
+        showPlayerError(playUrl);
       }
     }, 15000);
     
@@ -688,7 +697,7 @@ function openPlayer(channel, useProxy = false) {
           hlsInstance = null;
           openPlayer(channel, true);
         } else {
-          showPlayerError(isPrivate);
+          showPlayerError(playUrl);
           hlsInstance.destroy();
         }
       }
@@ -704,7 +713,7 @@ function openPlayer(channel, useProxy = false) {
         console.log('Native playback error. Retrying with proxy...');
         openPlayer(channel, true);
       } else {
-        showPlayerError(isPrivate);
+        showPlayerError(playUrl);
       }
     };
     videoEl.addEventListener('error', handleNativeError);
