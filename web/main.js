@@ -98,18 +98,22 @@ function parseM3U(content) {
     if (line.startsWith('#EXTINF:')) {
       // Extract Logo
       const logoMatch = line.match(/tvg-logo="([^"]+)"/);
-      currentChannel.logo = logoMatch ? logoMatch[1] : 'https://via.placeholder.com/150/141414/ffffff?text=No+Logo';
+      currentChannel.logo = logoMatch ? logoMatch[1] : 'https://via.placeholder.com/150/141414/ffffff?text=TV';
       
       // Extract Group
       const groupMatch = line.match(/group-title="([^"]+)"/);
-      currentChannel.group = groupMatch ? groupMatch[1] : 'Others';
+      currentChannel.group = groupMatch ? groupMatch[1].trim() : 'Others';
       
-      // Extract Name
-      const nameParts = line.split(',');
-      currentChannel.name = nameParts.length > 1 ? nameParts[1].trim() : 'Unknown Channel';
-    } else if (line.startsWith('http')) {
-      currentChannel.url = line;
-      channels.push({ ...currentChannel });
+      // Extract Name - everything after the last comma
+      const commaIdx = line.lastIndexOf(',');
+      currentChannel.name = commaIdx >= 0 ? line.substring(commaIdx + 1).trim() : 'Unknown Channel';
+      if (!currentChannel.name) currentChannel.name = 'Unknown Channel';
+    } else if (line.startsWith('http') || line.startsWith('rtmp') || line.startsWith('rtsp')) {
+      currentChannel.url = line.trim();
+      // Only push if we have both name and url
+      if (currentChannel.name && currentChannel.url) {
+        channels.push({ ...currentChannel });
+      }
       currentChannel = {};
     }
   }
@@ -752,7 +756,7 @@ document.getElementById('search-input').addEventListener('input', (e) => {
     return;
   }
   
-  const filtered = currentChannels.filter(c => c.name.toLowerCase().includes(term));
+  const filtered = currentChannels.filter(c => c.name && c.url && c.name.toLowerCase().includes(term));
   renderCategories({'Search Results': filtered});
 });
 
