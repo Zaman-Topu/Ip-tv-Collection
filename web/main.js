@@ -72,14 +72,18 @@ let currentChannels = [];
 let currentCategoryMap = {};
 let channelStatusMap = {};
 
-// Parse M3U
+// Parse M3U - with 8 second timeout per source
 async function loadPlaylist(url) {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 8000);
   try {
-    const response = await fetch(url);
+    const response = await fetch(url, { signal: controller.signal });
     const text = await response.text();
+    clearTimeout(timeoutId);
     return parseM3U(text);
   } catch (error) {
-    console.error("Error fetching playlist:", error);
+    clearTimeout(timeoutId);
+    console.warn(`Skipped source (timeout/error): ${url}`);
     return [];
   }
 }
@@ -650,31 +654,47 @@ async function initApp(mode = 'live') {
   // Load all playlists if not already loaded
   if (allTvChannels.length === 0 || allMovieChannels.length === 0) {
     // Show loading progress
-    container.innerHTML = '<div class="flex flex-col justify-center items-center h-64 gap-4"><div class="spinner"></div><p class="text-gray-400 text-sm">Loading channels from all sources...</p></div>';
+    container.innerHTML = '<div class="flex flex-col justify-center items-center h-64 gap-4"><div class="spinner"></div><p class="text-gray-400 text-sm" id="load-msg">Loading main channels...</p></div>';
 
-    const allSources = [M3U_URL_LIVE, ...EXTRA_LIVE_SOURCES];
-    const [mainTv, movieData, ...extraResults] = await Promise.all([
+    // Step 1: Load MAIN sources first so page shows fast
+    const [mainTv, movieData] = await Promise.all([
       loadPlaylist(M3U_URL_LIVE),
-      loadPlaylist(M3U_URL_MOVIES),
-      ...EXTRA_LIVE_SOURCES.map(url => loadPlaylist(url))
+      loadPlaylist(M3U_URL_MOVIES)
     ]);
 
-    // Merge all TV sources, deduplicate by URL
-    const seenUrls = new Set();
-    const mergedTv = [];
-    for (const ch of [...mainTv, ...extraResults.flat()]) {
-      if (ch.url && !seenUrls.has(ch.url)) {
-        seenUrls.add(ch.url);
-        mergedTv.push(ch);
-      }
+    // Show main channels immediately
+    const movieUrls = new Set(movieData.map(m => m.url));
+    allTvChannels = mainTv.filter(tv => !movieUrls.has(tv.url));
+    allMovieChannels = movieData;
+    currentChannels = mode === 'live' ? allTvChannels : allMovieChannels;
+    currentCategoryMap = groupByCategory(currentChannels);
+    if (currentChannels.length > 0) {
+      const topChannels = currentChannels.filter(c => c.group === 'Bangladesh' || c.group === 'Sports' || c.group === 'Movies');
+      const heroPick = topChannels.length > 0 ? topChannels[Math.floor(Math.random() * topChannels.length)] : currentChannels[0];
+      setHero(heroPick);
+      renderCategories(currentCategoryMap);
     }
 
-    // Remove any channel from TV data that exists in Movie data to prevent mixing
-    const movieUrls = new Set(movieData.map(m => m.url));
-    const pureTvData = mergedTv.filter(tv => !movieUrls.has(tv.url));
-
-    allTvChannels = pureTvData;
-    allMovieChannels = movieData;
+    // Step 2: Load extra sources in background, then silently merge
+    Promise.all(EXTRA_LIVE_SOURCES.map(url => loadPlaylist(url))).then(extraResults => {
+      const seenUrls = new Set(allTvChannels.map(ch => ch.url));
+      const newChannels = [];
+      for (const ch of extraResults.flat()) {
+        if (ch.url && !seenUrls.has(ch.url) && !movieUrls.has(ch.url)) {
+          seenUrls.add(ch.url);
+          newChannels.push(ch);
+        }
+      }
+      if (newChannels.length > 0) {
+        allTvChannels = [...allTvChannels, ...newChannels];
+        if (mode === 'live') {
+          currentChannels = allTvChannels;
+          currentCategoryMap = groupByCategory(currentChannels);
+          renderCategories(currentCategoryMap);
+        }
+      }
+    });
+    return; // Early return since we already rendered
   }
   
   currentChannels = mode === 'live' ? allTvChannels : allMovieChannels;
