@@ -26,6 +26,10 @@ SOURCES = [
 ]
 
 GROUP_MAP = {
+    # Indian Bangla
+    "indian bangla": "Indian Bangla", "kolkata": "Indian Bangla", "zee bangla": "Indian Bangla",
+    "star jalsha": "Indian Bangla", "colors bangla": "Indian Bangla", "sony aath": "Indian Bangla",
+    
     # Bangladesh
     "bangladesh": "Bangladesh", "bangla": "Bangladesh", "bd channel": "Bangladesh",
     "bd tv": "Bangladesh", "bdix": "Bangladesh", "bd live": "Bangladesh",
@@ -117,6 +121,19 @@ async def main():
     async with aiohttp.ClientSession(connector=connector) as session:
         tasks = [fetch_playlist(session, url) for url in SOURCES]
         playlists = await asyncio.gather(*tasks)
+        
+        # Fetch public JSON channels
+        scraped_json = ""
+        try:
+            print("[SCRAPER] Fetching channels from http://198.195.239.50/tv_channels.json...")
+            async with session.get("http://198.195.239.50/tv_channels.json", timeout=15) as resp:
+                if resp.status == 200:
+                    scraped_json = await resp.text()
+                    print(f"[SCRAPER] Success! Fetched {len(scraped_json)} chars")
+                else:
+                    print(f"[SCRAPER] ERR! Returned status {resp.status}")
+        except Exception as e:
+            print("[SCRAPER] FAIL! Error:", e)
 
     print("Parsing playlists and extracting metadata...")
     
@@ -160,6 +177,35 @@ async def main():
                             channels[url]['name'] = name
                             channels[url]['group'] = group
                 current_extinf = None
+
+    # Merge scraped JSON channels professionally
+    if scraped_json:
+        try:
+            import json
+            data = json.loads(scraped_json)
+            scraped_count = 0
+            for ch in data.get("channels", []):
+                if ch.get("status") == "hidden":
+                    continue
+                url = ch.get("url")
+                if not url:
+                    continue
+                name = ch.get("name", "Unknown Channel")
+                
+                # Resolve relative logo
+                logo = ch.get("logo", "")
+                if logo and not logo.startswith("http"):
+                    logo = "http://198.195.239.50/" + logo.replace(" ", "%20")
+                
+                # Use category as raw group
+                group = ch.get("category", "")
+                
+                # Add/overwrite in channels, prioritizing this source because it's high quality and public IP
+                channels[url] = {'name': name, 'group': group, 'logo': logo}
+                scraped_count += 1
+            print(f"[SCRAPER] Merged {scraped_count} public channels from http://198.195.239.50/ successfully!")
+        except Exception as e:
+            print("[SCRAPER] Error merging JSON channels:", e)
 
     print(f"Total unique channels found: {len(channels)}")
     print("Categorizing and writing to files...")

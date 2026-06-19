@@ -2,7 +2,8 @@
 
 @theme {
   /* Fonts */
-  --font-primary: "Space Grotesk", "Inter", sans-serif;
+  --font-primary: "Inter", sans-serif;
+  --font-display: "Space Grotesk", sans-serif;
   
   /* Typography Scale */
   --text-xs: 11px;
@@ -14,18 +15,18 @@
   --text-3xl: 42px;
 
   /* Colors */
-  --color-text-primary: lab(3.03701 -0.419587 -2.08024);
-  --color-text-secondary: lab(36.185 -0.944421 -3.59355);
-  --color-text-tertiary: lab(48.7029 74.3556 26.9302);
-  --color-text-inverse: #ffffff;
+  --color-text-primary: #f3f4f6;
+  --color-text-secondary: #9ca3af;
+  --color-text-tertiary: #ff0055;
+  --color-text-inverse: #000000;
   
-  --color-surface-base: #000000;
-  --color-surface-muted: oklab(0.149999 -0.00309155 -0.00950664 / 0.05);
-  --color-surface-raised: lab(100 0 0);
-  --color-surface-strong: lab(97.6738 -0.497282 -1.81038);
+  --color-surface-base: #09090b;
+  --color-surface-muted: rgba(255, 255, 255, 0.03);
+  --color-surface-raised: #18181b;
+  --color-surface-strong: #0f0f12;
   
-  --color-border-default: lab(88.3938 -0.496596 -1.81003);
-  --color-border-muted: oklab(0.899998 -0.00155377 -0.00473404 / 0.4);
+  --color-border-default: rgba(255, 255, 255, 0.08);
+  --color-border-muted: rgba(255, 255, 255, 0.04);
 
   /* Spacing */
   --spacing-1: 2px;
@@ -44,10 +45,10 @@
   --radius-lg: 33554400px;
 
   /* Shadows */
-  --shadow-1: rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.1) 0px 10px 15px -3px, rgba(0, 0, 0, 0.1) 0px 4px 6px -4px;
-  --shadow-2: rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.25) 0px 25px 50px -12px;
-  --shadow-3: rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.1) 0px 20px 25px -5px, rgba(0, 0, 0, 0.1) 0px 8px 10px -6px;
-  --shadow-4: rgba(214, 6, 73, 0.35) 0px 0px 20px 0px;
+  --shadow-1: rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.5) 0px 10px 15px -3px, rgba(0, 0, 0, 0.5) 0px 4px 6px -4px;
+  --shadow-2: rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.6) 0px 25px 50px -12px;
+  --shadow-3: rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.3) 0px 20px 25px -5px, rgba(0, 0, 0, 0.2) 0px 8px 10px -6px;
+  --shadow-4: rgba(255, 0, 85, 0.35) 0px 0px 20px 0px;
 
   /* Motion */
   --animate-spin: spin 1s ease-in-out infinite;
@@ -55,12 +56,17 @@
 
 body {
   font-family: var(--font-primary);
-  font-size: var(--text-lg);
-  line-height: 16px;
-  font-weight: 700;
+  font-size: var(--text-md);
+  line-height: 1.5;
+  font-weight: 400;
   background-color: var(--color-surface-strong);
   color: var(--color-text-primary);
   overflow-x: hidden;
+}
+
+h1, h2, h3, h4, h5, h6, .brand-font {
+  font-family: var(--font-display);
+  font-weight: 700;
 }
 
 /* Custom Scrollbar for list queue */
@@ -187,4 +193,10 @@ body {
 .queue-item.active {
   background-color: var(--color-surface-raised);
   border-left: 3px solid var(--color-text-tertiary);
+}
+
+/* Player controls visible state for mobile and click-toggle */
+#player-controls-bottom.controls-visible {
+  opacity: 1 !important;
+  pointer-events: auto !important;
 }

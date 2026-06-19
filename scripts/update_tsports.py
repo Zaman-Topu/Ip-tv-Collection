@@ -44,11 +44,19 @@ while i < len(lines):
                 is_tsports = True
                 
             if is_tsports:
-                removed_count += 1
-                # Try to extract the logo URL if present
-                logo_match = re.search(r'tvg-logo="([^"]+)"', line)
-                if logo_match and not tsports_logo:
-                    tsports_logo = logo_match.group(1)
+                # Keep our public stream and local BDIX stream
+                if "198.195.239.50" in url_line or "172.19.17.4" in url_line:
+                    # Rename the BDIX one to make it clear
+                    if "172.19.17.4" in url_line:
+                        line = re.sub(r',T Sports.*$', ',T Sports (BDIX)', line)
+                    new_lines.append(line + "\n")
+                    new_lines.append(url_line + "\n")
+                else:
+                    removed_count += 1
+                    # Try to extract the logo URL if present
+                    logo_match = re.search(r'tvg-logo="([^"]+)"', line)
+                    if logo_match and not tsports_logo:
+                        tsports_logo = logo_match.group(1)
                 i = next_i + 1
                 continue
             else:
@@ -69,9 +77,11 @@ if not tsports_logo:
 
 print(f"Using T Sports logo: {tsports_logo}")
 
-# Add the new T Sports channel
-new_lines.append(f'#EXTINF:-1 tvg-logo="{tsports_logo}" group-title="Sports",T Sports\n')
-new_lines.append("http://172.19.17.4:8090/hls/tsportshd3rd.m3u8\n")
+# Add the local BDIX T Sports channel if not already there
+bdix_exists = any("172.19.17.4" in line for line in new_lines)
+if not bdix_exists:
+    new_lines.append(f'#EXTINF:-1 tvg-logo="{tsports_logo}" group-title="Sports",T Sports (BDIX)\n')
+    new_lines.append("http://172.19.17.4:8090/hls/tsportshd3rd.m3u8\n")
 
 # Write back
 with open(m3u_path, "w", encoding="utf-8") as f:

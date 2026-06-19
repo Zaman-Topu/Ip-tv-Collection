@@ -175,6 +175,51 @@ function detectServer(url) {
   }
 }
 
+// Check if a URL is hosted on a private local network IP (BDIX)
+function isPrivateIp(urlStr) {
+  try {
+    const url = new URL(urlStr);
+    const hostname = url.hostname;
+    const parts = hostname.split('.');
+    if (parts.length === 4) {
+      const o1 = parseInt(parts[0], 10);
+      const o2 = parseInt(parts[1], 10);
+      if (o1 === 10) return true;
+      if (o1 === 127) return true;
+      if (o1 === 192 && o2 === 168) return true;
+      if (o1 === 172 && (o2 >= 16 && o2 <= 31)) return true;
+      if (o1 === 100 && (o2 >= 64 && o2 <= 127)) return true;
+      if (o1 === 169 && o2 === 254) return true;
+    }
+    if (hostname === 'localhost') return true;
+    return false;
+  } catch (e) {
+    return false;
+  }
+}
+
+// Display error messages inside the video player
+function showPlayerError(isPrivate) {
+  bufferingSpinner.classList.add('hidden');
+  errorOverlay.classList.remove('hidden');
+  
+  const titleEl = errorOverlay.querySelector('h3');
+  const descEl = errorOverlay.querySelector('p');
+  if (titleEl && descEl) {
+    if (isPrivate) {
+      titleEl.innerText = "BDIX / Private ISP Stream";
+      descEl.innerHTML = `
+        This stream is hosted on a private local IP (BDIX). To play it:<br>
+        <span class="text-text-tertiary font-bold">1. You must be on the host ISP network.</span><br>
+        <span class="text-text-tertiary font-bold">2. Click the lock/tune icon in the address bar &rarr; Site Settings &rarr; set "Insecure content" to "Allow", then refresh.</span>
+      `;
+    } else {
+      titleEl.innerText = "Stream Offline";
+      descEl.innerText = "This stream is currently offline, geo-blocked, or unavailable.";
+    }
+  }
+}
+
 // Map countries to flags
 const countryFlags = {
   'Bangladesh': '🇧🇩',
@@ -514,6 +559,7 @@ function openPlayer(channel, useProxy = false) {
 
   // Load stream URL
   let playUrl = channel.url;
+  const isPrivate = isPrivateIp(playUrl);
 
   if (hlsInstance) {
     hlsInstance.destroy();
@@ -537,7 +583,7 @@ function openPlayer(channel, useProxy = false) {
       }
     });
 
-    if (useProxy) {
+    if (useProxy && !isPrivate) {
       dashInstance.addRequestInterceptor((request) => {
         if (request.url && !request.url.startsWith('https://corsproxy.io/?url=')) {
           request.url = `https://corsproxy.io/?url=${encodeURIComponent(request.url)}`;
@@ -555,7 +601,7 @@ function openPlayer(channel, useProxy = false) {
     
     dashInstance.on(MediaPlayer.events.ERROR, (e) => {
       console.error('DASH Error', e);
-      if (!useProxy) {
+      if (!useProxy && !isPrivate) {
         console.log('Retrying DASH playback with CORS proxy fallback...');
         if (dashInstance) {
           dashInstance.destroy();
@@ -563,8 +609,7 @@ function openPlayer(channel, useProxy = false) {
         }
         openPlayer(channel, true);
       } else {
-        bufferingSpinner.classList.add('hidden');
-        errorOverlay.classList.remove('hidden');
+        showPlayerError(isPrivate);
       }
     });
     
@@ -577,12 +622,11 @@ function openPlayer(channel, useProxy = false) {
         dashInstance.destroy();
         dashInstance = null;
       }
-      if (!useProxy) {
+      if (!useProxy && !isPrivate) {
         console.log('Timeout. Retrying DASH playback with CORS proxy fallback...');
         openPlayer(channel, true);
       } else {
-        bufferingSpinner.classList.add('hidden');
-        errorOverlay.classList.remove('hidden');
+        showPlayerError(isPrivate);
       }
     }, 15000);
     
@@ -599,7 +643,7 @@ function openPlayer(channel, useProxy = false) {
       manifestLoadingTimeOut: 5000,
       fragLoadingMaxRetry: 1
     };
-    if (useProxy) {
+    if (useProxy && !isPrivate) {
       hlsConfig.loader = CustomProxyLoader;
     }
     hlsInstance = new Hls(hlsConfig);
@@ -615,12 +659,11 @@ function openPlayer(channel, useProxy = false) {
         hlsInstance.destroy();
         hlsInstance = null;
       }
-      if (!useProxy) {
+      if (!useProxy && !isPrivate) {
         console.log('Timeout. Retrying HLS playback with CORS proxy fallback...');
         openPlayer(channel, true);
       } else {
-        bufferingSpinner.classList.add('hidden');
-        errorOverlay.classList.remove('hidden');
+        showPlayerError(isPrivate);
       }
     }, 15000);
     
@@ -639,31 +682,29 @@ function openPlayer(channel, useProxy = false) {
     hlsInstance.on(Hls.Events.ERROR, (event, data) => {
       if (data.fatal) {
         console.warn('HLS Fatal Error:', data);
-        if (!useProxy) {
+        if (!useProxy && !isPrivate) {
           console.log('Fatal HLS Error. Retrying with CORS proxy fallback...');
           hlsInstance.destroy();
           hlsInstance = null;
           openPlayer(channel, true);
         } else {
-          bufferingSpinner.classList.add('hidden');
-          errorOverlay.classList.remove('hidden');
+          showPlayerError(isPrivate);
           hlsInstance.destroy();
         }
       }
     });
   } else if (videoEl.canPlayType('application/vnd.apple.mpegurl')) {
     // Safari fallback
-    const finalUrl = useProxy ? `https://corsproxy.io/?url=${encodeURIComponent(playUrl)}` : playUrl;
+    const finalUrl = (useProxy && !isPrivate) ? `https://corsproxy.io/?url=${encodeURIComponent(playUrl)}` : playUrl;
     videoEl.src = finalUrl;
     
     const handleNativeError = () => {
       videoEl.removeEventListener('error', handleNativeError);
-      if (!useProxy) {
+      if (!useProxy && !isPrivate) {
         console.log('Native playback error. Retrying with proxy...');
         openPlayer(channel, true);
       } else {
-        bufferingSpinner.classList.add('hidden');
-        errorOverlay.classList.remove('hidden');
+        showPlayerError(isPrivate);
       }
     };
     videoEl.addEventListener('error', handleNativeError);
@@ -747,6 +788,63 @@ fullscreenBtn.addEventListener('click', () => {
     fsEnter.classList.remove('hidden');
     fsExit.classList.add('hidden');
   }
+});
+
+let controlsTimeout = null;
+
+function showControls() {
+  const controls = document.getElementById('player-controls-bottom');
+  if (!controls) return;
+  controls.classList.add('controls-visible');
+  
+  clearTimeout(controlsTimeout);
+  if (!videoEl.paused) {
+    controlsTimeout = setTimeout(() => {
+      controls.classList.remove('controls-visible');
+    }, 4000);
+  }
+}
+
+function hideControls() {
+  const controls = document.getElementById('player-controls-bottom');
+  if (controls) {
+    controls.classList.remove('controls-visible');
+  }
+}
+
+// Toggle controls on clicking the video container (excluding the control bar itself)
+videoContainer.addEventListener('click', (e) => {
+  const controls = document.getElementById('player-controls-bottom');
+  const errorBanner = document.getElementById('player-error');
+  
+  // Don't toggle if click is on any interactive controls
+  if (e.target.closest('#player-controls-bottom') || 
+      e.target.closest('#close-player') ||
+      e.target.closest('#center-play-overlay') ||
+      (errorBanner && !errorBanner.classList.contains('hidden') && e.target.closest('#player-error'))) {
+    return;
+  }
+  
+  if (controls.classList.contains('controls-visible')) {
+    hideControls();
+  } else {
+    showControls();
+  }
+});
+
+// Show controls on activity
+videoContainer.addEventListener('mousemove', showControls);
+videoContainer.addEventListener('touchstart', showControls);
+
+// Reset timeout on video play/pause
+videoEl.addEventListener('play', () => {
+  clearTimeout(controlsTimeout);
+  controlsTimeout = setTimeout(hideControls, 4000);
+});
+
+videoEl.addEventListener('pause', () => {
+  clearTimeout(controlsTimeout);
+  showControls(); // keep visible when paused
 });
 
 centerPlayOverlay.onclick = () => {
