@@ -77,10 +77,10 @@ const bufferingSpinner = document.getElementById('buffering-spinner');
 const centerPlayOverlay = document.getElementById('center-play-overlay');
 const errorOverlay = document.getElementById('player-error');
 
-// Custom Proxy Loader class for Hls.js
-class CustomProxyLoader extends Hls.DefaultConfig.loader {
+// Custom Proxy Loader class for Hls.js (Wrapper pattern for max compatibility)
+class CustomProxyLoader {
   constructor(config) {
-    super(config);
+    this.internalLoader = new Hls.DefaultConfig.loader(config);
   }
   load(context, config, callbacks) {
     if (context.url && !context.url.startsWith('https://corsproxy.io/?url=')) {
@@ -89,23 +89,32 @@ class CustomProxyLoader extends Hls.DefaultConfig.loader {
 
     // Wrap onSuccess to rewrite response.url back to original URL so relative paths resolve correctly
     const originalOnSuccess = callbacks.onSuccess;
-    callbacks.onSuccess = function(response, stats, context, networkDetails) {
-      if (response && response.url && response.url.includes('corsproxy.io/?url=')) {
-        try {
-          const parsed = new URL(response.url);
-          const orig = parsed.searchParams.get('url');
-          if (orig) {
-            // Create a shallow copy to bypass read-only property restrictions
-            response = { ...response, url: orig };
+    const wrappedCallbacks = {
+      ...callbacks,
+      onSuccess: function(response, stats, context, networkDetails) {
+        if (response && response.url && response.url.includes('corsproxy.io/?url=')) {
+          try {
+            const parsed = new URL(response.url);
+            const orig = parsed.searchParams.get('url');
+            if (orig) {
+              // Create a shallow copy to bypass read-only property restrictions
+              response = { ...response, url: orig };
+            }
+          } catch (e) {
+            console.warn("Error parsing response URL:", e);
           }
-        } catch (e) {
-          console.warn("Error parsing proxied response URL:", e);
         }
+        originalOnSuccess(response, stats, context, networkDetails);
       }
-      originalOnSuccess(response, stats, context, networkDetails);
     };
 
-    super.load(context, config, callbacks);
+    this.internalLoader.load(context, config, wrappedCallbacks);
+  }
+  abort() {
+    this.internalLoader.abort();
+  }
+  destroy() {
+    this.internalLoader.destroy();
   }
 }
 
@@ -182,7 +191,11 @@ async function loadPlaylist(url) {
   const timeoutId = setTimeout(() => controller.abort(), 8000);
   try {
     const cacheBuster = url.includes('?') ? `&t=${Date.now()}` : `?t=${Date.now()}`;
-    const response = await fetch(url + cacheBuster, { signal: controller.signal });
+    const targetUrl = url + cacheBuster;
+    // Route through CORS proxy with URL encoding to hide extension from sniffers and bypass CORS
+    const proxiedUrl = `https://corsproxy.io/?url=${encodeURIComponent(targetUrl)}`;
+    
+    const response = await fetch(proxiedUrl, { signal: controller.signal });
     const text = await response.text();
     clearTimeout(timeoutId);
     return parseM3U(text);
