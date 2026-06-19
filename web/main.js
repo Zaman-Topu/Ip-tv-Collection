@@ -27,14 +27,16 @@ let hlsInstance = null;
 let dashInstance = null;
 let errorTimeout = null;
 const videoEl = document.getElementById('video-player');
-const playerView = document.getElementById('player-view');
-const homeView = document.getElementById('home-view');
-const playerTitle = document.getElementById('player-title');
-const relatedList = document.getElementById('related-list');
-const sidebar = document.getElementById('related-sidebar');
-const topControls = document.getElementById('player-controls-top');
-const bottomControls = document.getElementById('player-controls-bottom');
-const videoContainer = document.getElementById('video-container');
+const playerContainer = document.getElementById('player-container');
+const queueList = document.getElementById('player-queue-list');
+const queueCountEl = document.getElementById('queue-count');
+const closePlayerBtn = document.getElementById('close-player');
+
+// Player Details Elements
+const playerDetailsLogo = document.getElementById('player-details-logo');
+const playerDetailsTitle = document.getElementById('player-details-title');
+const playerDetailsCountry = document.getElementById('player-details-country');
+const playerDetailsServer = document.getElementById('player-details-server');
 
 // Custom Controls Elements
 const playPauseBtn = document.getElementById('play-pause-btn');
@@ -42,40 +44,82 @@ const playIcon = document.getElementById('play-icon');
 const pauseIcon = document.getElementById('pause-icon');
 const muteBtn = document.getElementById('mute-btn');
 const muteIcon = document.getElementById('mute-icon');
-const volIcon = document.getElementById('vol-icon');
 const volumeSlider = document.getElementById('volume-slider');
 const fullscreenBtn = document.getElementById('fullscreen-btn');
 const fsEnter = document.getElementById('fs-enter');
 const fsExit = document.getElementById('fs-exit');
-const qualityBtn = document.getElementById('quality-btn');
-const qualityMenu = document.getElementById('quality-menu');
-const progressBar = document.getElementById('progress-bar');
-const progressContainer = document.getElementById('progress-container');
 const timeDisplay = document.getElementById('current-time');
 const bufferingSpinner = document.getElementById('buffering-spinner');
 const centerPlayOverlay = document.getElementById('center-play-overlay');
 const errorOverlay = document.getElementById('player-error');
 
-// UI Elements
+// Filter UI Elements
+const searchInput = document.getElementById('search-input');
+const filterCategory = document.getElementById('filter-category');
+const filterServer = document.getElementById('filter-server');
+const filterCountriesList = document.getElementById('filter-countries-list');
+const filterQuickCategories = document.getElementById('filter-quick-categories');
+const filterResetBtn = document.getElementById('filter-reset');
+const clearCountryFilterBtn = document.getElementById('clear-country-filter');
+
+// Main Grid Container and Stats
 const container = document.getElementById('category-container');
-const heroTitle = document.getElementById('hero-title');
-const heroDesc = document.getElementById('hero-desc');
-const heroSection = document.getElementById('hero-section');
-const heroPlayBtn = document.getElementById('hero-play');
-let featuredChannel = null;
+const feedCountEl = document.getElementById('stats-feed-count');
 
 // State
 let allTvChannels = [];
-let currentChannels = [];
-let currentCategoryMap = {};
+let currentFilteredChannels = [];
 let channelStatusMap = {};
+let activePlayingChannel = null;
 
-// Parse M3U - with 8 second timeout per source and cache busting
+// Filter State
+let selectedCategory = 'all';
+let selectedCountry = 'all';
+let selectedServer = 'all';
+let searchQuery = '';
+
+// Detect Country from channel M3U data
+function detectCountry(group, name) {
+  const g = (group || '').toLowerCase();
+  const n = (name || '').toLowerCase();
+  if (g.includes('bangladesh') || g.includes('bdix') || n.includes('bd') || n.includes('btv') || n.includes('somoy') || n.includes('sports bd') || n.includes('tsports')) return 'Bangladesh';
+  if (g.includes('india') || n.includes('star sports') || n.includes('sony') || n.includes('zee') || n.includes('colors')) return 'India';
+  if (g.includes('pakistan') || n.includes('ten sports') || n.includes('geo')) return 'Pakistan';
+  if (g.includes('uk') || g.includes('united kingdom') || n.includes('sky sports') || n.includes('bbc')) return 'United Kingdom';
+  if (g.includes('usa') || g.includes('us') || n.includes('espn') || n.includes('fox') || n.includes('hbo')) return 'USA';
+  return 'Global';
+}
+
+// Detect Server Hub name from URL
+function detectServer(url) {
+  try {
+    const host = new URL(url).hostname;
+    if (host.includes('toffeelive')) return 'Toffee';
+    if (host.includes('bioscopelive')) return 'Bioscope';
+    if (host.includes('github')) return 'GitHub Raw';
+    if (host.includes('aiv-cdn')) return 'AIV CDN';
+    if (host.includes('cloudfront')) return 'CloudFront';
+    return host.replace('www.', '');
+  } catch (e) {
+    return 'Server Hub';
+  }
+}
+
+// Map countries to flags
+const countryFlags = {
+  'Bangladesh': '🇧🇩',
+  'India': '🇮🇳',
+  'Pakistan': '🇵🇰',
+  'United Kingdom': '🇬🇧',
+  'USA': '🇺🇸',
+  'Global': '🌐'
+};
+
+// Parse M3U
 async function loadPlaylist(url) {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 8000);
   try {
-    // Append timestamp to bypass aggressive CDN caching
     const cacheBuster = url.includes('?') ? `&t=${Date.now()}` : `?t=${Date.now()}`;
     const response = await fetch(url + cacheBuster, { signal: controller.signal });
     const text = await response.text();
@@ -96,24 +140,29 @@ function parseM3U(content) {
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i].trim();
     if (line.startsWith('#EXTINF:')) {
-      // Extract Logo
       const logoMatch = line.match(/tvg-logo="([^"]+)"/);
-      currentChannel.logo = logoMatch ? logoMatch[1] : 'https://via.placeholder.com/150/141414/ffffff?text=TV';
+      currentChannel.logo = logoMatch ? logoMatch[1] : '';
       
-      // Extract Group
       const groupMatch = line.match(/group-title="([^"]+)"/);
-      currentChannel.group = groupMatch ? groupMatch[1].trim() : 'Others';
+      let group = groupMatch ? groupMatch[1].trim() : 'Others';
       
-      // Extract Name - everything after the last comma
+      // Categorize cleanly
+      if (group === 'International News') group = 'News';
+      else if (group === 'Music') group = 'Song';
+      else if (group === 'Cartoon & Kids') group = 'Kids';
+      else if (group === 'Natok & Drama' || group === 'English' || group === 'India') group = 'Entertainment';
+      currentChannel.group = group;
+
       const commaIdx = line.lastIndexOf(',');
       currentChannel.name = commaIdx >= 0 ? line.substring(commaIdx + 1).trim() : 'Unknown Channel';
       if (!currentChannel.name) currentChannel.name = 'Unknown Channel';
     } else if (line.startsWith('http') || line.startsWith('rtmp') || line.startsWith('rtsp')) {
       const url = line.trim();
       currentChannel.url = url;
-      // Skip DRM protected streams since we don't have license keys
+      currentChannel.country = detectCountry(currentChannel.group, currentChannel.name);
+      currentChannel.server = detectServer(url);
+
       const isDRM = url.includes('cenc') || url.includes('/enc/');
-      // Only push if we have both name and url and it's not DRM
       if (currentChannel.name && currentChannel.url && !isDRM) {
         channels.push({ ...currentChannel });
       }
@@ -123,98 +172,148 @@ function parseM3U(content) {
   return channels;
 }
 
-function groupByCategory(channels) {
-  const map = {};
-  channels.forEach(ch => {
-    let group = ch.group;
-    
-    // Rename and Merge categories to match user preference
-    if (group === 'International News') group = 'News';
-    else if (group === 'Music') group = 'Song';
-    else if (group === 'Cartoon & Kids') group = 'Kids';
-    else if (group === 'Natok & Drama' || group === 'English' || group === 'India') group = 'Entertainment';
-    
-    if (!map[group]) map[group] = [];
-    map[group].push(ch);
+// Populate Filters (Categories, Servers, Countries)
+function populateFilters() {
+  // 1. Categories
+  const categories = new Set(allTvChannels.map(c => c.group));
+  filterCategory.innerHTML = '<option value="all">ALL CATEGORIES</option>';
+  categories.forEach(cat => {
+    const opt = document.createElement('option');
+    opt.value = cat;
+    opt.innerText = cat.toUpperCase();
+    filterCategory.appendChild(opt);
   });
-  return map;
+
+  // 2. Servers
+  const servers = new Set(allTvChannels.map(c => c.server));
+  filterServer.innerHTML = '<option value="all">ALL SERVER HUBS</option>';
+  servers.forEach(serv => {
+    const opt = document.createElement('option');
+    opt.value = serv;
+    opt.innerText = serv.toUpperCase();
+    filterServer.appendChild(opt);
+  });
+
+  // 3. Country Pills
+  renderCountryPills();
+
+  // 4. Quick Categories
+  renderQuickCategoryPills();
 }
 
-// Render UI
-function renderCategories(categoryMap) {
-  container.innerHTML = ''; // Clear loader
+function renderCountryPills() {
+  filterCountriesList.innerHTML = '';
+  const countries = ['all', 'Bangladesh', 'India', 'Pakistan', 'United Kingdom', 'USA', 'Global'];
   
-  const desiredOrder = [
-    'News',
-    'Song',
-    'Entertainment',
-    'Sports',
-    'Kids',
-    'Bangladesh',
-    'Documentary',
-    'Religion',
-    'Countrywise',
-    'Others',
-    'Search Results'
-  ];
-
-  const sortedEntries = Object.entries(categoryMap).sort((a, b) => {
-    let indexA = desiredOrder.indexOf(a[0]);
-    let indexB = desiredOrder.indexOf(b[0]);
-    if (indexA === -1) indexA = 999;
-    if (indexB === -1) indexB = 999;
+  countries.forEach(country => {
+    const btn = document.createElement('button');
+    const flag = countryFlags[country] || '🌐';
+    const label = country === 'all' ? 'All Countries' : country;
     
-    // If both have same index (e.g. 999), sort alphabetically
-    if (indexA === indexB) return a[0].localeCompare(b[0]);
-    return indexA - indexB;
+    btn.className = `filter-pill ${selectedCountry === country ? 'active' : ''}`;
+    btn.innerHTML = `<span>${flag}</span> ${label}`;
+    btn.onclick = () => {
+      selectedCountry = country;
+      if (selectedCountry === 'all') {
+        clearCountryFilterBtn.classList.add('hidden');
+      } else {
+        clearCountryFilterBtn.classList.remove('hidden');
+      }
+      renderCountryPills();
+      applyFilters();
+    };
+    filterCountriesList.appendChild(btn);
+  });
+}
+
+function renderQuickCategoryPills() {
+  filterQuickCategories.innerHTML = '';
+  
+  // Base categories
+  const categories = ['all', 'Sports', 'News', 'Bangladesh', 'Entertainment', 'Kids', 'Song', 'Others'];
+  
+  categories.forEach(cat => {
+    const btn = document.createElement('button');
+    const label = cat === 'all' ? 'ALL' : cat;
+    
+    btn.className = `filter-pill ${selectedCategory === cat ? 'active' : ''}`;
+    btn.innerText = label;
+    btn.onclick = () => {
+      selectedCategory = cat;
+      filterCategory.value = cat;
+      renderQuickCategoryPills();
+      applyFilters();
+    };
+    filterQuickCategories.appendChild(btn);
+  });
+}
+
+// Main Filtering Logic
+function applyFilters() {
+  currentFilteredChannels = allTvChannels.filter(ch => {
+    const matchSearch = ch.name.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchCategory = selectedCategory === 'all' || ch.group === selectedCategory;
+    const matchCountry = selectedCountry === 'all' || ch.country === selectedCountry;
+    const matchServer = selectedServer === 'all' || ch.server === selectedServer;
+    return matchSearch && matchCategory && matchCountry && matchServer;
   });
 
-  for (const [group, channels] of sortedEntries) {
-    if (channels.length === 0) continue;
-    
-    // Sort channels: Live/BDIX first, then unknown/geo, then offline
-    const sortedChannels = [...channels].sort((a, b) => {
-      const statusA = channelStatusMap[a.url] || 'unknown';
-      const statusB = channelStatusMap[b.url] || 'unknown';
-      
-      const getScore = (status) => {
-        if (status === 'active' || status === 'isp_bdix') return 3;
-        if (status === 'blocked') return 2;
-        if (status === 'unknown') return 1;
-        if (status === 'down') return 0;
-        return 1;
-      };
-      
-      return getScore(statusB) - getScore(statusA);
-    });
-    
+  // Update Stats Count
+  feedCountEl.innerText = `${currentFilteredChannels.length} OF ${allTvChannels.length}`;
+
+  renderGrid();
+  
+  // Update Queue list if Player is active
+  if (activePlayingChannel) {
+    renderQueueList();
+  }
+}
+
+// Render dynamic channel grid
+function renderGrid() {
+  container.innerHTML = '';
+
+  if (currentFilteredChannels.length === 0) {
+    container.innerHTML = '<div class="text-center text-text-secondary py-20 text-xs font-bold uppercase tracking-wider">No channels found matching active filters.</div>';
+    return;
+  }
+
+  // Group by category to match Netflix/Dude rows
+  const grouped = {};
+  currentFilteredChannels.forEach(ch => {
+    if (!grouped[ch.group]) grouped[ch.group] = [];
+    grouped[ch.group].push(ch);
+  });
+
+  // Sort groups by category names
+  const sortedGroups = Object.entries(grouped).sort((a, b) => a[0].localeCompare(b[0]));
+
+  sortedGroups.forEach(([group, channels]) => {
     const row = document.createElement('div');
     row.className = 'mb-10';
     
-    const title = document.createElement('h2');
-    title.className = 'text-2xl font-bold mb-4 text-white px-2';
+    const title = document.createElement('h3');
+    title.className = 'text-xs font-bold text-text-primary uppercase tracking-widest border-b border-border-default pb-2 mb-4';
     title.innerText = group;
-    row.appendChild(title);
     
-    const slider = document.createElement('div');
-    slider.className = 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 py-4 px-2';
+    const grid = document.createElement('div');
+    grid.className = 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4';
     
-    // Render all channels in the group
-    sortedChannels.forEach(ch => {
+    channels.forEach(ch => {
       const status = channelStatusMap[ch.url] || 'unknown';
       let badgeHtml = '';
       if (status === 'active') {
-          badgeHtml = '<div class="absolute top-2 right-2 bg-green-500/90 text-white text-[10px] font-bold px-2 py-0.5 rounded shadow backdrop-blur-md z-10 border border-green-400/30">🟢 LIVE</div>';
+        badgeHtml = '<div class="absolute top-2 left-2 bg-text-tertiary text-white text-[8px] font-bold px-1.5 py-0.5 rounded tracking-wide z-10 uppercase">🔴 Live</div>';
       } else if (status === 'isp_bdix') {
-          badgeHtml = '<div class="absolute top-2 right-2 bg-blue-500/90 text-white text-[10px] font-bold px-2 py-0.5 rounded shadow backdrop-blur-md z-10 border border-blue-400/30">🔵 BDIX</div>';
+        badgeHtml = '<div class="absolute top-2 left-2 bg-blue-500 text-white text-[8px] font-bold px-1.5 py-0.5 rounded tracking-wide z-10 uppercase">🔵 BDIX</div>';
       } else if (status === 'blocked') {
-          badgeHtml = '<div class="absolute top-2 right-2 bg-yellow-500/90 text-black text-[10px] font-bold px-2 py-0.5 rounded shadow backdrop-blur-md z-10 border border-yellow-400/30">🟡 GEO</div>';
+        badgeHtml = '<div class="absolute top-2 left-2 bg-yellow-500 text-black text-[8px] font-bold px-1.5 py-0.5 rounded tracking-wide z-10 uppercase">🟡 Geo</div>';
       } else if (status === 'down') {
-          badgeHtml = '<div class="absolute top-2 right-2 bg-red-600/90 text-white text-[10px] font-bold px-2 py-0.5 rounded shadow backdrop-blur-md z-10 border border-red-400/30">🔴 OFFLINE</div>';
+        badgeHtml = '<div class="absolute top-2 left-2 bg-red-600 text-white text-[8px] font-bold px-1.5 py-0.5 rounded tracking-wide z-10 uppercase">🔴 Off</div>';
       }
 
       const card = document.createElement('div');
-      card.className = 'channel-card-container relative w-full aspect-[16/11] rounded-xs cursor-pointer overflow-hidden bg-surface-raised shadow-1 flex flex-col justify-between items-center p-3 border border-border-default';
+      card.className = 'channel-card-container relative w-full aspect-[16/11] rounded-xs cursor-pointer overflow-hidden shadow-1 flex flex-col justify-between items-center p-3 border border-border-default';
       card.tabIndex = 0;
       card.role = 'button';
       card.setAttribute('aria-label', `Play ${ch.name}`);
@@ -222,98 +321,79 @@ function renderCategories(categoryMap) {
       card.innerHTML = `
         ${badgeHtml}
         <div class="w-full flex-1 flex items-center justify-center p-1 min-h-0">
-          <img src="${ch.logo}" class="max-w-full max-h-16 object-contain transition-transform duration-300 group-hover:scale-105" loading="lazy" onerror="this.src='https://via.placeholder.com/150/ffffff/000000?text=${encodeURIComponent(ch.name)}'">
+          <img src="${ch.logo}" class="max-w-full max-h-12 object-contain transition-transform duration-300 group-hover:scale-105" loading="lazy" onerror="this.src='https://via.placeholder.com/150/ffffff/000000?text=${encodeURIComponent(ch.name)}'">
         </div>
         <div class="w-full text-center border-t border-border-default pt-2 mt-1">
-          <div class="text-[11px] font-bold text-text-primary truncate tracking-tight">${ch.name}</div>
+          <div class="text-[10px] font-bold text-text-primary truncate tracking-tight uppercase">${ch.name}</div>
+          <div class="text-[8px] font-medium text-text-secondary truncate tracking-tight uppercase mt-0.5">${ch.country} • ${ch.server}</div>
         </div>
       `;
 
       const playAction = () => openPlayer(ch);
       card.addEventListener('click', playAction);
-      
-      // Accessibility: Keyboard enter/space handling
       card.addEventListener('keydown', (event) => {
         if (event.key === 'Enter' || event.key === ' ') {
           event.preventDefault();
           playAction();
         }
       });
-      
-      slider.appendChild(card);
+      grid.appendChild(card);
     });
-    
+
     row.appendChild(title);
-    row.appendChild(slider);
+    row.appendChild(grid);
     container.appendChild(row);
-  }
-
-  // Show "No channels found" if the container is still empty
-  if (container.children.length === 0) {
-    container.innerHTML = '<div class="text-center text-gray-500 py-20 text-xl font-bold">No channels found matching your search.</div>';
-  }
-}
-
-// Set Featured Hero
-function setHero(channel) {
-  featuredChannel = channel;
-  heroTitle.innerText = channel.name;
-  heroDesc.innerText = `Watch ${channel.name} live directly in your browser. Part of the ${channel.group} category.`;
-  // Set hero background to logo (blurred)
-  heroSection.style.backgroundImage = `linear-gradient(to right, rgba(20,20,20,1) 0%, rgba(20,20,20,0.6) 50%, rgba(20,20,20,0) 100%), url('${channel.logo}')`;
-  heroSection.style.backgroundSize = 'contain';
-}
-
-heroPlayBtn.addEventListener('click', () => {
-  if (featuredChannel) openPlayer(featuredChannel);
-});
-
-// Playback Logic
-function openPlayer(channel, useProxyIndex = 0, isHistoryBack = false) {
-  // Clear any existing timeout from previous channels to prevent ghost error popups
-  if (errorTimeout) {
-    clearTimeout(errorTimeout);
-    errorTimeout = null;
-  }
-
-  playerTitle.innerText = channel.name;
-  
-  // Hide Home, Show Player
-  homeView.classList.remove('block');
-  homeView.classList.add('hidden');
-  playerView.classList.remove('hidden');
-  playerView.classList.add('block');
-  sidebar.classList.add('translate-x-full'); // hide sidebar initially
-  
-  window.scrollTo(0,0);
-  errorOverlay.style.display = 'none';
-  bufferingSpinner.classList.remove('hidden'); // Show spinner on initial load
-  centerPlayOverlay.classList.add('hidden');
-  
-  // Push History State
-  if (!isHistoryBack) {
-    history.pushState({ channel: channel }, channel.name, `?play=${encodeURIComponent(channel.name)}`);
-  }
-  
-  // Populate Related Sidebar
-  relatedList.innerHTML = '';
-  const relatedChannels = currentCategoryMap[channel.group] || [];
-  relatedChannels.forEach(rel => {
-    if (rel.name === channel.name) return;
-    const item = document.createElement('div');
-    item.className = 'flex items-center gap-4 p-3 rounded-lg cursor-pointer transition hover:bg-gray-800 mb-2';
-    item.innerHTML = `
-      <img src="${rel.logo}" class="w-16 h-10 object-contain bg-black rounded" onerror="this.src='https://via.placeholder.com/150/141414/ffffff?text=No+Logo'">
-      <div class="flex-1 overflow-hidden">
-        <div class="text-sm font-medium text-white truncate">${rel.name}</div>
-      </div>
-    `;
-    item.addEventListener('click', () => {
-      openPlayer(rel);
-    });
-    relatedList.appendChild(item);
   });
+}
+
+// Render player queue sidebar list
+function renderQueueList() {
+  queueList.innerHTML = '';
+  queueCountEl.innerText = currentFilteredChannels.length;
+
+  currentFilteredChannels.forEach(ch => {
+    const item = document.createElement('div');
+    const isPlaying = activePlayingChannel && activePlayingChannel.url === ch.url;
+    
+    item.className = `queue-item flex items-center gap-3 p-3 cursor-pointer ${isPlaying ? 'active' : ''}`;
+    item.innerHTML = `
+      <img src="${ch.logo}" class="w-10 h-7 object-contain bg-white border border-border-default rounded" onerror="this.src='https://via.placeholder.com/150/ffffff/000000?text=TV'">
+      <div class="flex-1 min-w-0">
+        <div class="text-[10px] font-bold text-text-primary truncate uppercase">${ch.name}</div>
+        <div class="text-[8px] font-medium text-text-secondary truncate uppercase mt-0.5">${ch.country} • ${ch.server}</div>
+      </div>
+      ${isPlaying ? '<span class="text-text-tertiary text-xs">▶</span>' : ''}
+    `;
+
+    item.onclick = () => {
+      openPlayer(ch);
+    };
+    queueList.appendChild(item);
+  });
+}
+
+// Open video player (split layout)
+function openPlayer(channel) {
+  activePlayingChannel = channel;
   
+  // Show player, scroll to it smoothly
+  playerContainer.classList.remove('hidden');
+  playerContainer.classList.add('flex');
+  playerContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+  // Update Metadata Card
+  playerDetailsLogo.src = channel.logo;
+  playerDetailsTitle.innerText = channel.name;
+  playerDetailsCountry.innerText = channel.country;
+  playerDetailsServer.innerText = channel.server;
+
+  // Push browser history state
+  history.pushState({ channel: channel }, channel.name, `?play=${encodeURIComponent(channel.name)}`);
+
+  // Render Queue list items
+  renderQueueList();
+
+  // Load stream URL
   let playUrl = channel.url;
 
   if (hlsInstance) {
@@ -324,17 +404,12 @@ function openPlayer(channel, useProxyIndex = 0, isHistoryBack = false) {
     dashInstance.destroy();
     dashInstance = null;
   }
+  errorOverlay.classList.add('hidden');
+  bufferingSpinner.classList.remove('hidden');
+  centerPlayOverlay.classList.add('hidden');
 
-  // Handle MPEG-DASH Streams (.mpd only)
+  // Handle MPEG-DASH (.mpd)
   if (playUrl.includes('.mpd')) {
-    // Detect CENC (DRM) streams - these cannot play in browser without a license key
-    if (playUrl.includes('cenc') || playUrl.includes('/enc/')) {
-      bufferingSpinner.classList.add('hidden');
-      errorOverlay.style.display = 'block';
-      errorOverlay.innerHTML = `<h3 class="text-netflix-red text-2xl font-bold mb-2">DRM Protected Stream</h3><p class="text-gray-300 text-sm">This channel is encrypted (DRM/CENC). It requires a paid license key and cannot be played in a browser without it.</p>`;
-      return;
-    }
-
     dashInstance = MediaPlayer().create();
     dashInstance.updateSettings({
       streaming: {
@@ -347,20 +422,16 @@ function openPlayer(channel, useProxyIndex = 0, isHistoryBack = false) {
     
     dashInstance.on(MediaPlayer.events.PLAYBACK_STARTED, () => {
       bufferingSpinner.classList.add('hidden');
-      errorOverlay.style.display = 'none';
-      qualityMenu.innerHTML = '';
+      errorOverlay.classList.add('hidden');
     });
     
     dashInstance.on(MediaPlayer.events.ERROR, (e) => {
       console.error('DASH Error', e);
       bufferingSpinner.classList.add('hidden');
-      errorOverlay.style.display = 'block';
-      errorOverlay.innerHTML = `<h3 class="text-netflix-red text-2xl font-bold mb-2">Stream Offline</h3><p class="text-gray-300 text-sm">This DASH stream is offline or geo-blocked. Please try a different channel.</p>`;
+      errorOverlay.classList.remove('hidden');
     });
     
-    // Failsafe timeout - if nothing plays in 20s, show error
     errorTimeout = setTimeout(() => {
-      // Don't show error if video is actually playing!
       if (!videoEl.paused || videoEl.readyState >= 3) {
         clearTimeout(errorTimeout);
         return;
@@ -370,35 +441,26 @@ function openPlayer(channel, useProxyIndex = 0, isHistoryBack = false) {
         dashInstance = null;
       }
       bufferingSpinner.classList.add('hidden');
-      errorOverlay.style.display = 'block';
-      errorOverlay.innerHTML = `<h3 class="text-netflix-red text-2xl font-bold mb-2">Connection Timeout</h3><p class="text-gray-300 text-sm">Stream did not respond. It may be offline or geo-blocked.</p>`;
-    }, 20000);
+      errorOverlay.classList.remove('hidden');
+    }, 15000);
     
-    // Also clear timeout when video actually starts playing
     videoEl.addEventListener('playing', () => clearTimeout(errorTimeout), { once: true });
     return;
   }
 
-  // Handle HLS Streams
+  // Handle HLS (.m3u8)
   if (Hls.isSupported()) {
-    // Faster Startup Config for Live Streams with Fast-Fail for dead links
     hlsInstance = new Hls({
-      maxMaxBufferLength: 30,
-      maxBufferSize: 30 * 1000 * 1000,
+      maxMaxBufferLength: 15,
       enableWorker: true,
       lowLatencyMode: true,
-      backBufferLength: 90,
-      manifestLoadingMaxRetry: 1,
-      manifestLoadingTimeOut: 4000,
-      levelLoadingMaxRetry: 1,
+      manifestLoadingTimeOut: 5000,
       fragLoadingMaxRetry: 1
     });
     hlsInstance.loadSource(playUrl);
     hlsInstance.attachMedia(videoEl);
     
-    // Failsafe timeout - if nothing loads in 20s, show error
     errorTimeout = setTimeout(() => {
-      // Don't show error if video is actually playing!
       if (!videoEl.paused || videoEl.readyState >= 3) {
         clearTimeout(errorTimeout);
         return;
@@ -408,47 +470,25 @@ function openPlayer(channel, useProxyIndex = 0, isHistoryBack = false) {
         hlsInstance = null;
       }
       bufferingSpinner.classList.add('hidden');
-      errorOverlay.style.display = 'block';
-      errorOverlay.innerHTML = `<h3 class="text-netflix-red text-2xl font-bold mb-2">Connection Timeout</h3><p class="text-gray-300 text-sm">Stream did not respond within 20 seconds. It may be offline, expired, or geo-blocked. Try another channel.</p>`;
-    }, 20000);
+      errorOverlay.classList.remove('hidden');
+    }, 15000);
     
-    // Also clear timeout when video actually starts playing
     videoEl.addEventListener('playing', () => clearTimeout(errorTimeout), { once: true });
     
-    hlsInstance.on(Hls.Events.MANIFEST_PARSED, (event, data) => {
+    hlsInstance.on(Hls.Events.MANIFEST_PARSED, () => {
       clearTimeout(errorTimeout);
       bufferingSpinner.classList.add('hidden');
-      errorOverlay.style.display = 'none';
-      
-      // Populate Quality Menu
-      qualityMenu.innerHTML = '';
-      const autoBtn = document.createElement('button');
-      autoBtn.className = 'w-full text-left px-3 py-1 hover:bg-gray-700 text-netflix-red font-bold transition';
-      autoBtn.innerText = 'Auto';
-      autoBtn.onclick = () => { hlsInstance.currentLevel = -1; qualityMenu.classList.add('hidden'); };
-      qualityMenu.appendChild(autoBtn);
-
-      data.levels.forEach((level, index) => {
-        const btn = document.createElement('button');
-        btn.className = 'w-full text-left px-3 py-1 hover:bg-gray-700 text-white transition';
-        btn.innerText = level.height ? `${level.height}p` : `Level ${index}`;
-        btn.onclick = () => { hlsInstance.currentLevel = index; qualityMenu.classList.add('hidden'); };
-        qualityMenu.appendChild(btn);
-      });
-      
+      errorOverlay.classList.add('hidden');
       videoEl.play().catch(e => {
-        console.warn('Auto-play prevented:', e);
+        console.warn('Playback prevented', e);
         centerPlayOverlay.classList.remove('hidden');
-        playIcon.classList.remove('hidden');
-        pauseIcon.classList.add('hidden');
       });
     });
     
     hlsInstance.on(Hls.Events.ERROR, (event, data) => {
       if (data.fatal) {
         bufferingSpinner.classList.add('hidden');
-        errorOverlay.style.display = 'block';
-        errorOverlay.innerHTML = `<h3 class="text-netflix-red text-2xl font-bold mb-2">Stream Offline / Expired</h3><p class="text-gray-300 text-sm">This channel link is dead or its security token has expired (common for Toffee/Binge). Please try a different channel.</p>`;
+        errorOverlay.classList.remove('hidden');
         hlsInstance.destroy();
       }
     });
@@ -461,11 +501,11 @@ function openPlayer(channel, useProxyIndex = 0, isHistoryBack = false) {
   }
 }
 
+// Close player
 function closePlayer() {
-  playerView.classList.add('hidden');
-  playerView.classList.remove('block');
-  homeView.classList.remove('hidden');
-  homeView.classList.add('block');
+  activePlayingChannel = null;
+  playerContainer.classList.remove('flex');
+  playerContainer.classList.add('hidden');
   
   clearTimeout(errorTimeout);
   
@@ -479,157 +519,111 @@ function closePlayer() {
   }
   videoEl.pause();
   videoEl.src = '';
+  history.pushState(null, '', '/Ip-tv-Collection/');
 }
 
-document.getElementById('back-to-browse').addEventListener('click', () => {
-  closePlayer();
-  history.pushState(null, '', '/');
-});
+closePlayerBtn.onclick = closePlayer;
 
-// Sidebar Toggle
-document.getElementById('toggle-sidebar').addEventListener('click', () => {
-  sidebar.classList.toggle('translate-x-full');
-});
-
-// Auto-hide controls when mouse is inactive
-let timeout;
-playerView.addEventListener('mousemove', () => {
-  topControls.classList.remove('opacity-0');
-  bottomControls.classList.remove('opacity-0');
-  document.body.style.cursor = 'default';
-  clearTimeout(timeout);
-  timeout = setTimeout(() => {
-    topControls.classList.add('opacity-0');
-    bottomControls.classList.add('opacity-0');
-    document.body.style.cursor = 'none';
-    sidebar.classList.add('translate-x-full'); // also hide sidebar on inactive
-    qualityMenu.classList.add('hidden'); // hide quality menu
-  }, 3000);
-});
-
-// Custom Control Logic
-playPauseBtn.addEventListener('click', togglePlay);
-centerPlayOverlay.addEventListener('click', togglePlay);
-videoContainer.addEventListener('click', (e) => {
-  // Toggle play if clicking directly on the video, but not on controls
-  if (e.target === videoEl || e.target === centerPlayOverlay) {
-    togglePlay();
-  }
-});
-
-function togglePlay() {
+// Player custom controls listeners
+playPauseBtn.addEventListener('click', () => {
   if (videoEl.paused) {
     videoEl.play();
+    playIcon.classList.add('hidden');
+    pauseIcon.classList.remove('hidden');
   } else {
     videoEl.pause();
+    playIcon.classList.remove('hidden');
+    pauseIcon.classList.add('hidden');
   }
-}
+});
 
 videoEl.addEventListener('play', () => {
   playIcon.classList.add('hidden');
   pauseIcon.classList.remove('hidden');
-  centerPlayOverlay.classList.add('hidden');
 });
 
 videoEl.addEventListener('pause', () => {
   playIcon.classList.remove('hidden');
   pauseIcon.classList.add('hidden');
-  // Don't show play overlay if we are loading a new stream
-  if (bufferingSpinner.classList.contains('hidden')) {
-    centerPlayOverlay.classList.remove('hidden');
-  }
-});
-
-videoEl.addEventListener('waiting', () => {
-  bufferingSpinner.classList.remove('hidden');
-});
-
-videoEl.addEventListener('playing', () => {
-  bufferingSpinner.classList.add('hidden');
-});
-
-videoEl.addEventListener('canplay', () => {
-  bufferingSpinner.classList.add('hidden');
 });
 
 muteBtn.addEventListener('click', () => {
   videoEl.muted = !videoEl.muted;
-  updateVolumeUI();
-});
-
-volumeSlider.addEventListener('input', (e) => {
-  videoEl.volume = e.target.value;
-  videoEl.muted = videoEl.volume === 0;
-  updateVolumeUI();
-});
-
-function updateVolumeUI() {
-  volumeSlider.value = videoEl.muted ? 0 : videoEl.volume;
-  if (videoEl.muted || videoEl.volume === 0) {
+  if (videoEl.muted) {
     muteIcon.classList.remove('hidden');
     volIcon.classList.add('hidden');
   } else {
     muteIcon.classList.add('hidden');
     volIcon.classList.remove('hidden');
   }
-}
+});
+
+volumeSlider.addEventListener('input', (e) => {
+  videoEl.volume = e.target.value;
+  videoEl.muted = (e.target.value == 0);
+});
 
 fullscreenBtn.addEventListener('click', () => {
   if (!document.fullscreenElement) {
     videoContainer.requestFullscreen().catch(err => console.log(err));
-  } else {
-    document.exitFullscreen();
-  }
-});
-
-document.addEventListener('fullscreenchange', () => {
-  if (document.fullscreenElement) {
     fsEnter.classList.add('hidden');
     fsExit.classList.remove('hidden');
   } else {
+    document.exitFullscreen();
     fsEnter.classList.remove('hidden');
     fsExit.classList.add('hidden');
   }
 });
 
-qualityBtn.addEventListener('click', () => {
-  qualityMenu.classList.toggle('hidden');
+centerPlayOverlay.onclick = () => {
+  videoEl.play();
+  centerPlayOverlay.classList.add('hidden');
+};
+
+// Filter event handlers
+searchInput.addEventListener('input', (e) => {
+  searchQuery = e.target.value;
+  applyFilters();
 });
 
-// Progress Bar Updates (For VODs)
-videoEl.addEventListener('timeupdate', () => {
-  if (videoEl.duration) {
-    const percent = (videoEl.currentTime / videoEl.duration) * 100;
-    progressBar.style.width = `${percent}%`;
-    
-    // Format Time
-    const m = Math.floor(videoEl.currentTime / 60).toString().padStart(2, '0');
-    const s = Math.floor(videoEl.currentTime % 60).toString().padStart(2, '0');
-    const tm = Math.floor(videoEl.duration / 60).toString().padStart(2, '0');
-    const ts = Math.floor(videoEl.duration % 60).toString().padStart(2, '0');
-    
-    if (videoEl.duration === Infinity || isNaN(videoEl.duration)) {
-       timeDisplay.innerText = "LIVE";
-    } else {
-       timeDisplay.innerText = `${m}:${s} / ${tm}:${ts}`;
-    }
-  } else {
-    timeDisplay.innerText = "LIVE";
-  }
+filterCategory.addEventListener('change', (e) => {
+  selectedCategory = e.target.value;
+  renderQuickCategoryPills();
+  applyFilters();
 });
 
-progressContainer.addEventListener('click', (e) => {
-  if (videoEl.duration && videoEl.duration !== Infinity) {
-    const rect = progressContainer.getBoundingClientRect();
-    const pos = (e.clientX - rect.left) / rect.width;
-    videoEl.currentTime = pos * videoEl.duration;
-  }
+filterServer.addEventListener('change', (e) => {
+  selectedServer = e.target.value;
+  applyFilters();
 });
 
-// Handle Browser Back Button
+filterResetBtn.addEventListener('click', () => {
+  selectedCategory = 'all';
+  selectedCountry = 'all';
+  selectedServer = 'all';
+  searchQuery = '';
+  
+  searchInput.value = '';
+  filterCategory.value = 'all';
+  filterServer.value = 'all';
+  
+  clearCountryFilterBtn.classList.add('hidden');
+  
+  populateFilters();
+  applyFilters();
+});
+
+clearCountryFilterBtn.onclick = () => {
+  selectedCountry = 'all';
+  clearCountryFilterBtn.classList.add('hidden');
+  renderCountryPills();
+  applyFilters();
+};
+
+// Handle Browser Back/Forward history buttons
 window.addEventListener('popstate', (event) => {
   if (event.state && event.state.channel) {
-    openPlayer(event.state.channel, false, true);
+    openPlayer(event.state.channel);
   } else {
     closePlayer();
   }
@@ -638,8 +632,6 @@ window.addEventListener('popstate', (event) => {
 // App Initialization
 async function initApp() {
   container.innerHTML = '<div class="flex justify-center items-center h-64"><div class="spinner"></div></div>';
-  heroTitle.innerText = 'Connecting...';
-  heroDesc.innerText = 'Connecting to the massive IPTV database.';
   
   // Try to load channel status first (non-blocking)
   try {
@@ -651,26 +643,19 @@ async function initApp() {
     console.log("Could not load channel status map", e);
   }
   
-  // Load all playlists if not already loaded
   if (allTvChannels.length === 0) {
-    // Show loading progress
     container.innerHTML = '<div class="flex flex-col justify-center items-center h-64 gap-4"><div class="spinner"></div><p class="text-gray-400 text-sm" id="load-msg">Loading main channels...</p></div>';
 
-    // Step 1: Load MAIN sources first so page shows fast
+    // Step 1: Load main channels first
     const mainTv = await loadPlaylist(M3U_URL_LIVE);
 
-    // Show main channels immediately
     allTvChannels = mainTv;
-    currentChannels = allTvChannels;
-    currentCategoryMap = groupByCategory(currentChannels);
-    if (currentChannels.length > 0) {
-      const topChannels = currentChannels.filter(c => c.group === 'Bangladesh' || c.group === 'Sports');
-      const heroPick = topChannels.length > 0 ? topChannels[Math.floor(Math.random() * topChannels.length)] : currentChannels[0];
-      setHero(heroPick);
-      renderCategories(currentCategoryMap);
-    }
+    currentFilteredChannels = allTvChannels;
+    
+    populateFilters();
+    applyFilters();
 
-    // Step 2: Load extra sources in background, then silently merge
+    // Step 2: Load extra sources in background
     Promise.all(EXTRA_LIVE_SOURCES.map(url => loadPlaylist(url))).then(extraResults => {
       const seenUrls = new Set(allTvChannels.map(ch => ch.url));
       const newChannels = [];
@@ -682,63 +667,14 @@ async function initApp() {
       }
       if (newChannels.length > 0) {
         allTvChannels = [...allTvChannels, ...newChannels];
-        currentChannels = allTvChannels;
-        currentCategoryMap = groupByCategory(currentChannels);
-        renderCategories(currentCategoryMap);
+        populateFilters();
+        applyFilters();
       }
     });
-    return; // Early return since we already rendered
-  }
-  
-  currentChannels = allTvChannels;
-  
-  if (currentChannels.length > 0) {
-    // Pick random hero from a popular category
-    const topChannels = currentChannels.filter(c => c.group === 'Bangladesh' || c.group === 'Sports' || c.group === 'English');
-    const heroPick = topChannels.length > 0 ? topChannels[Math.floor(Math.random() * topChannels.length)] : currentChannels[0];
-    setHero(heroPick);
-    
-    currentCategoryMap = groupByCategory(currentChannels);
-    renderCategories(currentCategoryMap);
   } else {
-    container.innerHTML = '<div class="text-center text-red-500 text-xl py-20">Failed to load channels. Check console.</div>';
-    heroTitle.innerText = 'Error loading.';
+    applyFilters();
   }
 }
 
-// Navbar Scroll Effect
-window.addEventListener('scroll', () => {
-  const nav = document.getElementById('navbar');
-  if (window.scrollY > 50) {
-    nav.classList.add('bg-black/95', 'backdrop-blur-md', 'shadow-2xl', 'py-3');
-    nav.classList.remove('bg-gradient-to-b', 'from-black/90', 'to-transparent', 'py-4');
-  } else {
-    nav.classList.add('bg-gradient-to-b', 'from-black/90', 'to-transparent', 'py-4');
-    nav.classList.remove('bg-black/95', 'backdrop-blur-md', 'shadow-2xl', 'py-3');
-  }
-});
-
-// Nav events
-document.getElementById('nav-live').addEventListener('click', (e) => {
-  e.preventDefault();
-  initApp();
-});
-
-document.getElementById('hero-reload').addEventListener('click', () => {
-  initApp();
-});
-
-// Search functionality
-document.getElementById('search-input').addEventListener('input', (e) => {
-  const term = e.target.value.toLowerCase();
-  if (!term) {
-    renderCategories(currentCategoryMap);
-    return;
-  }
-  
-  const filtered = currentChannels.filter(c => c.name && c.url && c.name.toLowerCase().includes(term));
-  renderCategories({'Search Results': filtered});
-});
-
-// Start
+// Initialise App
 initApp();

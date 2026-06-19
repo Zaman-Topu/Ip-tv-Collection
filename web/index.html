@@ -7,145 +7,212 @@
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
   </head>
-  <body class="bg-surface-base text-text-primary antialiased font-primary">
+  <body class="bg-surface-base text-text-inverse antialiased font-primary">
     
-    <!-- Home View -->
-    <div id="home-view" class="block">
-      <!-- Navigation Bar -->
-      <nav id="navbar" class="fixed top-0 w-full px-6 py-4 flex justify-between items-center z-50 transition-all duration-300 bg-surface-base/90 border-b border-border-muted/20">
+    <!-- Top Header Navigation -->
+    <nav id="navbar" class="fixed top-0 w-full px-6 py-4 flex justify-between items-center z-50 bg-black border-b border-border-muted/10">
       <div class="flex items-center gap-8">
-        <h1 class="text-text-tertiary text-2xl font-bold tracking-tight cursor-pointer select-none" onclick="window.location.reload()" title="Home" tabindex="0" role="button">All TV Channels</h1>
-        <ul class="flex gap-6">
-          <li><a href="#" class="nav-link text-text-inverse font-bold transition hover:text-text-tertiary" id="nav-live" aria-current="page">Live TV</a></li>
+        <!-- Logo Block -->
+        <div class="flex items-center gap-2 cursor-pointer select-none" onclick="window.location.reload()">
+          <span class="bg-text-tertiary text-white font-bold px-3 py-1 rounded text-sm tracking-widest">DUDE TV</span>
+          <span class="hidden sm:inline bg-surface-strong/10 border border-text-tertiary/20 text-text-tertiary text-[10px] font-bold px-2 py-0.5 rounded tracking-wide animate-pulse">● BROADCAST ONLINE</span>
+        </div>
+        
+        <!-- Navigation Links -->
+        <ul class="hidden md:flex gap-6 text-xs tracking-wider uppercase font-bold text-gray-400">
+          <li><a href="#" class="hover:text-text-tertiary transition" id="nav-home">Home</a></li>
+          <li><a href="#" class="text-text-tertiary transition" id="nav-live">All Channels</a></li>
+          <li><a href="#" class="hover:text-text-tertiary transition" id="nav-sports">All Sports</a></li>
+          <li><a href="#" class="bg-text-tertiary text-white px-3 py-1.5 rounded-full hover:bg-text-tertiary/80 transition" id="nav-worldcup">🔴 World Cup</a></li>
         </ul>
       </div>
-      <div>
-        <input type="text" id="search-input" class="bg-black/50 border border-gray-700 text-white px-4 py-2 rounded-full focus:outline-none focus:border-netflix-red focus:w-64 transition-all duration-300 w-48" placeholder="Search channels..." />
+
+      <!-- Right Header Controls -->
+      <div class="flex items-center gap-4">
+        <button aria-label="Search" class="text-gray-400 hover:text-white transition">
+          <svg viewBox="0 0 24 24" class="w-5 h-5 fill-current"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+        </button>
+        <button aria-label="Toggle Dark Mode" class="text-gray-400 hover:text-white transition">
+          <svg viewBox="0 0 24 24" class="w-5 h-5 fill-current"><path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9 9-4.03 9-9c0-.46-.04-.92-.1-1.36-.98 1.37-2.58 2.26-4.4 2.26-2.98 0-5.4-2.42-5.4-5.4 0-1.81.89-3.42 2.26-4.4-.44-.06-.9-.1-1.36-.1z"/></svg>
+        </button>
       </div>
     </nav>
 
-    <!-- Hero Section -->
-    <header class="h-[85vh] relative bg-cover bg-center flex items-center px-8 transition-all duration-500" id="hero-section">
-      <div class="absolute inset-0 hero-vignette pointer-events-none"></div>
+    <!-- Main Container -->
+    <div class="max-w-[1400px] mx-auto px-6 pt-28 pb-16">
       
-      <div class="relative z-10 max-w-2xl">
-        <h1 class="text-6xl font-extrabold mb-4 leading-tight drop-shadow-2xl text-white" id="hero-title">Connecting...</h1>
-        <p class="text-lg text-gray-200 mb-8 drop-shadow-lg" id="hero-desc">Connecting to the massive IPTV database.</p>
-        <div class="flex gap-4">
-          <button class="bg-white text-black px-8 py-3 rounded text-lg font-bold flex items-center gap-2 hover:bg-white/80 transition" id="hero-play">
-            <svg viewBox="0 0 24 24" class="w-6 h-6 fill-current"><path d="M8 5v14l11-7z"/></svg> Play
-          </button>
-          <button class="bg-gray-500/70 text-white px-8 py-3 rounded text-lg font-bold flex items-center gap-2 hover:bg-gray-500/50 transition" id="hero-reload">
-            <svg viewBox="0 0 24 24" class="w-6 h-6 fill-current"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg> Refresh
-          </button>
+      <!-- Top Title and Stats -->
+      <div class="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
+        <div>
+          <span class="text-text-tertiary text-[10px] font-bold tracking-widest uppercase">Universal Stream Directory</span>
+          <h2 class="text-4xl font-bold tracking-tight text-white mt-1">ALL TV CHANNELS</h2>
+          <p class="text-gray-400 text-xs mt-1 max-w-xl">Browse and stream live television feeds aggregated from all connected broadcast networks.</p>
+        </div>
+        <div class="bg-surface-strong/10 border border-border-default/20 rounded-full px-4 py-2 flex items-center gap-2">
+          <span class="text-[10px] font-bold text-text-tertiary" id="stats-feed-count">0 OF 0</span>
+          <span class="text-[10px] font-bold text-gray-400 tracking-wider uppercase">Feeds Online</span>
         </div>
       </div>
-      <div class="absolute bottom-0 left-0 right-0 h-64 hero-overlay-gradient pointer-events-none"></div>
-    </header>
 
-      <!-- Main Content: Category Rows -->
-      <main class="px-8 -mt-16 relative z-20 pb-16" id="category-container">
+      <!-- Split Video Player Section (Hidden by default) -->
+      <div class="hidden flex-col lg:flex-row gap-6 mb-10 w-full" id="player-container">
+        
+        <!-- Left: Video Player Column -->
+        <div class="w-full lg:w-2/3 flex flex-col">
+          <!-- Video Box -->
+          <div class="relative w-full aspect-video rounded-xs overflow-hidden bg-black border border-border-default/20 group" id="video-container">
+            <video id="video-player" class="w-full h-full outline-none" autoplay></video>
+            
+            <!-- Buffering Spinner -->
+            <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 hidden z-40" id="buffering-spinner">
+              <div class="w-12 h-12 border-4 border-white/20 border-t-text-tertiary rounded-full animate-spin"></div>
+            </div>
+
+            <!-- Play Button Overlay -->
+            <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 hidden z-40 cursor-pointer bg-black/50 hover:bg-black/70 rounded-full p-4 transition" id="center-play-overlay">
+              <svg viewBox="0 0 24 24" class="w-12 h-12 fill-white"><path d="M8 5v14l11-7z"/></svg>
+            </div>
+
+            <!-- Error Banner -->
+            <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-black/90 border border-border-default p-6 rounded-xs text-center hidden shadow-2xl z-50 max-w-sm" id="player-error">
+              <h3 class="text-text-tertiary text-lg font-bold mb-1">Stream Offline</h3>
+              <p class="text-gray-400 text-xs">This stream is currently offline, geo-blocked, or unavailable.</p>
+            </div>
+
+            <!-- Close Button -->
+            <button id="close-player" aria-label="Close player" class="absolute top-4 right-4 bg-black/60 hover:bg-black text-white p-2 rounded-full border border-border-default/20 transition z-50">
+              <svg viewBox="0 0 24 24" class="w-5 h-5 fill-current"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+            </button>
+            
+            <!-- Custom Bottom Controls -->
+            <div class="absolute bottom-0 w-full p-4 flex flex-col gap-3 bg-gradient-to-t from-black via-black/80 to-transparent z-40 transition-opacity duration-300 opacity-0 group-hover:opacity-100" id="player-controls-bottom">
+              <!-- Custom Seekbar (visual representation only for live streams) -->
+              <div class="w-full h-1 bg-gray-600/50 rounded-full relative" id="progress-container">
+                <div class="absolute h-full bg-text-tertiary w-full rounded-full" id="progress-bar"></div>
+              </div>
+              <div class="flex justify-between items-center">
+                <div class="flex items-center gap-6">
+                  <!-- Play/Pause -->
+                  <button class="text-white hover:text-text-tertiary transition" id="play-pause-btn">
+                    <svg viewBox="0 0 24 24" class="w-6 h-6 fill-current" id="play-icon"><path d="M8 5v14l11-7z"/></svg>
+                    <svg viewBox="0 0 24 24" class="w-6 h-6 fill-current hidden" id="pause-icon"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+                  </button>
+                  <!-- Volume control -->
+                  <div class="flex items-center gap-2">
+                    <button class="text-white hover:text-text-tertiary transition" id="mute-btn">
+                      <svg viewBox="0 0 24 24" class="w-6 h-6 fill-current" id="vol-icon"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/></svg>
+                      <svg viewBox="0 0 24 24" class="w-6 h-6 fill-current hidden" id="mute-icon"><path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71z"/></svg>
+                    </button>
+                    <input type="range" id="volume-slider" min="0" max="1" step="0.1" value="1" class="w-16 h-1 bg-gray-600 rounded-full accent-text-tertiary cursor-pointer">
+                  </div>
+                  <!-- Time status -->
+                  <span class="text-[10px] font-bold text-white uppercase" id="current-time">LIVE</span>
+                </div>
+                <!-- Fullscreen -->
+                <button class="text-white hover:text-text-tertiary transition" id="fullscreen-btn">
+                  <svg viewBox="0 0 24 24" class="w-6 h-6 fill-current" id="fs-enter"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>
+                  <svg viewBox="0 0 24 24" class="w-6 h-6 fill-current hidden" id="fs-exit"><path d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z"/></svg>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Video Metadata Details -->
+          <div class="flex items-center gap-4 mt-4 bg-surface-strong p-4 rounded-xs border border-border-default">
+            <img src="" class="w-16 h-10 object-contain bg-black p-1 rounded border border-border-default" id="player-details-logo" onerror="this.src='https://via.placeholder.com/150/ffffff/000000?text=TV'">
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="bg-text-tertiary text-white text-[9px] font-bold px-1.5 py-0.5 rounded uppercase">Live Feed</span>
+                <span class="bg-gray-200 text-text-primary text-[9px] font-bold px-1.5 py-0.5 rounded uppercase" id="player-details-country">-</span>
+                <span class="bg-gray-100 text-text-secondary text-[9px] font-bold px-1.5 py-0.5 rounded uppercase" id="player-details-server">-</span>
+              </div>
+              <h3 class="text-text-primary text-md font-bold mt-1" id="player-details-title">Channel Name</h3>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: Filtered Queue Sidebar Column -->
+        <div class="w-full lg:w-1/3 flex flex-col bg-surface-strong border border-border-default rounded-xs p-4 h-[35vh] lg:h-auto">
+          <div class="border-b border-border-default pb-3 mb-3">
+            <h3 class="text-text-primary text-xs font-bold uppercase tracking-wider">Filtered Queue</h3>
+            <p class="text-text-secondary text-[10px] font-medium mt-0.5">Live streams matching active filters: <span class="text-text-tertiary font-bold" id="queue-count">0</span></p>
+          </div>
+          
+          <!-- Scrollable Queue Container -->
+          <div class="flex-1 overflow-y-auto pr-1 related-list" id="player-queue-list">
+            <!-- Dynamic list generated by JS -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Smart Filters Container -->
+      <div class="bg-surface-strong border border-border-default rounded-xs p-6 mb-8 shadow-1">
+        <div class="flex justify-between items-center border-b border-border-default pb-4 mb-4">
+          <div class="flex items-center gap-2">
+            <span class="text-text-tertiary text-xs">🎛️</span>
+            <h3 class="text-text-primary text-xs font-bold uppercase tracking-wider">Smart Filters</h3>
+          </div>
+          <button class="text-text-tertiary hover:underline text-[10px] font-bold uppercase tracking-wider" id="filter-reset">✕ Reset All Filters</button>
+        </div>
+
+        <!-- Inputs Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          <!-- Search input -->
+          <div>
+            <label class="block text-text-secondary text-[10px] font-bold uppercase tracking-wider mb-2">Search Broadcast</label>
+            <div class="relative">
+              <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400 pointer-events-none">
+                <svg viewBox="0 0 24 24" class="w-4 h-4 fill-current"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+              </span>
+              <input type="text" id="search-input" class="w-full bg-surface-raised border border-border-default text-text-primary pl-9 pr-4 py-2 rounded text-[11px] font-medium outline-none focus:border-text-tertiary transition" placeholder="SEARCH CHANNEL NAME..." />
+            </div>
+          </div>
+
+          <!-- Category dropdown -->
+          <div>
+            <label class="block text-text-secondary text-[10px] font-bold uppercase tracking-wider mb-2">Category</label>
+            <select id="filter-category" class="w-full bg-surface-raised border border-border-default text-text-primary px-3 py-2 rounded text-[11px] font-medium outline-none focus:border-text-tertiary transition cursor-pointer">
+              <option value="all">ALL CATEGORIES</option>
+            </select>
+          </div>
+
+          <!-- Server dropdown -->
+          <div>
+            <label class="block text-text-secondary text-[10px] font-bold uppercase tracking-wider mb-2">Stream Hub / Server</label>
+            <select id="filter-server" class="w-full bg-surface-raised border border-border-default text-text-primary px-3 py-2 rounded text-[11px] font-medium outline-none focus:border-text-tertiary transition cursor-pointer">
+              <option value="all">ALL SERVER HUBS</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Country Filters -->
+        <div class="border-t border-border-default pt-4 mb-4">
+          <div class="flex justify-between items-center mb-2">
+            <span class="text-text-secondary text-[10px] font-bold uppercase tracking-wider">Filter By Country</span>
+            <button class="text-text-tertiary hover:underline text-[9px] font-bold uppercase tracking-wider hidden" id="clear-country-filter">✕ Clear</button>
+          </div>
+          <div class="flex flex-wrap gap-2" id="filter-countries-list">
+            <!-- Dynamic Country Pills generated by JS -->
+          </div>
+        </div>
+
+        <!-- Quick Category Shortcuts -->
+        <div class="border-t border-border-default pt-4">
+          <span class="block text-text-secondary text-[10px] font-bold uppercase tracking-wider mb-2">Quick Category</span>
+          <div class="flex flex-wrap gap-2" id="filter-quick-categories">
+            <!-- Dynamic Category Pills generated by JS -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Channel Grid Content -->
+      <main id="category-container" class="min-h-96">
         <div class="flex justify-center items-center h-64">
           <div class="spinner"></div>
         </div>
       </main>
-    </div> <!-- End Home View -->
-
-    <!-- Video Player View (Separate Page UI) -->
-    <div class="hidden fixed inset-0 z-[3000] bg-black w-full h-screen" id="player-view">
-      
-      <!-- Top Bar (Floating) -->
-      <div class="absolute top-0 w-full p-6 flex items-center justify-between bg-gradient-to-b from-black/90 via-black/50 to-transparent z-50 transition-opacity duration-300" id="player-controls-top">
-        <div class="flex items-center gap-4">
-          <button class="text-white hover:text-netflix-red transition" id="back-to-browse">
-            <svg viewBox="0 0 24 24" class="w-10 h-10 fill-current"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
-          </button>
-          <h2 class="text-3xl font-bold text-white drop-shadow-lg" id="player-title">Channel Name</h2>
-        </div>
-        <button class="bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded flex items-center gap-2 backdrop-blur-md transition" id="toggle-sidebar">
-          <svg viewBox="0 0 24 24" class="w-6 h-6 fill-current"><path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h16v2H4z"/></svg> Channels
-        </button>
-      </div>
-      
-      <!-- Video Element -->
-      <div class="relative w-full h-full flex justify-center items-center bg-black group" id="video-container">
-        <video id="video-player" class="w-full h-full outline-none" autoplay></video>
-        
-        <!-- Center Buffering Spinner -->
-        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 hidden z-[80]" id="buffering-spinner">
-          <div class="w-16 h-16 border-4 border-white/20 border-t-netflix-red rounded-full animate-spin"></div>
-        </div>
-
-        <!-- Big Center Play Button Overlay -->
-        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 hidden z-[80] cursor-pointer bg-black/50 hover:bg-black/70 rounded-full p-4 transition" id="center-play-overlay">
-          <svg viewBox="0 0 24 24" class="w-16 h-16 fill-white"><path d="M8 5v14l11-7z"/></svg>
-        </div>
-        
-        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-black/80 border border-gray-700 p-8 rounded-xl text-center hidden shadow-2xl z-[100] backdrop-blur-md" id="player-error">
-          <h3 class="text-netflix-red text-2xl font-bold mb-2">Stream Unavailable</h3>
-          <p class="text-gray-300">This stream might be geo-blocked or offline. Trying proxy...</p>
-        </div>
-
-        <!-- Custom YouTube-Style Bottom Controls -->
-        <div class="absolute bottom-0 w-full p-6 px-10 flex flex-col gap-4 bg-gradient-to-t from-black/90 via-black/60 to-transparent z-50 transition-opacity duration-300 pb-10" id="player-controls-bottom">
-          <!-- Progress bar -->
-          <div class="w-full h-1.5 bg-gray-600/70 hover:h-2 transition-all cursor-pointer rounded-full relative group/progress" id="progress-container">
-            <div class="absolute h-full bg-netflix-red w-0 rounded-full pointer-events-none transition-all duration-100 shadow-[0_0_10px_rgba(229,9,20,0.8)]" id="progress-bar">
-               <div class="absolute right-0 top-1/2 -translate-y-1/2 w-4 h-4 bg-netflix-red rounded-full opacity-0 group-hover/progress:opacity-100 transform translate-x-1/2 shadow-lg transition-opacity"></div>
-            </div>
-          </div>
-          
-          <div class="flex justify-between items-center mt-2">
-            <div class="flex items-center gap-8">
-              <!-- Play/Pause -->
-              <button class="text-white hover:text-netflix-red transition transform hover:scale-110" id="play-pause-btn">
-                <svg viewBox="0 0 24 24" class="w-9 h-9 fill-current" id="play-icon"><path d="M8 5v14l11-7z"/></svg>
-                <svg viewBox="0 0 24 24" class="w-9 h-9 fill-current hidden" id="pause-icon"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
-              </button>
-              
-              <!-- Volume -->
-              <div class="flex items-center gap-2 group/vol">
-                <button class="text-white hover:text-netflix-red transition transform hover:scale-110" id="mute-btn">
-                  <svg viewBox="0 0 24 24" class="w-8 h-8 fill-current" id="vol-icon"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
-                  <svg viewBox="0 0 24 24" class="w-8 h-8 fill-current hidden" id="mute-icon"><path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/></svg>
-                </button>
-                <input type="range" id="volume-slider" min="0" max="1" step="0.05" value="1" class="w-0 opacity-0 group-hover/vol:w-24 group-hover/vol:opacity-100 transition-all duration-300 accent-netflix-red cursor-pointer h-1.5 bg-gray-600 rounded-full">
-              </div>
-              
-              <!-- Time -->
-              <div class="text-white text-base font-semibold tracking-wide ml-2"><span id="current-time">LIVE</span></div>
-            </div>
-            
-            <div class="flex items-center gap-8 relative">
-              <!-- Quality Setting -->
-              <button class="text-white hover:text-netflix-red transition transform hover:scale-110" id="quality-btn">
-                <svg viewBox="0 0 24 24" class="w-8 h-8 fill-current"><path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.06-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.73,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.06,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.43-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.49-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/></svg>
-              </button>
-              
-              <!-- Quality Menu Popup -->
-              <div class="hidden absolute bottom-16 right-12 bg-gray-900/95 border border-gray-700 rounded-lg p-2 min-w-36 flex flex-col gap-1 z-[60] backdrop-blur shadow-2xl" id="quality-menu">
-                <!-- Quality options added here by JS -->
-              </div>
-              
-              <!-- Fullscreen -->
-              <button class="text-white hover:text-netflix-red transition transform hover:scale-110" id="fullscreen-btn">
-                <svg viewBox="0 0 24 24" class="w-9 h-9 fill-current" id="fs-enter"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>
-                <svg viewBox="0 0 24 24" class="w-9 h-9 fill-current hidden" id="fs-exit"><path d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z"/></svg>
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-        
-      <!-- Floating Sidebar for Related Channels -->
-      <div class="absolute top-0 right-0 h-full w-96 bg-black/90 backdrop-blur-xl border-l border-white/10 flex flex-col transform translate-x-full transition-transform duration-300 z-40" id="related-sidebar">
-        <div class="p-6 pt-24 border-b border-white/10">
-          <h3 class="text-xl font-bold text-white">Up Next / Related</h3>
-        </div>
-        <div class="flex-1 overflow-y-auto p-4 related-list" id="related-list"></div>
-      </div>
     </div>
 
     <!-- Scripts -->
