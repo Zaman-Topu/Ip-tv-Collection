@@ -3,22 +3,22 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Ultimate IPTV - Web Player</title>
+    <title>All TV Channels - Live Player</title>
     <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Netflix+Sans:wght@300;400;500;700&display=swap" rel="stylesheet" />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
   </head>
-  <body class="bg-netflix-bg text-gray-200 antialiased font-inter">
+  <body class="bg-surface-base text-text-primary antialiased font-primary">
     
     <!-- Home View -->
     <div id="home-view" class="block">
       <!-- Navigation Bar -->
-      <nav id="navbar" class="fixed top-0 w-full px-6 py-4 flex justify-between items-center z-50 transition-all duration-500 bg-gradient-to-b from-black/90 to-transparent">
+      <nav id="navbar" class="fixed top-0 w-full px-6 py-4 flex justify-between items-center z-50 transition-all duration-300 bg-surface-base/90 border-b border-border-muted/20">
       <div class="flex items-center gap-8">
-        <h1 class="text-netflix-red text-3xl font-extrabold tracking-tight cursor-pointer select-none" onclick="window.location.reload()" title="Home">ULTIMATE<span class="text-white font-light">IPTV</span></h1>
+        <h1 class="text-text-tertiary text-2xl font-bold tracking-tight cursor-pointer select-none" onclick="window.location.reload()" title="Home" tabindex="0" role="button">All TV Channels</h1>
         <ul class="flex gap-6">
-          <li><a href="#" class="nav-link text-white font-medium transition hover:text-white" id="nav-live">Live TV</a></li>
-          <li><a href="#" class="nav-link text-gray-400 font-medium transition hover:text-white" id="nav-movies">Movies</a></li>
+          <li><a href="#" class="nav-link text-text-inverse font-bold transition hover:text-text-tertiary" id="nav-live" aria-current="page">Live TV</a></li>
         </ul>
       </div>
       <div>

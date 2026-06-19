@@ -3,7 +3,6 @@ import Hls from 'hls.js';
 import { MediaPlayer } from 'dashjs';
 
 const M3U_URL_LIVE = "https://raw.githubusercontent.com/Zaman-Topu/Ip-tv-Collection/main/FINAL_IPTV_COMPLETE.m3u";
-const M3U_URL_MOVIES = "https://raw.githubusercontent.com/Zaman-Topu/Ip-tv-Collection/main/FINAL_MOVIES_COMPLETE.m3u";
 
 // Extra IPTV sources
 const EXTRA_LIVE_SOURCES = [
@@ -67,7 +66,6 @@ let featuredChannel = null;
 
 // State
 let allTvChannels = [];
-let allMovieChannels = [];
 let currentChannels = [];
 let currentCategoryMap = {};
 let channelStatusMap = {};
@@ -153,7 +151,6 @@ function renderCategories(categoryMap) {
     'Sports',
     'Kids',
     'Bangladesh',
-    'Movies',
     'Documentary',
     'Religion',
     'Countrywise',
@@ -217,13 +214,32 @@ function renderCategories(categoryMap) {
       }
 
       const card = document.createElement('div');
-      card.className = 'relative w-full aspect-video rounded-md cursor-pointer overflow-hidden bg-gradient-to-br from-gray-800 to-gray-900 shadow-lg transform transition-all duration-300 hover:scale-110 hover:shadow-2xl hover:border hover:border-white/20 hover:z-50 group flex flex-col justify-center items-center';
+      card.className = 'channel-card-container relative w-full aspect-[16/11] rounded-xs cursor-pointer overflow-hidden bg-surface-raised shadow-1 flex flex-col justify-between items-center p-3 border border-border-default';
+      card.tabIndex = 0;
+      card.role = 'button';
+      card.setAttribute('aria-label', `Play ${ch.name}`);
+      
       card.innerHTML = `
         ${badgeHtml}
-        <img src="${ch.logo}" class="w-24 h-24 object-contain transition-transform duration-500 group-hover:scale-75 group-hover:-translate-y-2 drop-shadow-lg" loading="lazy" onerror="this.src='https://via.placeholder.com/150/141414/ffffff?text=No+Logo'">
-        <div class="absolute bottom-0 left-0 w-full bg-gradient-to-t from-black via-black/80 to-transparent text-white text-sm font-bold text-center p-3 pt-6 opacity-0 group-hover:opacity-100 transition-opacity duration-300 truncate tracking-wide">${ch.name}</div>
+        <div class="w-full flex-1 flex items-center justify-center p-1 min-h-0">
+          <img src="${ch.logo}" class="max-w-full max-h-16 object-contain transition-transform duration-300 group-hover:scale-105" loading="lazy" onerror="this.src='https://via.placeholder.com/150/ffffff/000000?text=${encodeURIComponent(ch.name)}'">
+        </div>
+        <div class="w-full text-center border-t border-border-default pt-2 mt-1">
+          <div class="text-[11px] font-bold text-text-primary truncate tracking-tight">${ch.name}</div>
+        </div>
       `;
-      card.addEventListener('click', () => openPlayer(ch));
+
+      const playAction = () => openPlayer(ch);
+      card.addEventListener('click', playAction);
+      
+      // Accessibility: Keyboard enter/space handling
+      card.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          playAction();
+        }
+      });
+      
       slider.appendChild(card);
     });
     
@@ -620,7 +636,7 @@ window.addEventListener('popstate', (event) => {
 });
 
 // App Initialization
-async function initApp(mode = 'live') {
+async function initApp() {
   container.innerHTML = '<div class="flex justify-center items-center h-64"><div class="spinner"></div></div>';
   heroTitle.innerText = 'Connecting...';
   heroDesc.innerText = 'Connecting to the massive IPTV database.';
@@ -636,24 +652,19 @@ async function initApp(mode = 'live') {
   }
   
   // Load all playlists if not already loaded
-  if (allTvChannels.length === 0 || allMovieChannels.length === 0) {
+  if (allTvChannels.length === 0) {
     // Show loading progress
     container.innerHTML = '<div class="flex flex-col justify-center items-center h-64 gap-4"><div class="spinner"></div><p class="text-gray-400 text-sm" id="load-msg">Loading main channels...</p></div>';
 
     // Step 1: Load MAIN sources first so page shows fast
-    const [mainTv, movieData] = await Promise.all([
-      loadPlaylist(M3U_URL_LIVE),
-      loadPlaylist(M3U_URL_MOVIES)
-    ]);
+    const mainTv = await loadPlaylist(M3U_URL_LIVE);
 
     // Show main channels immediately
-    const movieUrls = new Set(movieData.map(m => m.url));
-    allTvChannels = mainTv.filter(tv => !movieUrls.has(tv.url));
-    allMovieChannels = movieData;
-    currentChannels = mode === 'live' ? allTvChannels : allMovieChannels;
+    allTvChannels = mainTv;
+    currentChannels = allTvChannels;
     currentCategoryMap = groupByCategory(currentChannels);
     if (currentChannels.length > 0) {
-      const topChannels = currentChannels.filter(c => c.group === 'Bangladesh' || c.group === 'Sports' || c.group === 'Movies');
+      const topChannels = currentChannels.filter(c => c.group === 'Bangladesh' || c.group === 'Sports');
       const heroPick = topChannels.length > 0 ? topChannels[Math.floor(Math.random() * topChannels.length)] : currentChannels[0];
       setHero(heroPick);
       renderCategories(currentCategoryMap);
@@ -664,28 +675,26 @@ async function initApp(mode = 'live') {
       const seenUrls = new Set(allTvChannels.map(ch => ch.url));
       const newChannels = [];
       for (const ch of extraResults.flat()) {
-        if (ch.url && !seenUrls.has(ch.url) && !movieUrls.has(ch.url)) {
+        if (ch.url && !seenUrls.has(ch.url)) {
           seenUrls.add(ch.url);
           newChannels.push(ch);
         }
       }
       if (newChannels.length > 0) {
         allTvChannels = [...allTvChannels, ...newChannels];
-        if (mode === 'live') {
-          currentChannels = allTvChannels;
-          currentCategoryMap = groupByCategory(currentChannels);
-          renderCategories(currentCategoryMap);
-        }
+        currentChannels = allTvChannels;
+        currentCategoryMap = groupByCategory(currentChannels);
+        renderCategories(currentCategoryMap);
       }
     });
     return; // Early return since we already rendered
   }
   
-  currentChannels = mode === 'live' ? allTvChannels : allMovieChannels;
+  currentChannels = allTvChannels;
   
   if (currentChannels.length > 0) {
     // Pick random hero from a popular category
-    const topChannels = currentChannels.filter(c => c.group === 'Bangladesh' || c.group === 'Sports' || c.group === 'Movies' || c.group === 'English');
+    const topChannels = currentChannels.filter(c => c.group === 'Bangladesh' || c.group === 'Sports' || c.group === 'English');
     const heroPick = topChannels.length > 0 ? topChannels[Math.floor(Math.random() * topChannels.length)] : currentChannels[0];
     setHero(heroPick);
     
@@ -712,20 +721,11 @@ window.addEventListener('scroll', () => {
 // Nav events
 document.getElementById('nav-live').addEventListener('click', (e) => {
   e.preventDefault();
-  document.querySelectorAll('.nav-links a').forEach(a => a.classList.remove('active'));
-  e.target.classList.add('active');
-  initApp('live');
-});
-
-document.getElementById('nav-movies').addEventListener('click', (e) => {
-  e.preventDefault();
-  document.querySelectorAll('.nav-links a').forEach(a => a.classList.remove('active'));
-  e.target.classList.add('active');
-  initApp('movies');
+  initApp();
 });
 
 document.getElementById('hero-reload').addEventListener('click', () => {
-  initApp(document.getElementById('nav-movies').classList.contains('active') ? 'movies' : 'live');
+  initApp();
 });
 
 // Search functionality
@@ -741,4 +741,4 @@ document.getElementById('search-input').addEventListener('input', (e) => {
 });
 
 // Start
-initApp('live');
+initApp();

@@ -1,21 +1,69 @@
 @import "tailwindcss";
 
 @theme {
-  --color-netflix-red: #e50914;
-  --color-netflix-bg: #141414;
-  --color-netflix-card: #2f2f2f;
-  --font-inter: 'Inter', sans-serif;
+  /* Fonts */
+  --font-primary: "Space Grotesk", "Inter", sans-serif;
+  
+  /* Typography Scale */
+  --text-xs: 9px;
+  --text-sm: 10px;
+  --text-md: 11px;
+  --text-lg: 12px;
+  --text-xl: 14px;
+  --text-2xl: 16px;
+  --text-3xl: 36px;
+
+  /* Colors */
+  --color-text-primary: lab(3.03701 -0.419587 -2.08024);
+  --color-text-secondary: lab(36.185 -0.944421 -3.59355);
+  --color-text-tertiary: lab(48.7029 74.3556 26.9302);
+  --color-text-inverse: #ffffff;
+  
+  --color-surface-base: #000000;
+  --color-surface-muted: oklab(0.149999 -0.00309155 -0.00950664 / 0.05);
+  --color-surface-raised: lab(100 0 0);
+  --color-surface-strong: lab(97.6738 -0.497282 -1.81038);
+  
+  --color-border-default: lab(88.3938 -0.496596 -1.81003);
+  --color-border-muted: oklab(0.899998 -0.00155377 -0.00473404 / 0.4);
+
+  /* Spacing */
+  --spacing-1: 2px;
+  --spacing-2: 4px;
+  --spacing-3: 6px;
+  --spacing-4: 8px;
+  --spacing-5: 12px;
+  --spacing-6: 16px;
+  --spacing-7: 20px;
+  --spacing-8: 24px;
+
+  /* Radius */
+  --radius-xs: 16px;
+  --radius-sm: 22.4px;
+  --radius-md: 28.8px;
+  --radius-lg: 33554400px;
+
+  /* Shadows */
+  --shadow-1: rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.1) 0px 10px 15px -3px, rgba(0, 0, 0, 0.1) 0px 4px 6px -4px;
+  --shadow-2: rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.25) 0px 25px 50px -12px;
+  --shadow-3: rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.1) 0px 20px 25px -5px, rgba(0, 0, 0, 0.1) 0px 8px 10px -6px;
+  --shadow-4: rgba(214, 6, 73, 0.35) 0px 0px 20px 0px;
+
+  /* Motion */
+  --animate-spin: spin 1s ease-in-out infinite;
 }
 
 body {
-  font-family: var(--font-inter);
-  background-color: var(--color-netflix-bg);
-  background-image: radial-gradient(circle at 50% 0%, #2a080a 0%, var(--color-netflix-bg) 40%);
-  color: #e5e5e5;
+  font-family: var(--font-primary);
+  font-size: var(--text-lg);
+  line-height: 16px;
+  font-weight: 700;
+  background-color: var(--color-surface-base);
+  color: var(--color-text-inverse);
   overflow-x: hidden;
 }
 
-/* Hide scrollbar but keep functionality */
+/* Custom Scrollbar */
 .card-slider {
   scroll-behavior: smooth;
   -ms-overflow-style: none;
@@ -26,34 +74,56 @@ body {
   display: none;
 }
 
-/* Custom Scrollbar for Sidebar */
 .related-list::-webkit-scrollbar {
-  width: 8px;
+  width: var(--spacing-2);
 }
 .related-list::-webkit-scrollbar-thumb {
-  background: #333;
-  border-radius: 4px;
+  background: var(--color-text-secondary);
+  border-radius: var(--radius-xs);
 }
 
 /* Spinner Animation */
 .spinner {
   width: 50px;
   height: 50px;
-  border: 5px solid rgba(229, 9, 20, 0.3);
+  border: 5px solid var(--color-surface-muted);
   border-radius: 50%;
-  border-top-color: var(--color-netflix-red);
-  animation: spin 1s ease-in-out infinite;
+  border-top-color: var(--color-text-tertiary);
+  animation: spin 300ms ease-in-out infinite;
 }
 
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
 
-/* Hero Overlay Gradient */
-.hero-overlay-gradient {
-  background: linear-gradient(to top, var(--color-netflix-bg) 10%, transparent 100%);
+/* Accessibility Focus Visible Rules */
+*:focus-visible {
+  outline: 3px solid var(--color-text-tertiary) !important;
+  outline-offset: 3px !important;
+  box-shadow: var(--shadow-4) !important;
 }
 
-.hero-vignette {
-  background: radial-gradient(circle at center, transparent 0%, rgba(0,0,0,0.6) 100%);
+/* Clean Category Styling */
+h2 {
+  font-family: var(--font-primary);
+  font-size: var(--text-2xl);
+  font-weight: 700;
+  color: var(--color-text-inverse);
+  letter-spacing: -0.02em;
+}
+
+/* Dynamic State Classes for Cards */
+.channel-card-container {
+  transition: transform 200ms ease, box-shadow 200ms ease, border-color 200ms ease;
+  border: 1px solid var(--color-border-default);
+}
+
+.channel-card-container:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-1);
+  border-color: var(--color-text-tertiary);
+}
+
+.channel-card-container:active {
+  transform: scale(0.98);
 }
