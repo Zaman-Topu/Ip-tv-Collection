@@ -378,14 +378,30 @@ function openPlayer(channel, useProxyIndex = 0, isHistoryBack = false) {
 
   // Handle HLS Streams
   if (Hls.isSupported()) {
-    // Custom loader to proxy all sub-requests (chunks, playlists)
+    // Custom loader to proxy only playlist manifests, not segment chunks
     class ProxyLoader extends Hls.DefaultConfig.loader {
       constructor(config) {
         super(config);
       }
       load(context, config, callbacks) {
-        if (currentProxyIndex > 0 && context.url && !context.url.startsWith(proxies[currentProxyIndex])) {
-          context.url = proxies[currentProxyIndex] + encodeURIComponent(context.url);
+        const proxyPrefix = proxies[currentProxyIndex];
+        if (currentProxyIndex > 0 && context.url) {
+          const isPlaylist = context.url.includes('.m3u8') || context.url.includes('.key') || !context.url.includes('.');
+          if (isPlaylist) {
+            if (!context.url.startsWith(proxyPrefix)) {
+              context.url = proxyPrefix + encodeURIComponent(context.url);
+            }
+          } else {
+            // Strip proxy prefix from relative segment URLs so they load directly
+            if (context.url.startsWith(proxyPrefix)) {
+              const encodedUrl = context.url.substring(proxyPrefix.length);
+              try {
+                context.url = decodeURIComponent(encodedUrl);
+              } catch (e) {
+                // Fallback if decode fails
+              }
+            }
+          }
         }
         super.load(context, config, callbacks);
       }
