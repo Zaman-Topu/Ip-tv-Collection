@@ -72,12 +72,14 @@ let currentChannels = [];
 let currentCategoryMap = {};
 let channelStatusMap = {};
 
-// Parse M3U - with 8 second timeout per source
+// Parse M3U - with 8 second timeout per source and cache busting
 async function loadPlaylist(url) {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 8000);
   try {
-    const response = await fetch(url, { signal: controller.signal });
+    // Append timestamp to bypass aggressive CDN caching
+    const cacheBuster = url.includes('?') ? `&t=${Date.now()}` : `?t=${Date.now()}`;
+    const response = await fetch(url + cacheBuster, { signal: controller.signal });
     const text = await response.text();
     clearTimeout(timeoutId);
     return parseM3U(text);
@@ -228,6 +230,11 @@ function renderCategories(categoryMap) {
     row.appendChild(title);
     row.appendChild(slider);
     container.appendChild(row);
+  }
+
+  // Show "No channels found" if the container is still empty
+  if (container.children.length === 0) {
+    container.innerHTML = '<div class="text-center text-gray-500 py-20 text-xl font-bold">No channels found matching your search.</div>';
   }
 }
 
