@@ -1,6 +1,9 @@
 name: Daily IPTV Status Check
 
 on:
+  push:
+    branches:
+      - main
   schedule:
     # 18:00 UTC is 12:00 AM BST (Bangladesh Standard Time)
     - cron: '0 18 * * *'
