@@ -78,6 +78,11 @@ let selectedCountry = 'all';
 let selectedServer = 'all';
 let searchQuery = '';
 
+// Pagination State
+let currentPage = 1;
+const itemsPerPage = 96;
+const paginationContainer = document.getElementById('pagination-container');
+
 // Detect Country from channel M3U data
 function detectCountry(group, name) {
   const g = (group || '').toLowerCase();
@@ -258,6 +263,25 @@ function applyFilters() {
     return matchSearch && matchCategory && matchCountry && matchServer;
   });
 
+  // Sort currentFilteredChannels globally so active/BDIX channels are always on page 1!
+  currentFilteredChannels.sort((a, b) => {
+    const statusA = channelStatusMap[a.url] || 'unknown';
+    const statusB = channelStatusMap[b.url] || 'unknown';
+    
+    const getScore = (status) => {
+      if (status === 'active' || status === 'isp_bdix') return 3;
+      if (status === 'blocked') return 2;
+      if (status === 'unknown') return 1;
+      if (status === 'down') return 0;
+      return 1;
+    };
+    
+    return getScore(statusB) - getScore(statusA);
+  });
+
+  // Reset page to 1
+  currentPage = 1;
+
   // Update Stats Count
   feedCountEl.innerText = `${currentFilteredChannels.length} OF ${allTvChannels.length}`;
 
@@ -269,81 +293,96 @@ function applyFilters() {
   }
 }
 
-// Render dynamic channel grid
+// Render dynamic channel grid (Flat and Paginated for 2GB RAM device optimization)
 function renderGrid() {
   container.innerHTML = '';
+  paginationContainer.innerHTML = '';
 
   if (currentFilteredChannels.length === 0) {
-    container.innerHTML = '<div class="text-center text-text-secondary py-20 text-xs font-bold uppercase tracking-wider">No channels found matching active filters.</div>';
+    container.innerHTML = '<div class="col-span-full text-center text-text-secondary py-20 text-xs font-bold uppercase tracking-wider">No channels found matching active filters.</div>';
     return;
   }
 
-  // Group by category to match Netflix/Dude rows
-  const grouped = {};
-  currentFilteredChannels.forEach(ch => {
-    if (!grouped[ch.group]) grouped[ch.group] = [];
-    grouped[ch.group].push(ch);
-  });
+  // Calculate pages
+  const totalPages = Math.ceil(currentFilteredChannels.length / itemsPerPage);
+  if (currentPage > totalPages) currentPage = totalPages || 1;
 
-  // Sort groups by category names
-  const sortedGroups = Object.entries(grouped).sort((a, b) => a[0].localeCompare(b[0]));
+  const startIdx = (currentPage - 1) * itemsPerPage;
+  const endIdx = startIdx + itemsPerPage;
+  const paginatedChannels = currentFilteredChannels.slice(startIdx, endIdx);
 
-  sortedGroups.forEach(([group, channels]) => {
-    const row = document.createElement('div');
-    row.className = 'mb-10';
+  // Render cards flat directly in the container grid
+  paginatedChannels.forEach(ch => {
+    const status = channelStatusMap[ch.url] || 'unknown';
+    let badgeHtml = '';
+    if (status === 'active') {
+      badgeHtml = '<div class="absolute top-2 left-2 bg-text-tertiary text-white text-[8px] font-bold px-1.5 py-0.5 rounded tracking-wide z-10 uppercase">🔴 Live</div>';
+    } else if (status === 'isp_bdix') {
+      badgeHtml = '<div class="absolute top-2 left-2 bg-blue-500 text-white text-[8px] font-bold px-1.5 py-0.5 rounded tracking-wide z-10 uppercase">🔵 BDIX</div>';
+    } else if (status === 'blocked') {
+      badgeHtml = '<div class="absolute top-2 left-2 bg-yellow-500 text-black text-[8px] font-bold px-1.5 py-0.5 rounded tracking-wide z-10 uppercase">🟡 Geo</div>';
+    } else if (status === 'down') {
+      badgeHtml = '<div class="absolute top-2 left-2 bg-red-600 text-white text-[8px] font-bold px-1.5 py-0.5 rounded tracking-wide z-10 uppercase">🔴 Off</div>';
+    }
+
+    const card = document.createElement('div');
+    card.className = 'channel-card-container relative w-full aspect-[16/11] rounded-xs cursor-pointer overflow-hidden shadow-1 flex flex-col justify-between items-center p-3 border border-border-default';
+    card.tabIndex = 0;
+    card.role = 'button';
+    card.setAttribute('aria-label', `Play ${ch.name}`);
     
-    const title = document.createElement('h3');
-    title.className = 'text-xs font-bold text-text-primary uppercase tracking-widest border-b border-border-default pb-2 mb-4';
-    title.innerText = group;
-    
-    const grid = document.createElement('div');
-    grid.className = 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4';
-    
-    channels.forEach(ch => {
-      const status = channelStatusMap[ch.url] || 'unknown';
-      let badgeHtml = '';
-      if (status === 'active') {
-        badgeHtml = '<div class="absolute top-2 left-2 bg-text-tertiary text-white text-[8px] font-bold px-1.5 py-0.5 rounded tracking-wide z-10 uppercase">🔴 Live</div>';
-      } else if (status === 'isp_bdix') {
-        badgeHtml = '<div class="absolute top-2 left-2 bg-blue-500 text-white text-[8px] font-bold px-1.5 py-0.5 rounded tracking-wide z-10 uppercase">🔵 BDIX</div>';
-      } else if (status === 'blocked') {
-        badgeHtml = '<div class="absolute top-2 left-2 bg-yellow-500 text-black text-[8px] font-bold px-1.5 py-0.5 rounded tracking-wide z-10 uppercase">🟡 Geo</div>';
-      } else if (status === 'down') {
-        badgeHtml = '<div class="absolute top-2 left-2 bg-red-600 text-white text-[8px] font-bold px-1.5 py-0.5 rounded tracking-wide z-10 uppercase">🔴 Off</div>';
+    card.innerHTML = `
+      ${badgeHtml}
+      <div class="w-full flex-1 flex items-center justify-center p-1 min-h-0">
+        <img src="${ch.logo}" class="max-w-full max-h-12 object-contain transition-transform duration-300 group-hover:scale-105" loading="lazy" onerror="this.src='https://via.placeholder.com/150/ffffff/000000?text=${encodeURIComponent(ch.name)}'">
+      </div>
+      <div class="w-full text-center border-t border-border-default pt-2 mt-1">
+        <div class="text-[10px] font-bold text-text-primary truncate tracking-tight uppercase">${ch.name}</div>
+        <div class="text-[8px] font-medium text-text-secondary truncate tracking-tight uppercase mt-0.5">${ch.country} • ${ch.server}</div>
+      </div>
+    `;
+
+    const playAction = () => openPlayer(ch);
+    card.addEventListener('click', playAction);
+    card.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        playAction();
       }
-
-      const card = document.createElement('div');
-      card.className = 'channel-card-container relative w-full aspect-[16/11] rounded-xs cursor-pointer overflow-hidden shadow-1 flex flex-col justify-between items-center p-3 border border-border-default';
-      card.tabIndex = 0;
-      card.role = 'button';
-      card.setAttribute('aria-label', `Play ${ch.name}`);
-      
-      card.innerHTML = `
-        ${badgeHtml}
-        <div class="w-full flex-1 flex items-center justify-center p-1 min-h-0">
-          <img src="${ch.logo}" class="max-w-full max-h-12 object-contain transition-transform duration-300 group-hover:scale-105" loading="lazy" onerror="this.src='https://via.placeholder.com/150/ffffff/000000?text=${encodeURIComponent(ch.name)}'">
-        </div>
-        <div class="w-full text-center border-t border-border-default pt-2 mt-1">
-          <div class="text-[10px] font-bold text-text-primary truncate tracking-tight uppercase">${ch.name}</div>
-          <div class="text-[8px] font-medium text-text-secondary truncate tracking-tight uppercase mt-0.5">${ch.country} • ${ch.server}</div>
-        </div>
-      `;
-
-      const playAction = () => openPlayer(ch);
-      card.addEventListener('click', playAction);
-      card.addEventListener('keydown', (event) => {
-        if (event.key === 'Enter' || event.key === ' ') {
-          event.preventDefault();
-          playAction();
-        }
-      });
-      grid.appendChild(card);
     });
-
-    row.appendChild(title);
-    row.appendChild(grid);
-    container.appendChild(row);
+    container.appendChild(card);
   });
+
+  // Render pagination buttons if there is more than 1 page
+  if (totalPages > 1) {
+    const prevBtn = document.createElement('button');
+    prevBtn.className = 'page-btn';
+    prevBtn.innerText = '◄ Prev';
+    prevBtn.disabled = currentPage === 1;
+    prevBtn.onclick = () => {
+      currentPage--;
+      renderGrid();
+      document.getElementById('search-input').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    };
+
+    const pageInfo = document.createElement('span');
+    pageInfo.className = 'page-info';
+    pageInfo.innerText = `Page ${currentPage} of ${totalPages}`;
+
+    const nextBtn = document.createElement('button');
+    nextBtn.className = 'page-btn';
+    nextBtn.innerText = 'Next ►';
+    nextBtn.disabled = currentPage === totalPages;
+    nextBtn.onclick = () => {
+      currentPage++;
+      renderGrid();
+      document.getElementById('search-input').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    };
+
+    paginationContainer.appendChild(prevBtn);
+    paginationContainer.appendChild(pageInfo);
+    paginationContainer.appendChild(nextBtn);
+  }
 }
 
 // Render player queue sidebar list

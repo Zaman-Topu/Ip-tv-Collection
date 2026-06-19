@@ -111,6 +111,42 @@ body {
   transform: scale(0.98);
 }
 
+/* Pagination Button Styles */
+.page-btn {
+  transition: all 150ms ease;
+  background-color: var(--color-surface-raised);
+  border: 1px solid var(--color-border-default);
+  color: var(--color-text-secondary);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  padding: 8px 16px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  text-transform: uppercase;
+}
+
+.page-btn:hover:not(:disabled) {
+  border-color: var(--color-text-tertiary);
+  color: var(--color-text-tertiary);
+  box-shadow: var(--shadow-1);
+}
+
+.page-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.page-info {
+  font-size: var(--text-xs);
+  font-weight: 700;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+}
+
+
 /* Filter Pill Badges */
 .filter-pill {
   transition: all 150ms ease;
