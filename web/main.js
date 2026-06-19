@@ -191,11 +191,7 @@ async function loadPlaylist(url) {
   const timeoutId = setTimeout(() => controller.abort(), 8000);
   try {
     const cacheBuster = url.includes('?') ? `&t=${Date.now()}` : `?t=${Date.now()}`;
-    const targetUrl = url + cacheBuster;
-    // Route through CORS proxy with URL encoding to hide extension from sniffers and bypass CORS
-    const proxiedUrl = `https://corsproxy.io/?url=${encodeURIComponent(targetUrl)}`;
-    
-    const response = await fetch(proxiedUrl, { signal: controller.signal });
+    const response = await fetch(url + cacheBuster, { signal: controller.signal });
     const text = await response.text();
     clearTimeout(timeoutId);
     return parseM3U(text);
