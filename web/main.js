@@ -299,16 +299,6 @@ function openPlayer(channel, useProxyIndex = 0, isHistoryBack = false) {
   });
   
   let playUrl = channel.url;
-  
-  const proxies = [
-    '', // Direct
-    'https://corsproxy.io/?'
-  ];
-  let currentProxyIndex = useProxyIndex || 0;
-  
-  if (currentProxyIndex > 0) {
-    playUrl = proxies[currentProxyIndex] + encodeURIComponent(channel.url);
-  }
 
   if (hlsInstance) {
     hlsInstance.destroy();
@@ -348,15 +338,8 @@ function openPlayer(channel, useProxyIndex = 0, isHistoryBack = false) {
     dashInstance.on(MediaPlayer.events.ERROR, (e) => {
       console.error('DASH Error', e);
       bufferingSpinner.classList.add('hidden');
-      if (currentProxyIndex < proxies.length - 1) {
-        console.log(`DASH error. Trying proxy ${currentProxyIndex + 1}...`);
-        errorOverlay.style.display = 'block';
-        errorOverlay.innerHTML = `<h3 class="text-netflix-red text-2xl font-bold mb-2">Bypassing Security...</h3><p class="text-gray-300">Trying proxy server to bypass CORS...</p>`;
-        setTimeout(() => openPlayer(channel, currentProxyIndex + 1), 500);
-      } else {
-        errorOverlay.style.display = 'block';
-        errorOverlay.innerHTML = `<h3 class="text-netflix-red text-2xl font-bold mb-2">Stream Offline</h3><p class="text-gray-300 text-sm">This DASH stream is offline or geo-blocked. Please try a different channel.</p>`;
-      }
+      errorOverlay.style.display = 'block';
+      errorOverlay.innerHTML = `<h3 class="text-netflix-red text-2xl font-bold mb-2">Stream Offline</h3><p class="text-gray-300 text-sm">This DASH stream is offline or geo-blocked. Please try a different channel.</p>`;
     });
     
     // Failsafe timeout - if nothing plays in 20s, show error
@@ -371,12 +354,8 @@ function openPlayer(channel, useProxyIndex = 0, isHistoryBack = false) {
         dashInstance = null;
       }
       bufferingSpinner.classList.add('hidden');
-      if (currentProxyIndex < proxies.length - 1) {
-        openPlayer(channel, currentProxyIndex + 1);
-      } else {
-        errorOverlay.style.display = 'block';
-        errorOverlay.innerHTML = `<h3 class="text-netflix-red text-2xl font-bold mb-2">Connection Timeout</h3><p class="text-gray-300 text-sm">Stream did not respond. It may be offline or geo-blocked.</p>`;
-      }
+      errorOverlay.style.display = 'block';
+      errorOverlay.innerHTML = `<h3 class="text-netflix-red text-2xl font-bold mb-2">Connection Timeout</h3><p class="text-gray-300 text-sm">Stream did not respond. It may be offline or geo-blocked.</p>`;
     }, 20000);
     
     // Also clear timeout when video actually starts playing
@@ -386,19 +365,6 @@ function openPlayer(channel, useProxyIndex = 0, isHistoryBack = false) {
 
   // Handle HLS Streams
   if (Hls.isSupported()) {
-    // Custom loader to proxy all sub-requests (chunks, playlists)
-    class ProxyLoader extends Hls.DefaultConfig.loader {
-      constructor(config) {
-        super(config);
-      }
-      load(context, config, callbacks) {
-        if (currentProxyIndex > 0 && context.url && !context.url.startsWith(proxies[currentProxyIndex])) {
-          context.url = proxies[currentProxyIndex] + encodeURIComponent(context.url);
-        }
-        super.load(context, config, callbacks);
-      }
-    }
-
     // Faster Startup Config for Live Streams with Fast-Fail for dead links
     hlsInstance = new Hls({
       maxMaxBufferLength: 30,
@@ -409,9 +375,7 @@ function openPlayer(channel, useProxyIndex = 0, isHistoryBack = false) {
       manifestLoadingMaxRetry: 1,
       manifestLoadingTimeOut: 4000,
       levelLoadingMaxRetry: 1,
-      fragLoadingMaxRetry: 1,
-      pLoader: currentProxyIndex > 0 ? ProxyLoader : Hls.DefaultConfig.loader,
-      fLoader: currentProxyIndex > 0 ? ProxyLoader : Hls.DefaultConfig.loader
+      fragLoadingMaxRetry: 1
     });
     hlsInstance.loadSource(playUrl);
     hlsInstance.attachMedia(videoEl);
@@ -467,17 +431,9 @@ function openPlayer(channel, useProxyIndex = 0, isHistoryBack = false) {
     hlsInstance.on(Hls.Events.ERROR, (event, data) => {
       if (data.fatal) {
         bufferingSpinner.classList.add('hidden');
-        if (data.type === Hls.ErrorTypes.NETWORK_ERROR && currentProxyIndex < proxies.length - 1) {
-          // Attempt next proxy fallback
-          console.log(`Network error. Trying proxy ${currentProxyIndex + 1}...`);
-          errorOverlay.style.display = 'block';
-          errorOverlay.innerHTML = `<h3 class="text-netflix-red text-2xl font-bold mb-2">Bypassing Security...</h3><p class="text-gray-300">Trying proxy server ${currentProxyIndex + 1} to bypass CORS...</p>`;
-          setTimeout(() => openPlayer(channel, currentProxyIndex + 1), 500);
-        } else {
-          errorOverlay.style.display = 'block';
-          errorOverlay.innerHTML = `<h3 class="text-netflix-red text-2xl font-bold mb-2">Stream Offline / Expired</h3><p class="text-gray-300 text-sm">This channel link is dead or its security token has expired (common for Toffee/Binge). Please try a different channel.</p>`;
-          hlsInstance.destroy();
-        }
+        errorOverlay.style.display = 'block';
+        errorOverlay.innerHTML = `<h3 class="text-netflix-red text-2xl font-bold mb-2">Stream Offline / Expired</h3><p class="text-gray-300 text-sm">This channel link is dead or its security token has expired (common for Toffee/Binge). Please try a different channel.</p>`;
+        hlsInstance.destroy();
       }
     });
   } else if (videoEl.canPlayType('application/vnd.apple.mpegurl')) {
