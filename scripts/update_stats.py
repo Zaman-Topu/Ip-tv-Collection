@@ -4,6 +4,10 @@ import re
 from datetime import datetime, timezone, timedelta
 import socket
 from urllib.parse import urlparse
+import sys
+
+# Windows select() loop is limited to 64 file descriptors; limit semaphore concurrency on Windows to 45
+SEMAPHORE_LIMIT = 45 if sys.platform == 'win32' else 150
 
 M3U_FILE = "FINAL_IPTV_COMPLETE.m3u"
 README_FILE = "README.md"
@@ -58,7 +62,7 @@ async def main():
 
     print(f"Starting check for {total} channels...")
 
-    sem = asyncio.Semaphore(150)
+    sem = asyncio.Semaphore(SEMAPHORE_LIMIT)
     
     async def bound_check(url):
         async with sem:
@@ -70,7 +74,7 @@ async def main():
                 print(f"Progress: {completed}/{total} (Active: {results['active']}, Blocked: {results['blocked']}, BDIX: {results['isp_bdix']}, Down: {results['down']})")
 
     # Use a TCPConnector to limit total connections and disable SSL verification for streams with broken certs.
-    connector = aiohttp.TCPConnector(limit=0, ssl=False)
+    connector = aiohttp.TCPConnector(limit=SEMAPHORE_LIMIT, ssl=False)
     async with aiohttp.ClientSession(connector=connector) as session:
         tasks = [bound_check(u) for u in urls]
         await asyncio.gather(*tasks)
