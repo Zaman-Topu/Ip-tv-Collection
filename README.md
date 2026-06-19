@@ -20,9 +20,14 @@ Welcome to the **Ultimate Free IPTV Collection**. We aggregate the best free IPT
 
 This playlist is perfectly formatted for all modern IPTV applications, including **TiviMate**, **IPTV Smarters Pro**, **Televizo**, **SS IPTV**, **GSE Smart IPTV**, and **VLC Media Player**.
 
-**Copy this RAW link and paste it into your player's URL field:**
+**Copy this RAW link for LIVE TV (News, Sports, BD) and paste it into your player:**
 ```http
 https://raw.githubusercontent.com/Zaman-Topu/Ip-tv-Collection/main/FINAL_IPTV_COMPLETE.m3u
+```
+
+**Copy this RAW link for VOD & MOVIES:**
+```http
+https://raw.githubusercontent.com/Zaman-Topu/Ip-tv-Collection/main/FINAL_MOVIES_COMPLETE.m3u
 ```
 
 **EPG (TV Guide) URL:**
@@ -34,7 +39,7 @@ https://raw.githubusercontent.com/Zaman-Topu/Ip-tv-Collection/main/FINAL_EPG_COM
 
 ## 📡 Live Channel Status
 
-*This repository uses a custom GitHub Action bot to ping all 32,000+ channels and verify their uptime every single night!*
+*This repository uses a custom GitHub Action bot to ping the Live TV channels and verify their uptime every single night! (Movies/VODs are excluded from the ping to ensure ultra-fast nightly checks).*
 
 <!-- STATS:START -->
 > **Last Checked:** 2026-06-19 12:45 PM (BST)
@@ -68,7 +73,6 @@ We combined 15 of the best IPTV sources on GitHub, ran a strict deduplication sc
 | Category | Channel Count | Description |
 | :--- | :---: | :--- |
 | 🇧🇩 **[BD] Bangladesh** | 1,895 | All local Bangladeshi channels (BTV, Somoy, Jamuna, NTV, BDIX Servers) |
-| 🎬 **[MOVIES] Movies** | 24,434 | Massive Free VOD & Movie streams from premium sources |
 | 🗺️ **[COUNTRY] Countrywise** | 1,978 | Country-specific Live TV channels sorted globally |
 | 🇮🇳 **[INDIA] India** | 918 | Hindi, Tamil, Telugu, Bengali & other regional Indian channels |
 | ⚽ **[SPORTS] Sports** | 673 | T Sports, Star Sports, Sky, Bein, ESPN, F1, Live Cricket & Football Streams |

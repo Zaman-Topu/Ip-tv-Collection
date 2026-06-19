@@ -5,6 +5,7 @@ import os
 import urllib.parse
 
 OUTPUT_FILE = "FINAL_IPTV_COMPLETE.m3u"
+MOVIES_OUTPUT_FILE = "FINAL_MOVIES_COMPLETE.m3u"
 
 SOURCES = [
     "https://raw.githubusercontent.com/Monjil404/livetv/refs/heads/main/pro",
@@ -161,10 +162,11 @@ async def main():
                 current_extinf = None
 
     print(f"Total unique channels found: {len(channels)}")
-    print("Categorizing and writing to file...")
+    print("Categorizing and writing to files...")
     
-    with open(OUTPUT_FILE, 'w', encoding='utf-8') as f:
-        f.write("#EXTM3U\n")
+    with open(OUTPUT_FILE, 'w', encoding='utf-8') as f_tv, open(MOVIES_OUTPUT_FILE, 'w', encoding='utf-8') as f_mov:
+        f_tv.write("#EXTM3U\n")
+        f_mov.write("#EXTM3U\n")
         
         for url, data in channels.items():
             mapped_cat = map_category(data['group'], data['name'])
@@ -172,10 +174,14 @@ async def main():
             # Format logo tag if it exists
             logo_attr = f' tvg-logo="{data["logo"]}"' if data["logo"] else ""
             
-            f.write(f'#EXTINF:-1 group-title="{mapped_cat}"{logo_attr},{data["name"]}\n')
-            f.write(f"{url}\n")
+            entry = f'#EXTINF:-1 group-title="{mapped_cat}"{logo_attr},{data["name"]}\n{url}\n'
             
-    print(f"Success! Written to {OUTPUT_FILE}")
+            if mapped_cat == "Movies":
+                f_mov.write(entry)
+            else:
+                f_tv.write(entry)
+            
+    print(f"Success! Written Live TV to {OUTPUT_FILE} and Movies to {MOVIES_OUTPUT_FILE}")
 
 if __name__ == "__main__":
     import sys
