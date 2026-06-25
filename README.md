@@ -3,43 +3,56 @@
   
   <br><br>
   
-  <h1>📺 Ultimate Free IPTV Playlist 2026 (Auto-Updating M3U)</h1>
-  <p><b>The most comprehensive, deduplicated, and auto-categorized IPTV M3U Playlist for Live TV, Sports, Movies, and Bangladeshi BDIX Channels.</b></p>
+  <h1>📺 Ultimate Dynamic IPTV Aggregator (Auto-Updating)</h1>
+  <p><b>The most advanced, auto-testing, deduplicating IPTV Aggregator engine on GitHub.</b></p>
   
-  [![Channels](https://img.shields.io/badge/Channels-32,354+-blue?style=for-the-badge&logo=tv)](FINAL_IPTV_COMPLETE.m3u)
-  [![Updated](https://img.shields.io/badge/Auto_Updated-Every_3_Days-brightgreen?style=for-the-badge&logo=clock)](FINAL_IPTV_COMPLETE.m3u)
-  [![Format](https://img.shields.io/badge/Format-M3U8-orange?style=for-the-badge)](FINAL_IPTV_COMPLETE.m3u)
-  [![License](https://img.shields.io/badge/License-Free-red?style=for-the-badge)](#)
+  [![Channels](https://img.shields.io/badge/Channels-50k+-blue?style=for-the-badge&logo=tv)](#)
+  [![Updated](https://img.shields.io/badge/Auto_Updated-Every_Night-brightgreen?style=for-the-badge&logo=clock)](#)
+  [![Format](https://img.shields.io/badge/Format-M3U8-orange?style=for-the-badge)](#)
+  [![Security](https://img.shields.io/badge/Security-Policy-red?style=for-the-badge)](SECURITY.md)
 </div>
 
 <br>
 
-Welcome to the **Ultimate Free IPTV Collection**. We aggregate the best free IPTV `.m3u` and `.m3u8` links from across the web into a single, massive, deduplicated, and neatly categorized playlist. Whether you are looking for **Bangladeshi Live TV (BDIX)**, **Global Sports Streams**, or **Free Movies VOD**, it's all here.
+Welcome to the **Ultimate Dynamic IPTV Aggregator**. Every single night, our automated GitHub Action connects to **25+ of the top IPTV repositories**, merges their streams, removes duplicates, physically tests thousands of streams, and generates four ultra-clean databases. 
+
+Whether you are looking for **Bangladeshi Live TV (BDIX)**, **Global Sports Streams**, or **Free Movies**, it's all here and it's guaranteed to work.
 
 ## 🚀 How to use in your TV / IPTV App
 
-This playlist is perfectly formatted for all modern IPTV applications, including **TiviMate**, **IPTV Smarters Pro**, **Televizo**, **SS IPTV**, **GSE Smart IPTV**, and **VLC Media Player**.
+This playlist is perfectly formatted for all modern IPTV applications, including **TiviMate**, **IPTV Smarters Pro**, **Televizo**, **SS IPTV**, and **VLC**.
 
-**Copy this RAW link for LIVE TV (News, Sports, BD) and paste it into your player:**
+We offer **4 distinct databases** to suit your needs:
+
+### ⚡ 1. The Active Database (Recommended)
+This list ONLY contains 100% verified working streams and local BDIX links. It is lightweight and ultra-fast.
+```http
+https://raw.githubusercontent.com/Zaman-Topu/Ip-tv-Collection/main/FINAL_IPTV_ACTIVE.m3u
+```
+
+### 🌍 2. The Geo-Blocked Database
+Streams that are online but require a VPN to bypass regional restrictions.
+```http
+https://raw.githubusercontent.com/Zaman-Topu/Ip-tv-Collection/main/FINAL_IPTV_GEO.m3u
+```
+
+### 📚 3. The Complete Database
+The massive, deduplicated master list containing everything (including untested streams).
 ```http
 https://raw.githubusercontent.com/Zaman-Topu/Ip-tv-Collection/main/FINAL_IPTV_COMPLETE.m3u
 ```
 
-**Copy this RAW link for VOD & MOVIES:**
+### 📅 EPG (Electronic Program Guide)
+Our system automatically generates a customized, lightning-fast JSON EPG matched specifically to the Active Database!
 ```http
-https://raw.githubusercontent.com/Zaman-Topu/Ip-tv-Collection/main/FINAL_MOVIES_COMPLETE.m3u
-```
-
-**EPG (TV Guide) URL:**
-```http
-https://raw.githubusercontent.com/Zaman-Topu/Ip-tv-Collection/main/FINAL_EPG_COMPLETE.xml.gz
+https://raw.githubusercontent.com/Zaman-Topu/Ip-tv-Collection/main/epg.json
 ```
 
 ---
 
-## 📡 Live Channel Status
+## 📡 Live Auto-Aggregator Status
 
-*This repository uses a custom GitHub Action bot to ping the Live TV channels and verify their uptime every single night! (Movies/VODs are excluded from the ping to ensure ultra-fast nightly checks).*
+*This repository uses a custom Python Aggregator Bot to pull from 25+ sources, merge, deduplicate, and ping the streams every single night!*
 
 <!-- STATS:START -->
 > **Last Checked:** 2026-06-25 08:17 PM (BST)
@@ -89,24 +102,23 @@ We combined 15 of the best IPTV sources on GitHub, ran a strict deduplication sc
 
 **Total Unique Channels:** `32,388`
 
----
+## 🛠️ The Ultimate Architecture
 
-## 🛠️ Premium Features included for FREE
-
-* **🤖 100% Auto-Updating:** A custom GitHub Bot fetches 15 fresh sources every 3 days. Your link will NEVER go dead!
-* **🖼️ Professional Channel Logos (`tvg-logo`):** Our script extracts and preserves HD logos for thousands of channels.
-* **🚫 Zero Duplicates:** Advanced URL-matching completely removes duplicate channels to save TV RAM.
-* **📂 Smart Categories (`group-title`):** Automatic mapping based on intelligent keyword detection.
-* **📺 Smart TV Ready:** No CORS or browser issues. Load directly into your Android TV, Firestick, Apple TV, or Roku.
+* **🤖 25+ Source Aggregation:** Pulls dynamically from the best repositories worldwide.
+* **🚫 Zero Duplicates:** Advanced URL-matching completely removes duplicate channels.
+* **⚡ 4-Tier Database Generation:** Automatically separates Active, Geo-blocked, and Dead streams into their own lists.
+* **📅 JSON EPG Generator:** Custom Python script matches XMLTV data to active streams to produce a lightweight JSON EPG.
+* **📺 Smart Web Player:** Integrated web player that utilizes the JSON EPG to show "Now Playing" titles directly on the stream cards.
 
 ---
 
-## 🔍 SEO Keywords
-`Free IPTV 2026`, `M3U Playlist URL`, `M3U8 Links Free`, `Bangladeshi IPTV M3U`, `Live TV Channels Free`, `TiviMate Best Playlist`, `BDIX Live TV`, `Sports IPTV Free`, `IPTV Smarters Pro Links`.
+## 🛡️ Security & Privacy Policy
+
+We take security seriously. Please read our official [Security Policy](SECURITY.md) for information on reporting vulnerabilities, malicious links, or handling DMCA takedown requests.
 
 <br>
 
 <div align="center">
-  <i>Maintained by <a href="https://github.com/Zaman-Topu">Zaman-Topu</a></i><br>
-  ⭐⭐⭐ <b>If you love this free IPTV list, please STAR this repository!</b> ⭐⭐⭐
+  <i>Built and Maintained by <a href="https://github.com/Zaman-Topu">Zaman-Topu</a></i><br>
+  ⭐⭐⭐ <b>If you love this professional architecture, please STAR this repository!</b> ⭐⭐⭐
 </div>

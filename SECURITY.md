@@ -2,25 +2,24 @@
 
 ## Supported Versions
 
-Since this repository is a collection of IPTV and Movie M3U playlists, "versions" refer to our active branches and updated lists. We actively maintain the `main` branch to ensure the provided links are safe, functional, and up-to-date.
+The IPTV aggregator and Web Player are actively maintained.
 
-| Branch / Collection | Supported          |
-| ------------------- | ------------------ |
-| `main` branch       | :white_check_mark: |
-| Archived / Old tags | :x:                |
+| Component | Supported          |
+| ------- | ------------------ |
+| GitHub Action Backend | :white_check_mark: |
+| Web Player | :white_check_mark: |
 
-## Reporting a Security Issue or Malicious Link
+## Reporting a Vulnerability
 
-We take the safety of our users very seriously. If you discover any malicious URLs, phishing links, or harmful domains embedded within the M3U playlists, please report them immediately.
+We take the security of this open-source project seriously. Because this project aggregates public M3U links, there are a few inherent risks that we mitigate through our GitHub Actions testing pipeline:
 
-**Please do not open a public issue for security concerns or malicious links.**
+1. **Malicious Links:** If you discover that an aggregated link points to a malicious domain or executes unwanted code, please report it immediately.
+2. **Web Player XSS:** If you find a Cross-Site Scripting (XSS) vulnerability in the Web Player's M3U parser or EPG renderer, let us know.
 
-Instead, report the issue privately by contacting:
-**[topu7252@gmail.com]** 
+### How to Report
+Please **DO NOT** create a public GitHub issue for security vulnerabilities. Instead, please email the repository owner or send a direct message via the appropriate channels.
 
-When reporting, please include:
-* The exact filename (e.g., `movies.m3u`).
-* The specific line number or the exact URL that is suspicious.
-* A brief description of the potential threat.
+### Takedown Requests (DMCA)
+This repository does NOT host any media files, video streams, or copyrighted content. It simply aggregates publicly available hyperlinks. 
 
-You can expect an initial response within 48 hours. If the report is validated, the unsafe links will be removed or patched immediately to protect users.
+If you are a copyright owner and believe a link should be removed from the aggregator, please open an Issue with the exact URL and we will add it to the backend blocklist.
