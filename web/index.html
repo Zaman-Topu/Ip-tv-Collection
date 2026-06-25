@@ -63,18 +63,8 @@
         <div class="w-full lg:w-2/3 flex flex-col">
           <!-- Video Box -->
           <div class="relative w-full aspect-video rounded-xs overflow-hidden bg-black border border-border-default/20 group" id="video-container">
-            <video id="video-player" class="w-full h-full outline-none" autoplay></video>
+            <video id="video-player" class="video-js vjs-default-skin vjs-16-9 vjs-big-play-centered" controls preload="auto"></video>
             
-            <!-- Buffering Spinner -->
-            <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 hidden z-40" id="buffering-spinner">
-              <div class="w-12 h-12 border-4 border-white/20 border-t-text-tertiary rounded-full animate-spin"></div>
-            </div>
-
-            <!-- Play Button Overlay -->
-            <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 hidden z-40 cursor-pointer bg-black/50 hover:bg-black/70 rounded-full p-4 transition" id="center-play-overlay">
-              <svg viewBox="0 0 24 24" class="w-12 h-12 fill-white"><path d="M8 5v14l11-7z"/></svg>
-            </div>
-
             <!-- Error Banner -->
             <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-black/90 border border-border-default p-6 rounded-xs text-center hidden shadow-2xl z-50 max-w-sm" id="player-error">
               <h3 class="text-text-tertiary text-lg font-bold mb-1">Stream Offline</h3>
@@ -85,38 +75,6 @@
             <button id="close-player" aria-label="Close player" class="absolute top-4 right-4 bg-black/60 hover:bg-black text-white p-2 rounded-full border border-border-default/20 transition z-50">
               <svg viewBox="0 0 24 24" class="w-5 h-5 fill-current"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
             </button>
-            
-            <!-- Custom Bottom Controls -->
-            <div class="absolute bottom-4 left-4 right-4 p-3 flex flex-col gap-2 bg-black/70 backdrop-blur-md border border-white/10 rounded-lg z-40 transition-all duration-300 opacity-0 pointer-events-none group-hover:opacity-100 focus-within:opacity-100 shadow-2" id="player-controls-bottom">
-              <!-- Custom Seekbar (visual representation only for live streams) -->
-              <div class="w-full h-1 bg-white/20 rounded-full relative overflow-hidden cursor-pointer" id="progress-container">
-                <div class="absolute h-full bg-text-tertiary w-full rounded-full shadow-[0_0_8px_#ff0055]" id="progress-bar"></div>
-              </div>
-              <div class="flex justify-between items-center">
-                <div class="flex items-center gap-6">
-                  <!-- Play/Pause -->
-                  <button class="text-white hover:text-text-tertiary transition cursor-pointer" id="play-pause-btn">
-                    <svg viewBox="0 0 24 24" class="w-6 h-6 fill-current" id="play-icon"><path d="M8 5v14l11-7z"/></svg>
-                    <svg viewBox="0 0 24 24" class="w-6 h-6 fill-current hidden" id="pause-icon"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
-                  </button>
-                  <!-- Volume control -->
-                  <div class="flex items-center gap-2">
-                    <button class="text-white hover:text-text-tertiary transition cursor-pointer" id="mute-btn">
-                      <svg viewBox="0 0 24 24" class="w-6 h-6 fill-current" id="vol-icon"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/></svg>
-                      <svg viewBox="0 0 24 24" class="w-6 h-6 fill-current hidden" id="mute-icon"><path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71z"/></svg>
-                    </button>
-                    <input type="range" id="volume-slider" min="0" max="1" step="0.1" value="1" class="w-16 h-1 bg-gray-600 rounded-full accent-text-tertiary cursor-pointer">
-                  </div>
-                  <!-- Time status -->
-                  <span class="text-[12px] font-bold text-white uppercase" id="current-time">LIVE</span>
-                </div>
-                <!-- Fullscreen -->
-                <button class="text-white hover:text-text-tertiary transition cursor-pointer" id="fullscreen-btn">
-                  <svg viewBox="0 0 24 24" class="w-6 h-6 fill-current" id="fs-enter"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>
-                  <svg viewBox="0 0 24 24" class="w-6 h-6 fill-current hidden" id="fs-exit"><path d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z"/></svg>
-                </button>
-              </div>
-            </div>
           </div>
 
           <!-- Video Metadata Details -->

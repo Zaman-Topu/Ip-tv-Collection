@@ -1,6 +1,7 @@
 import './style.css';
-import Hls from 'hls.js';
-import { MediaPlayer } from 'dashjs';
+import videojs from 'video.js';
+import 'video.js/dist/video-js.css';
+import 'videojs-contrib-dash';
 
 // Security helper to prevent right click and inspect shortcuts
 function securePage() {
@@ -27,28 +28,10 @@ const decodeUrl = (str) => atob(str);
 const M3U_URL_LIVE = decodeUrl("aHR0cHM6Ly9yYXcuZ2l0aHVidXNlcmNvbnRlbnQuY29tL1phbWFuLVRvcHUvSXAtdHYtQ29sbGVjdGlvbi9tYWluL0ZJTkFMX0lQVFZfQ09NUExFVEUubTN1");
 
 // Extra IPTV sources
-const EXTRA_LIVE_SOURCES = [
-  decodeUrl("aHR0cHM6Ly9yYXcuZ2l0aHVidXNlcmNvbnRlbnQuY29tL01vbmppbDQwNC9saXZldHYvcmVmcy9oZWFkcy9tYWluL3Bybw=="),
-  decodeUrl("aHR0cHM6Ly9yYXcuZ2l0aHVidXNlcmNvbnRlbnQuY29tL01vbmppbDQwNC9UVnNwby9yZWZzL2hlYWRzL21haW4vdHZz"),
-  decodeUrl("aHR0cHM6Ly9yYXcuZ2l0aHVidXNlcmNvbnRlbnQuY29tL2FidXNhZWVpZHgvTXJnaWZ5LUJESVgtSVBUVi9tYWluL3BsYXlsaXN0Lm0zdQ=="),
-  decodeUrl("aHR0cHM6Ly9yYXcuZ2l0aHVidXNlcmNvbnRlbnQuY29tL2FzaGlrNHUvbXJnaWZ5LWNsZWFuL21haW4vcGxheWxpc3QubTN1"),
-  decodeUrl("aHR0cHM6Ly9yYXcuZ2l0aHVidXNlcmNvbnRlbnQuY29tL2ltU2hha2lsL3R2bGluay9yZWZzL2hlYWRzL21haW4vaXB0di5tM3U4"),
-  decodeUrl("aHR0cHM6Ly9yYXcuZ2l0aHVidXNlcmNvbnRlbnQuY29tL3R2YmQvbTN1cGxheWVyL3JlZnMvaGVhZHMvbWFpbi9tM3UveG5pcHR2Lm0zdQ=="),
-  decodeUrl("aHR0cHM6Ly9yYXcuZ2l0aHVidXNlcmNvbnRlbnQuY29tL3RpbWUyc2hpbmUvSVBUVi9tYXN0ZXIvY29tYmluZWQubTN1"),
-  decodeUrl("aHR0cHM6Ly9yYXcuZ2l0aHVidXNlcmNvbnRlbnQuY29tL1NoYW1pbUhvc3NhaW5PZmZpY2lhbC9JUFRWL21hc3Rlci9CRElYLUlQVFYubTN1OA=="),
-  decodeUrl("aHR0cHM6Ly9yYXcuZ2l0aHVidXNlcmNvbnRlbnQuY29tL1NoYWRtYW5pc2xhbS9iZGlwdHYvbWFzdGVyL0JEJTIwSVBUVi5tM3U="),
-  decodeUrl("aHR0cHM6Ly9yYXcuZ2l0aHVidXNlcmNvbnRlbnQuY29tL0RyU3Vqb25QYXVsL1N1am9uLzZkYzZhMWQ0ZWFhMjBhOTIzOWFlMjdkOGUwZjAwMTgyYjYwZWViNDcvaXB0dg=="),
-  decodeUrl("aHR0cHM6Ly9yYXcuZ2l0aHVidXNlcmNvbnRlbnQuY29tL3NyaGFkeS9IYWR5L3JlZnMvaGVhZHMvbWFpbi9ha2FzaF9saXZlLm0zdQ=="),
-  decodeUrl("aHR0cHM6Ly9yYXcuZ2l0aHVidXNlcmNvbnRlbnQuY29tL2J1Z3NmcmVld2ViL0xpdmVUVkNvbGxlY3Rvci9tYWluL0xpdmVUVS9CYW5nbGFkZXNoL0xpdmVUVi5tM3U="),
-  decodeUrl("aHR0cHM6Ly9yYXcuZ2l0aHVidXNlcmNvbnRlbnQuY29tL2J1Z3NmcmVld2ViL0xpdmVUVkNvbGxlY3Rvci9tYWluL0xpdmVUVS9JbmRpYS9MaXZlVFYubTN1"),
-  decodeUrl("aHR0cHM6Ly9sdXBhZWwuZ2l0aHViLmlvL0lQVFYvcnVubmluZy5tM3U="),
-  decodeUrl("aHR0cHM6Ly9yYXcuZ2l0aHVidXNlcmNvbnRlbnQuY29tL3NyaGFkeS9heHNwb3J0cy9yZWZzL2hlYWRzL21haW4vcGxheWxpc3QubTN1")
-];
+const EXTRA_LIVE_SOURCES = [];
 
-let hlsInstance = null;
-let dashInstance = null;
+let playerInstance = null;
 let errorTimeout = null;
-const videoEl = document.getElementById('video-player');
 const videoContainer = document.getElementById('video-container');
 const playerContainer = document.getElementById('player-container');
 const queueList = document.getElementById('player-queue-list');
@@ -60,62 +43,17 @@ const playerDetailsLogo = document.getElementById('player-details-logo');
 const playerDetailsTitle = document.getElementById('player-details-title');
 const playerDetailsCountry = document.getElementById('player-details-country');
 const playerDetailsServer = document.getElementById('player-details-server');
-
-// Custom Controls Elements
-const playPauseBtn = document.getElementById('play-pause-btn');
-const playIcon = document.getElementById('play-icon');
-const pauseIcon = document.getElementById('pause-icon');
-const muteBtn = document.getElementById('mute-btn');
-const muteIcon = document.getElementById('mute-icon');
-const volIcon = document.getElementById('vol-icon');
-const volumeSlider = document.getElementById('volume-slider');
-const fullscreenBtn = document.getElementById('fullscreen-btn');
-const fsEnter = document.getElementById('fs-enter');
-const fsExit = document.getElementById('fs-exit');
-const timeDisplay = document.getElementById('current-time');
-const bufferingSpinner = document.getElementById('buffering-spinner');
-const centerPlayOverlay = document.getElementById('center-play-overlay');
 const errorOverlay = document.getElementById('player-error');
 
-// Custom Proxy Loader class for Hls.js (Wrapper pattern for max compatibility)
-class CustomProxyLoader {
-  constructor(config) {
-    this.internalLoader = new Hls.DefaultConfig.loader(config);
-  }
-  load(context, config, callbacks) {
-    if (context.url && !context.url.startsWith('https://corsproxy.io/?url=')) {
-      context.url = `https://corsproxy.io/?url=${encodeURIComponent(context.url)}`;
+window.useCorsProxy = false;
+
+if (videojs.Vhs) {
+  videojs.Vhs.xhr.beforeRequest = function(options) {
+    if (window.useCorsProxy && options.uri && !options.uri.startsWith('https://corsproxy.io/?url=')) {
+      options.uri = `https://corsproxy.io/?url=${encodeURIComponent(options.uri)}`;
     }
-
-    // Wrap onSuccess to rewrite response.url back to original URL so relative paths resolve correctly
-    const originalOnSuccess = callbacks.onSuccess;
-    const wrappedCallbacks = {
-      ...callbacks,
-      onSuccess: function(response, stats, context, networkDetails) {
-        if (response && response.url && response.url.includes('corsproxy.io/?url=')) {
-          try {
-            const parsed = new URL(response.url);
-            const orig = parsed.searchParams.get('url');
-            if (orig) {
-              // Create a shallow copy to bypass read-only property restrictions
-              response = { ...response, url: orig };
-            }
-          } catch (e) {
-            console.warn("Error parsing response URL:", e);
-          }
-        }
-        originalOnSuccess(response, stats, context, networkDetails);
-      }
-    };
-
-    this.internalLoader.load(context, config, wrappedCallbacks);
-  }
-  abort() {
-    this.internalLoader.abort();
-  }
-  destroy() {
-    this.internalLoader.destroy();
-  }
+    return options;
+  };
 }
 
 // Filter UI Elements
@@ -200,7 +138,9 @@ function isPrivateIp(urlStr) {
 
 // Display error messages inside the video player
 function showPlayerError(streamUrl) {
-  bufferingSpinner.classList.add('hidden');
+  if (playerInstance) {
+    playerInstance.loadingSpinner.hide();
+  }
   errorOverlay.classList.remove('hidden');
   
   const titleEl = errorOverlay.querySelector('h3');
@@ -569,160 +509,69 @@ function openPlayer(channel, useProxy = false) {
   // Load stream URL
   let playUrl = channel.url;
   const isPrivate = isPrivateIp(playUrl);
+  
+  const isHttp = playUrl.startsWith('http:');
+  const isHttpsPage = window.location.protocol === 'https:';
+  
+  if (isHttp && isHttpsPage && !isPrivate) {
+     useProxy = true;
+  }
+  
+  window.useCorsProxy = useProxy && !isPrivate;
 
-  if (hlsInstance) {
-    hlsInstance.destroy();
-    hlsInstance = null;
+  if (playerInstance) {
+    playerInstance.dispose();
+    playerInstance = null;
   }
-  if (dashInstance) {
-    dashInstance.destroy();
-    dashInstance = null;
-  }
+  
+  const newVideoEl = document.createElement('video');
+  newVideoEl.id = 'video-player';
+  newVideoEl.className = 'video-js vjs-default-skin vjs-16-9 vjs-big-play-centered';
+  newVideoEl.setAttribute('controls', 'true');
+  newVideoEl.setAttribute('preload', 'auto');
+  videoContainer.insertBefore(newVideoEl, errorOverlay);
+
   errorOverlay.classList.add('hidden');
-  bufferingSpinner.classList.remove('hidden');
-  centerPlayOverlay.classList.add('hidden');
 
-  // Handle MPEG-DASH (.mpd)
-  if (playUrl.includes('.mpd')) {
-    dashInstance = MediaPlayer().create();
-    dashInstance.updateSettings({
-      streaming: {
-        retryAttempts: { MPD: 1, MediaSegment: 1, InitializationSegment: 1 },
-        retryIntervals: { MPD: 500, MediaSegment: 500, InitializationSegment: 500 }
-      }
-    });
+  const type = playUrl.includes('.mpd') ? 'application/dash+xml' : (playUrl.includes('.m3u8') ? 'application/x-mpegURL' : 'video/mp4');
 
-    if (useProxy && !isPrivate) {
-      dashInstance.addRequestInterceptor((request) => {
-        if (request.url && !request.url.startsWith('https://corsproxy.io/?url=')) {
-          request.url = `https://corsproxy.io/?url=${encodeURIComponent(request.url)}`;
-        }
-        return Promise.resolve(request);
-      });
-    }
+  playerInstance = videojs(newVideoEl, {
+    liveui: true,
+    autoplay: true,
+    fluid: true
+  });
 
-    dashInstance.initialize(videoEl, playUrl, true);
-    
-    dashInstance.on(MediaPlayer.events.PLAYBACK_STARTED, () => {
-      bufferingSpinner.classList.add('hidden');
-      errorOverlay.classList.add('hidden');
-    });
-    
-    dashInstance.on(MediaPlayer.events.ERROR, (e) => {
-      console.error('DASH Error', e);
-      if (!useProxy && !isPrivate) {
-        console.log('Retrying DASH playback with CORS proxy fallback...');
-        if (dashInstance) {
-          dashInstance.destroy();
-          dashInstance = null;
-        }
-        openPlayer(channel, true);
-      } else {
-        showPlayerError(playUrl);
-      }
-    });
-    
-    errorTimeout = setTimeout(() => {
-      if (!videoEl.paused || videoEl.readyState >= 3) {
-        clearTimeout(errorTimeout);
-        return;
-      }
-      if (dashInstance) {
-        dashInstance.destroy();
-        dashInstance = null;
-      }
-      if (!useProxy && !isPrivate) {
-        console.log('Timeout. Retrying DASH playback with CORS proxy fallback...');
-        openPlayer(channel, true);
-      } else {
-        showPlayerError(playUrl);
-      }
-    }, 15000);
-    
-    videoEl.addEventListener('playing', () => clearTimeout(errorTimeout), { once: true });
-    return;
+  let finalUrl = playUrl;
+  if (window.useCorsProxy) {
+     finalUrl = `https://corsproxy.io/?url=${encodeURIComponent(playUrl)}`;
   }
 
-  // Handle HLS (.m3u8)
-  if (Hls.isSupported()) {
-    const hlsConfig = {
-      maxMaxBufferLength: 15,
-      enableWorker: true,
-      lowLatencyMode: true,
-      manifestLoadingTimeOut: 5000,
-      fragLoadingMaxRetry: 1
-    };
-    if (useProxy && !isPrivate) {
-      hlsConfig.loader = CustomProxyLoader;
+  playerInstance.src({ src: finalUrl, type: type });
+
+  playerInstance.on('error', function() {
+    console.error('Video.js Error', playerInstance.error());
+    if (!window.useCorsProxy && !isPrivate) {
+      console.log('Retrying playback with CORS proxy fallback...');
+      openPlayer(channel, true);
+    } else {
+      showPlayerError(playUrl);
     }
-    hlsInstance = new Hls(hlsConfig);
-    hlsInstance.loadSource(playUrl);
-    hlsInstance.attachMedia(videoEl);
-    
-    errorTimeout = setTimeout(() => {
-      if (!videoEl.paused || videoEl.readyState >= 3) {
-        clearTimeout(errorTimeout);
-        return;
-      }
-      if (hlsInstance) {
-        hlsInstance.destroy();
-        hlsInstance = null;
-      }
-      if (!useProxy && !isPrivate) {
-        console.log('Timeout. Retrying HLS playback with CORS proxy fallback...');
-        openPlayer(channel, true);
-      } else {
-        showPlayerError(playUrl);
-      }
-    }, 15000);
-    
-    videoEl.addEventListener('playing', () => clearTimeout(errorTimeout), { once: true });
-    
-    hlsInstance.on(Hls.Events.MANIFEST_PARSED, () => {
+  });
+
+  errorTimeout = setTimeout(() => {
+    if (playerInstance && !playerInstance.hasStarted()) {
       clearTimeout(errorTimeout);
-      bufferingSpinner.classList.add('hidden');
-      errorOverlay.classList.add('hidden');
-      videoEl.play().catch(e => {
-        console.warn('Playback prevented', e);
-        centerPlayOverlay.classList.remove('hidden');
-      });
-    });
-    
-    hlsInstance.on(Hls.Events.ERROR, (event, data) => {
-      if (data.fatal) {
-        console.warn('HLS Fatal Error:', data);
-        if (!useProxy && !isPrivate) {
-          console.log('Fatal HLS Error. Retrying with CORS proxy fallback...');
-          hlsInstance.destroy();
-          hlsInstance = null;
-          openPlayer(channel, true);
-        } else {
-          showPlayerError(playUrl);
-          hlsInstance.destroy();
-        }
-      }
-    });
-  } else if (videoEl.canPlayType('application/vnd.apple.mpegurl')) {
-    // Safari fallback
-    const finalUrl = (useProxy && !isPrivate) ? `https://corsproxy.io/?url=${encodeURIComponent(playUrl)}` : playUrl;
-    videoEl.src = finalUrl;
-    
-    const handleNativeError = () => {
-      videoEl.removeEventListener('error', handleNativeError);
-      if (!useProxy && !isPrivate) {
-        console.log('Native playback error. Retrying with proxy...');
+      if (!window.useCorsProxy && !isPrivate) {
         openPlayer(channel, true);
       } else {
         showPlayerError(playUrl);
       }
-    };
-    videoEl.addEventListener('error', handleNativeError);
-    
-    videoEl.addEventListener('loadedmetadata', () => {
-      videoEl.removeEventListener('error', handleNativeError);
-      videoEl.play();
-    });
-  }
+    }
+  }, 10000);
+
+  playerInstance.on('playing', () => {
+    clearTimeout(errorTimeout);
+  });
 }
 
 // Close player
@@ -733,133 +582,16 @@ function closePlayer() {
   
   clearTimeout(errorTimeout);
   
-  if (hlsInstance) {
-    hlsInstance.destroy();
-    hlsInstance = null;
+  if (playerInstance) {
+    playerInstance.dispose();
+    playerInstance = null;
   }
-  if (dashInstance) {
-    dashInstance.destroy();
-    dashInstance = null;
-  }
-  videoEl.pause();
-  videoEl.src = '';
   history.pushState(null, '', window.location.pathname);
 }
 
 closePlayerBtn.onclick = closePlayer;
 
-// Player custom controls listeners
-playPauseBtn.addEventListener('click', () => {
-  if (videoEl.paused) {
-    videoEl.play();
-    playIcon.classList.add('hidden');
-    pauseIcon.classList.remove('hidden');
-  } else {
-    videoEl.pause();
-    playIcon.classList.remove('hidden');
-    pauseIcon.classList.add('hidden');
-  }
-});
 
-videoEl.addEventListener('play', () => {
-  playIcon.classList.add('hidden');
-  pauseIcon.classList.remove('hidden');
-});
-
-videoEl.addEventListener('pause', () => {
-  playIcon.classList.remove('hidden');
-  pauseIcon.classList.add('hidden');
-});
-
-muteBtn.addEventListener('click', () => {
-  videoEl.muted = !videoEl.muted;
-  if (videoEl.muted) {
-    muteIcon.classList.remove('hidden');
-    volIcon.classList.add('hidden');
-  } else {
-    muteIcon.classList.add('hidden');
-    volIcon.classList.remove('hidden');
-  }
-});
-
-volumeSlider.addEventListener('input', (e) => {
-  videoEl.volume = e.target.value;
-  videoEl.muted = (e.target.value == 0);
-});
-
-fullscreenBtn.addEventListener('click', () => {
-  if (!document.fullscreenElement) {
-    videoContainer.requestFullscreen().catch(err => console.log(err));
-    fsEnter.classList.add('hidden');
-    fsExit.classList.remove('hidden');
-  } else {
-    document.exitFullscreen();
-    fsEnter.classList.remove('hidden');
-    fsExit.classList.add('hidden');
-  }
-});
-
-let controlsTimeout = null;
-
-function showControls() {
-  const controls = document.getElementById('player-controls-bottom');
-  if (!controls) return;
-  controls.classList.add('controls-visible');
-  
-  clearTimeout(controlsTimeout);
-  if (!videoEl.paused) {
-    controlsTimeout = setTimeout(() => {
-      controls.classList.remove('controls-visible');
-    }, 4000);
-  }
-}
-
-function hideControls() {
-  const controls = document.getElementById('player-controls-bottom');
-  if (controls) {
-    controls.classList.remove('controls-visible');
-  }
-}
-
-// Toggle controls on clicking the video container (excluding the control bar itself)
-videoContainer.addEventListener('click', (e) => {
-  const controls = document.getElementById('player-controls-bottom');
-  const errorBanner = document.getElementById('player-error');
-  
-  // Don't toggle if click is on any interactive controls
-  if (e.target.closest('#player-controls-bottom') || 
-      e.target.closest('#close-player') ||
-      e.target.closest('#center-play-overlay') ||
-      (errorBanner && !errorBanner.classList.contains('hidden') && e.target.closest('#player-error'))) {
-    return;
-  }
-  
-  if (controls.classList.contains('controls-visible')) {
-    hideControls();
-  } else {
-    showControls();
-  }
-});
-
-// Show controls on activity
-videoContainer.addEventListener('mousemove', showControls);
-videoContainer.addEventListener('touchstart', showControls);
-
-// Reset timeout on video play/pause
-videoEl.addEventListener('play', () => {
-  clearTimeout(controlsTimeout);
-  controlsTimeout = setTimeout(hideControls, 4000);
-});
-
-videoEl.addEventListener('pause', () => {
-  clearTimeout(controlsTimeout);
-  showControls(); // keep visible when paused
-});
-
-centerPlayOverlay.onclick = () => {
-  videoEl.play();
-  centerPlayOverlay.classList.add('hidden');
-};
 
 // Filter event handlers
 searchInput.addEventListener('input', (e) => {

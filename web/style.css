@@ -195,8 +195,76 @@ h1, h2, h3, h4, h5, h6, .brand-font {
   border-left: 3px solid var(--color-text-tertiary);
 }
 
-/* Player controls visible state for mobile and click-toggle */
-#player-controls-bottom.controls-visible {
-  opacity: 1 !important;
-  pointer-events: auto !important;
+/* Video.js Theme Overrides */
+.video-js {
+  font-family: var(--font-primary);
+}
+
+.video-js .vjs-big-play-button {
+  background-color: var(--color-text-tertiary);
+  border-color: var(--color-text-tertiary);
+  color: #fff;
+  border-radius: 50%;
+  width: 80px;
+  height: 80px;
+  line-height: 80px;
+  transition: all 0.3s ease;
+  margin-top: -40px;
+  margin-left: -40px;
+}
+
+.video-js:hover .vjs-big-play-button {
+  background-color: #ff3377;
+  border-color: #ff3377;
+  transform: scale(1.05);
+}
+
+.video-js .vjs-control-bar {
+  background-color: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(8px);
+  height: 50px;
+}
+
+.video-js .vjs-play-progress {
+  background-color: var(--color-text-tertiary);
+}
+
+.video-js .vjs-slider {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.video-js .vjs-load-progress {
+  background: rgba(255, 255, 255, 0.4);
+}
+
+.video-js .vjs-live-control {
+  color: var(--color-text-tertiary);
+  font-weight: bold;
+  font-family: var(--font-display);
+  letter-spacing: 1px;
+}
+
+.video-js .vjs-live-display::before {
+  content: "●";
+  color: var(--color-text-tertiary);
+  margin-right: 4px;
+  font-size: 1.2em;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.5; }
+  100% { opacity: 1; }
+}
+
+/* Ensure mobile layout doesn't clip */
+@media (max-width: 768px) {
+  .video-js .vjs-big-play-button {
+    width: 60px;
+    height: 60px;
+    line-height: 60px;
+    margin-top: -30px;
+    margin-left: -30px;
+  }
 }
