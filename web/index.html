@@ -116,7 +116,17 @@
         </div>
 
         <!-- Inputs Grid -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+          <!-- Database Mode -->
+          <div>
+            <label class="block text-text-secondary text-[12px] font-bold uppercase tracking-wider mb-2">Database Engine</label>
+            <select id="filter-db-mode" class="w-full bg-surface-raised border border-border-default text-text-primary px-3 py-2 rounded text-[13px] font-medium outline-none focus:border-text-tertiary transition cursor-pointer">
+              <option value="active" selected>⚡ Active Streams (Fast)</option>
+              <option value="geo">🌍 Geo-Blocked (VPN Needed)</option>
+              <option value="complete">📚 Complete Master DB</option>
+            </select>
+          </div>
+
           <!-- Search input -->
           <div>
             <label class="block text-text-secondary text-[12px] font-bold uppercase tracking-wider mb-2">Search Broadcast</label>

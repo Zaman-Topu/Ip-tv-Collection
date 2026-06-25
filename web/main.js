@@ -25,9 +25,20 @@ securePage();
 
 const decodeUrl = (str) => atob(str);
 
-const M3U_URL_LIVE = decodeUrl("aHR0cHM6Ly9yYXcuZ2l0aHVidXNlcmNvbnRlbnQuY29tL1phbWFuLVRvcHUvSXAtdHYtQ29sbGVjdGlvbi9tYWluL0ZJTkFMX0lQVFZfQUNUSVZFLm0zdQ==");
+// M3U Database URLs
+const DB_URLS = {
+  active: "aHR0cHM6Ly9yYXcuZ2l0aHVidXNlcmNvbnRlbnQuY29tL1phbWFuLVRvcHUvSXAtdHYtQ29sbGVjdGlvbi9tYWluL0ZJTkFMX0lQVFZfQUNUSVZFLm0zdQ==",
+  geo: "aHR0cHM6Ly9yYXcuZ2l0aHVidXNlcmNvbnRlbnQuY29tL1phbWFuLVRvcHUvSXAtdHYtQ29sbGVjdGlvbi9tYWluL0ZJTkFMX0lQVFZfR0VPLm0zdQ==",
+  complete: "aHR0cHM6Ly9yYXcuZ2l0aHVidXNlcmNvbnRlbnQuY29tL1phbWFuLVRvcHUvSXAtdHYtQ29sbGVjdGlvbi9tYWluL0ZJTkFMX0lQVFZfQ09NUExFVEUubTN1"
+};
 
-// Extra IPTV sources
+let M3U_URL_LIVE = decodeUrl(DB_URLS.active);
+
+// Global State
+let epgData = {};
+let allTvChannels = [];
+let currentFilteredChannels = [];
+let channelStatusMap = {};
 const EXTRA_LIVE_SOURCES = [];
 
 let playerInstance = null;
@@ -390,6 +401,15 @@ function renderGrid() {
     card.role = 'button';
     card.setAttribute('aria-label', `Play ${ch.name}`);
     
+    // Find EPG Data
+    let epgInfo = '';
+    if (ch.id && epgData[ch.id] && epgData[ch.id].length > 0) {
+      const currentProgram = epgData[ch.id][0];
+      epgInfo = `<div class="w-full mt-1 bg-surface-base px-1.5 py-0.5 rounded text-[9px] text-text-tertiary truncate border border-border-default">
+        <span class="text-brand-primary">▶</span> ${currentProgram.title}
+      </div>`;
+    }
+
     card.innerHTML = `
       ${badgeHtml}
       <div class="w-full flex-1 flex items-center justify-center p-1 min-h-0">
@@ -398,6 +418,7 @@ function renderGrid() {
       <div class="w-full text-center border-t border-border-default pt-2 mt-1">
         <div class="text-[12px] font-bold text-text-primary truncate tracking-tight uppercase">${ch.name}</div>
         <div class="text-[10px] font-medium text-text-secondary truncate tracking-tight uppercase mt-0.5">${ch.country} • ${ch.server}</div>
+        ${epgInfo}
       </div>
     `;
 
@@ -660,15 +681,41 @@ window.addEventListener('popstate', (event) => {
 async function initApp() {
   container.innerHTML = '<div class="flex justify-center items-center h-64"><div class="spinner"></div></div>';
   
-  // Try to load channel status first (non-blocking)
+  // Fetch statuses and EPG first
   try {
-    const statusResp = await fetch(decodeUrl('aHR0cHM6Ly9yYXcuZ2l0aHVidXNlcmNvbnRlbnQuY29tL1phbWFuLVRvcHUvSXAtdHYtQ29sbGVjdGlvbi9tYWluL2NoYW5uZWxfc3RhdHVzLmpzb24='));
-    if (statusResp.ok) {
-      channelStatusMap = await statusResp.json();
-    }
+    const [statusResp, epgResp] = await Promise.all([
+      fetch(decodeUrl('aHR0cHM6Ly9yYXcuZ2l0aHVidXNlcmNvbnRlbnQuY29tL1phbWFuLVRvcHUvSXAtdHYtQ29sbGVjdGlvbi9tYWluL2NoYW5uZWxfc3RhdHVzLmpzb24=')).catch(() => null),
+      fetch(decodeUrl('aHR0cHM6Ly9yYXcuZ2l0aHVidXNlcmNvbnRlbnQuY29tL1phbWFuLVRvcHUvSXAtdHYtQ29sbGVjdGlvbi9tYWluL2VwZy5qc29u')).catch(() => null)
+    ]);
+    
+    if (statusResp && statusResp.ok) channelStatusMap = await statusResp.json();
+    if (epgResp && epgResp.ok) epgData = await epgResp.json();
   } catch(e) {
-    console.log("Could not load channel status map", e);
+    console.log("Could not load supplementary data", e);
   }
+  
+  await loadDatabase();
+}
+
+async function loadDatabase() {
+  container.innerHTML = '<div class="flex flex-col justify-center items-center h-64 gap-4"><div class="spinner"></div><p class="text-gray-400 text-sm" id="load-msg">Loading database...</p></div>';
+
+  allTvChannels = await loadPlaylist(M3U_URL_LIVE);
+  currentFilteredChannels = allTvChannels;
+  
+  populateFilters();
+  applyFilters();
+  
+  handleUrlParams();
+}
+
+document.getElementById('filter-db-mode').addEventListener('change', (e) => {
+  const mode = e.target.value;
+  if (DB_URLS[mode]) {
+    M3U_URL_LIVE = decodeUrl(DB_URLS[mode]);
+    loadDatabase();
+  }
+});
   
   if (allTvChannels.length === 0) {
     container.innerHTML = '<div class="flex flex-col justify-center items-center h-64 gap-4"><div class="spinner"></div><p class="text-gray-400 text-sm" id="load-msg">Loading main channels...</p></div>';
