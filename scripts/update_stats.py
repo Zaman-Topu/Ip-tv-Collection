@@ -10,6 +10,7 @@ import sys
 SEMAPHORE_LIMIT = 45 if sys.platform == 'win32' else 150
 
 M3U_FILE = "FINAL_IPTV_COMPLETE.m3u"
+ACTIVE_M3U_FILE = "FINAL_IPTV_ACTIVE.m3u"
 README_FILE = "README.md"
 
 # Keywords and regex for local Bangladeshi ISP / BDIX streams
@@ -49,14 +50,25 @@ async def check_url(session, url):
         return 'down'
 
 async def main():
-    urls = []
+    channel_entries = []
+    seen_urls = set()
+    current_extinf = None
+
+    # Deduplicate and extract entries
     with open(M3U_FILE, 'r', encoding='utf-8') as f:
         for line in f:
             line = line.strip()
-            if line and not line.startswith('#'):
-                urls.append(line)
+            if not line:
+                continue
+            if line.startswith('#EXTINF'):
+                current_extinf = line
+            elif not line.startswith('#'):
+                if line not in seen_urls:
+                    seen_urls.add(line)
+                    channel_entries.append({'extinf': current_extinf, 'url': line})
+                current_extinf = None
 
-    total = len(urls)
+    total = len(channel_entries)
     results = {'active': 0, 'blocked': 0, 'isp_bdix': 0, 'down': 0}
     url_status = {}
 
@@ -73,11 +85,35 @@ async def main():
             if completed % 1000 == 0 or completed == total:
                 print(f"Progress: {completed}/{total} (Active: {results['active']}, Blocked: {results['blocked']}, BDIX: {results['isp_bdix']}, Down: {results['down']})")
 
-    # Use a TCPConnector to limit total connections and disable SSL verification for streams with broken certs.
     connector = aiohttp.TCPConnector(limit=SEMAPHORE_LIMIT, ssl=False)
     async with aiohttp.ClientSession(connector=connector) as session:
-        tasks = [bound_check(u) for u in urls]
+        tasks = [bound_check(entry['url']) for entry in channel_entries]
         await asyncio.gather(*tasks)
+
+    # Filter channels and rewrite M3U files
+    active_lines = ['#EXTM3U']
+    complete_lines = ['#EXTM3U']
+    
+    for entry in channel_entries:
+        url = entry['url']
+        extinf = entry['extinf']
+        status = url_status.get(url, 'down')
+        
+        # Build string blocks for the channel
+        block = f"{extinf}\n{url}" if extinf else url
+        
+        if status != 'down':
+            # Remove inactive streams completely from the master DB and add to active
+            complete_lines.append(block)
+            active_lines.append(block)
+            
+    # Overwrite the COMPLETE file (cleaning out dead streams)
+    with open(M3U_FILE, 'w', encoding='utf-8') as f:
+        f.write('\n'.join(complete_lines) + '\n')
+        
+    # Create the strictly ACTIVE file
+    with open(ACTIVE_M3U_FILE, 'w', encoding='utf-8') as f:
+        f.write('\n'.join(active_lines) + '\n')
 
     # Save to JSON for Web Player
     import json

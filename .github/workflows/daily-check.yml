@@ -38,12 +38,12 @@ jobs:
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
-          git add README.md channel_status.json
+          git add README.md channel_status.json FINAL_IPTV_COMPLETE.m3u FINAL_IPTV_ACTIVE.m3u
           
           # Only commit if there are changes
           if git diff --staged --quiet; then
             echo "No changes in channel status to commit."
           else
-            git commit -m "docs(readme): auto-update daily channel status chart"
+            git commit -m "docs(readme): auto-update daily channel status and cleanup dead streams"
             git push
           fi

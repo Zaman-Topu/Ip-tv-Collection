@@ -25,7 +25,7 @@ securePage();
 
 const decodeUrl = (str) => atob(str);
 
-const M3U_URL_LIVE = decodeUrl("aHR0cHM6Ly9yYXcuZ2l0aHVidXNlcmNvbnRlbnQuY29tL1phbWFuLVRvcHUvSXAtdHYtQ29sbGVjdGlvbi9tYWluL0ZJTkFMX0lQVFZfQ09NUExFVEUubTN1");
+const M3U_URL_LIVE = decodeUrl("aHR0cHM6Ly9yYXcuZ2l0aHVidXNlcmNvbnRlbnQuY29tL1phbWFuLVRvcHUvSXAtdHYtQ29sbGVjdGlvbi9tYWluL0ZJTkFMX0lQVFZfQUNUSVZFLm0zdQ==");
 
 // Extra IPTV sources
 const EXTRA_LIVE_SOURCES = [];
