@@ -580,24 +580,33 @@ function playStream(rawUrl, ch, useProxy) {
   if (vidSpin)   vidSpin.classList.add('show');
 
   const isPrivate = isPrivateIp(rawUrl);
+  const isHttp    = rawUrl.startsWith('http:');
+  const isHttps   = location.protocol==='https:';
 
-  // ⚡ ALWAYS route through proxy for non-private streams
-  // → hides real URL from m3u8 sniffers (sniffer only sees corsproxy.io URL)
+  // Only proxy if explicitly requested OR HTTP stream on HTTPS (to avoid mixed content block)
   let url = rawUrl;
-  if (!isPrivate) {
+  if ((useProxy || (isHttp && isHttps)) && !isPrivate) {
     url = `https://corsproxy.io/?url=${encodeURIComponent(rawUrl)}`;
   }
   const _tmp = url;
 
   function onErr() {
-    if (vidSpin) vidSpin.classList.remove('show');
-    pErr.classList.add('show');
-    if (isPrivate) {
-      errTxt.innerHTML = 'BDIX stream — open browser settings → Allow insecure content.';
+    if (!useProxy && !isPrivate) {
+      playStream(rawUrl, ch, true); // try with proxy on error
     } else {
-      errTxt.textContent = 'Stream offline or geo-blocked. Try another channel.';
+      if (vidSpin) vidSpin.classList.remove('show');
+      pErr.classList.add('show');
+      if (isPrivate) {
+        errTxt.innerHTML = 'BDIX stream — open browser settings → Allow insecure content.';
+      } else {
+        errTxt.textContent = 'Stream offline or geo-blocked. Try another channel.';
+      }
     }
   }
+
+  // Remove spinner on native play event (catches both HLS and native video load)
+  vidEl.onplaying = () => { if (vidSpin) vidSpin.classList.remove('show'); };
+
 
   // Buffer progress animation
   let bufTimer = null;
