@@ -60,7 +60,7 @@ const PER     = 96;
 let activeCh  = null;
 let hlsInst   = null;
 let srchTimer = null;
-let dbKey     = 'active';
+let dbKey     = 'complete';
 
 let fSearch  = '';
 let fCat     = 'all';
