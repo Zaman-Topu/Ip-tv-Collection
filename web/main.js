@@ -106,6 +106,7 @@ function getFallback(name) {
   const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='80' height='50'><rect width='80' height='50' rx='4' fill='${c}'/><text x='50%' y='55%' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='24' font-weight='bold' fill='#ffffff'>${l}</text></svg>`;
   return `data:image/svg+xml,${encodeURIComponent(svg)}`;
 }
+window.getFallback = getFallback;
 
 function logoSrc(logo, name) {
   if (!logo) return getFallback(name);
