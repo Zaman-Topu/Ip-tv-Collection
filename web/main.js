@@ -107,22 +107,213 @@ function logoSrc(logo) {
 }
 
 // ══════════════════════════════════════════
-//  COUNTRY / SERVER DETECTION
+//  COMPREHENSIVE COUNTRY DETECTION
 // ══════════════════════════════════════════
-const CMAP = {
-  'bangladesh':'Bangladesh','bdix':'Bangladesh','btv':'Bangladesh','somoy':'Bangladesh','tsports':'Bangladesh',
-  'india':'India','star sports':'India','sony':'India','zee':'India','colors':'India','hindi':'India',
-  'pakistan':'Pakistan','geo':'Pakistan','ten sports':'Pakistan',
-  'uk':'UK','sky sports':'UK','bbc':'UK',
-  'usa':'USA','espn':'USA','fox sports':'USA','hbo':'USA',
+
+// Explicit group → country mapping
+const GROUP_COUNTRY = {
+  'bangladesh': 'Bangladesh',
+  'akash go': 'Bangladesh',
+  'bangla': 'Bangladesh',
+  'bdix': 'Bangladesh',
+  'bd': 'Bangladesh',
+  'indian bangla': 'India',
+  'india': 'India',
+  'hindi': 'India',
+  'pakistan': 'Pakistan',
+  'uk': 'UK',
+  'usa': 'USA',
+  'france': 'France',
+  'germany': 'Germany',
+  'italy': 'Italy',
+  'spain': 'Spain',
+  'turkey': 'Turkey',
+  'arabic': 'Arabic',
+  'arab': 'Arabic',
+  'russia': 'Russia',
+  'china': 'China',
+  'japan': 'Japan',
 };
-function detectCountry(g, n) {
-  const gL = (g||'').toLowerCase(), nL = (n||'').toLowerCase();
-  for (const [k,v] of Object.entries(CMAP)) {
-    if (gL.includes(k) || nL.includes(k)) return v;
+
+// BD channel name keywords (channels that are from Bangladesh regardless of group)
+const BD_NAMES = [
+  'btv','btv world','btv national','bangladesh television',
+  'somoy tv','somoy news','shomoy',
+  'jamuna tv','jamuna news',
+  'ntv bangla', 'ntv bd',
+  'channel i','channel-i',
+  'desh tv','desh bangla','desh bideshe','deshe bideshe',
+  'boishakhi tv','boishakhi',
+  'rtv bd','rtv bangla',
+  'gazi tv','gazi',
+  'satv','sa tv','sa-tv',
+  'banglavision','bangla vision',
+  'mytvbd','my tv bd','my tv bangla',
+  'deepto tv','deepto',
+  'ekattor tv','ekattor',
+  'independent tv','independent television',
+  'news24 bd','news 24 bd',
+  'channel 24 bd','channel24',
+  'maasranga','maas ranga',
+  'channel 9 bangla','channel nine bd',
+  'gsatv','gaan bangla','gaan tv',
+  't sports','tsports','t-sports',
+  'time television bd',
+  'bijoy tv','bijoy bangla',
+  'nagorik tv',
+  '71 tv','71tv',
+  'baul tv',
+  'peace tv bangla','peace bangla',
+  'quraner alo','quraaner alo','quran tv bangla',
+  'dbc news',
+  'atv bangla','atv news bangla',
+  'atn bangla','atn news',
+  'ekushey tv','ekushe tv',
+  'bbc bangla',
+  'channel s bangla','channel-s',
+  'duronto tv',
+  'asia tv bd',
+  'abc radio bangla',
+  'madani channel bangla',
+  'islamic tv bangla',
+  'channel 16 bd',
+  'sunny tv bd',
+  'nexus television',
+  'asia pacific tv',
+  'bd news 24','bdnews24',
+  'nbc bangla','nbc bd',
+  'chhannel i','channeli',
+  'jago bd','jago bangla',
+  'radio today',
+  'islamic channel bd',
+  'shanta vision',
+  'dip tv',
+  'music bangla',
+  'sangbad pratidin tv',
+  'bd sports',
+  'toffee tv',
+];
+
+// India channel name keywords
+const IN_NAMES = [
+  'star plus','star gold','star bharat','star vijay',
+  'star jalsha','star pravah','star suvarna',
+  'zee tv','zee cinema','zee bangla','zee news','zee anmol',
+  'zee business','zee punjabi','zee 24 taas',
+  'sony','sony liv','sony max','sony sab','sony ten',
+  'colors','colors tv','colors bangla','colors marathi','colors gujarati',
+  'sun tv','sun news','sun music','sun nxt',
+  'dd national','dd sports','dd news','dd bharati',
+  'aaj tak','india today','india tv',
+  'ndtv','ndtv india','ndtv 24x7',
+  'republic tv','republic bharat',
+  'times now','mirror now','et now',
+  'asianet','asianet news','asianet movies',
+  'manorama','mazhavil manorama',
+  'vijay tv','kalaignar tv','jaya tv',
+  'star sports','star sports 1','star sports 2','star sports 3',
+  'jio cinema','hotstar','jio tv',
+  'puthuyugam','polimer',
+  'mtv india','vh1 india',
+  'nick india','cartoon network india',
+  'discovery india','nat geo india',
+  'comedy central india',
+  'cnbc tv18','cnbc awaaz',
+  'tv9','tv9 bharatvarsh','tv9 gujarat',
+  'news18','news18 india',
+  'sahara one','sab tv',
+  'dangal tv','rishtey','rishtey cineplex',
+  'b4u movies','b4u music',
+  'zing tv',
+  'bindass',
+  'animax india',
+  'tata sky',
+  'd sports india',
+  'ten sports india',
+  'ten cricket',
+  'p7 news',
+];
+
+// Pakistan channel keywords  
+const PK_NAMES = [
+  'geo news','geo tv','geo entertainment','geo tez',
+  'ary news','ary digital','ary musiqe','ary zindagi',
+  'hum tv','hum news','hum sitaray',
+  'ten sports pk','ptv home','ptv sports','ptv news','ptv world',
+  'a plus','aplus tv',
+  'samaa tv','samaa news',
+  'express news','express tv','express entertainment',
+  'capital tv pk','neo news','neo tv',
+  'such tv','voice of america urdu',
+  'dunya news','dunya tv',
+  'pakistan tv','pak tv',
+];
+
+function detectCountry(group, name, url) {
+  const g = (group || '').toLowerCase().trim();
+  const n = (name  || '').toLowerCase().trim();
+  const u = (url   || '').toLowerCase();
+
+  // 1. Explicit group match first
+  for (const [key, country] of Object.entries(GROUP_COUNTRY)) {
+    if (g === key || g.startsWith(key + ' ') || g.includes(key)) {
+      return country;
+    }
   }
+
+  // 2. Bangladesh channel name check
+  for (const kw of BD_NAMES) {
+    if (n.includes(kw) || n === kw) return 'Bangladesh';
+  }
+
+  // 3. India channel name check
+  for (const kw of IN_NAMES) {
+    if (n.includes(kw)) return 'India';
+  }
+
+  // 4. Pakistan channel name check
+  for (const kw of PK_NAMES) {
+    if (n.includes(kw)) return 'Pakistan';
+  }
+
+  // 5. URL-based detection
+  if (u.includes('sonarbanglatv') || u.includes('aynaott') || u.includes('jagobd') ||
+      u.includes('toffeelive') || u.includes('bioscopelive') || u.includes('bozztv') ||
+      u.includes('gpcdn') || u.includes('ncare.live') || u.includes('boishakhi') ||
+      u.includes('.com.bd') || u.includes('.net.bd') || u.includes('.org.bd')) {
+    return 'Bangladesh';
+  }
+
+  // 6. Keyword checks in name for other countries
+  if (n.includes('uk') || n.includes('bbc') || n.includes('itv') || n.includes('sky') || n.includes('channel 4') || n.includes('channel 5')) return 'UK';
+  if (n.includes('espn') || n.includes('nbc') || n.includes('cbs') || n.includes('abc news') || n.includes('cnn') || n.includes('fox news') || n.includes('hbo') || n.includes(' usa') || n.includes('american')) return 'USA';
+  if (n.includes('france') || n.includes('tf1') || n.includes('m6 ') || n.includes('bfm')) return 'France';
+  if (n.includes('ard ') || n.includes('zdf') || n.includes('rtl') || n.includes('deutsch') || n.includes('german')) return 'Germany';
+  if (n.includes('rai ') || n.includes('mediaset') || n.includes('italia') || n.includes('canale 5')) return 'Italy';
+  if (n.includes('trt') || n.includes('turkey') || n.includes('turk') || n.includes('show tv')) return 'Turkey';
+  if (n.includes('arabic') || n.includes('aljazeera') || n.includes('al jazeera') || n.includes('al arabiya') || n.includes('mbc') || n.includes('al hayat')) return 'Arabic';
+  if (n.includes('russia') || n.includes('russian') || n.includes('rt ') || n.includes('ntv ')) return 'Russia';
+
   return 'Global';
 }
+
+// Subcategory detection from group name
+function detectSubCategory(group) {
+  const g = (group || '').toLowerCase();
+  if (g.includes('sport') || g.includes('cricket') || g.includes('football') || g.includes('fifa') || g.includes('world cup')) return 'Sports';
+  if (g.includes('news') || g.includes('news24') || g.includes('international news')) return 'News';
+  if (g.includes('natok') || g.includes('drama') || g.includes('entertainment') || g.includes('serial')) return 'Natok/Drama';
+  if (g.includes('kid') || g.includes('cartoon') || g.includes('animation') || g.includes('baby')) return 'Kids';
+  if (g.includes('religio') || g.includes('islam') || g.includes('quran') || g.includes('islamic') || g.includes('peace tv') || g.includes('church') || g.includes('hindu')) return 'Religious';
+  if (g.includes('music') || g.includes('song') || g.includes('gaan')) return 'Music';
+  if (g.includes('doc') || g.includes('discovery') || g.includes('nat geo') || g.includes('animal')) return 'Documentary';
+  if (g.includes('education') || g.includes('learning')) return 'Education';
+  if (g.includes('bangla') || g.includes('bangladesh') || g.includes('bd')) return 'General';
+  if (g.includes('india') || g.includes('hindi')) return 'General';
+  return group || 'General';
+}
+
+
 function detectServer(url) {
   try {
     const h = new URL(url).hostname.replace('www.','');
@@ -167,7 +358,8 @@ function parseM3U(text) {
     } else if (cur && (line.startsWith('http')||line.startsWith('rtmp')||line.startsWith('rtsp'))) {
       if (line.includes('/enc/')||line.includes('cenc')) { cur=null; continue; }
       cur._u = _enc(line);          // ← URL stored ENCRYPTED only
-      cur.country = detectCountry(cur.group, cur.name);
+      cur.country = detectCountry(cur.group, cur.name, line);
+      cur.subcat  = detectSubCategory(cur.group);
       cur.server  = detectServer(line);
       out.push(cur);
       cur = null;
@@ -210,22 +402,44 @@ function getStatus(ch) {
 // ══════════════════════════════════════════
 //  FILTERS
 // ══════════════════════════════════════════
-const COUNTRIES = ['Bangladesh','India','Pakistan','UK','USA','Global'];
-const FLAGS = {Bangladesh:'🇧🇩',India:'🇮🇳',Pakistan:'🇵🇰',UK:'🇬🇧',USA:'🇺🇸',Global:'🌐'};
-const QCATS = ['Sports','News','Bangladesh','India','Kids','Entertainment','Religion','Others'];
+const COUNTRIES = ['Bangladesh','India','Pakistan','UK','USA','France','Germany','Italy','Turkey','Arabic','Russia','Global'];
+const FLAGS = {Bangladesh:'🇧🇩',India:'🇮🇳',Pakistan:'🇵🇰',UK:'🇬🇧',USA:'🇺🇸',France:'🇫🇷',Germany:'🇩🇪',Italy:'🇮🇹',Turkey:'🇹🇷',Arabic:'🌍',Russia:'🇷🇺',Global:'🌐'};
+const QCATS = ['Sports','News','Natok/Drama','Kids','Religious','Music','Documentary','Education'];
 
 function buildFilters() {
+  // Build category select from actual data
   const cats = [...new Set(allCh.map(c=>c.group))].sort();
   selCat.innerHTML = '<option value="all">All Categories</option>';
   cats.forEach(c => { const o=document.createElement('option'); o.value=o.textContent=c; selCat.appendChild(o); });
 
-  cpills.innerHTML = '';
-  mkPill(cpills,'🌐 All', fCountry==='all', ()=>{ fCountry='all'; buildFilters(); applyFilters(); });
-  COUNTRIES.forEach(c => mkPill(cpills, `${FLAGS[c]||'🌐'} ${c}`, fCountry===c, ()=>{ fCountry=c; buildFilters(); applyFilters(); }));
+  // Country pills — only show countries that have channels
+  const activeCounts = {};
+  allCh.forEach(c => { activeCounts[c.country] = (activeCounts[c.country]||0)+1; });
 
+  cpills.innerHTML = '';
+  const allCount = allCh.length;
+  mkPill(cpills, `🌐 All (${allCount})`, fCountry==='all', ()=>{ fCountry='all'; buildFilters(); applyFilters(); });
+  COUNTRIES.forEach(c => {
+    const cnt = activeCounts[c] || 0;
+    if (cnt > 0) mkPill(cpills, `${FLAGS[c]||'🌐'} ${c} (${cnt})`, fCountry===c, ()=>{ fCountry=c; buildFilters(); applyFilters(); });
+  });
+  // Show remaining countries with channels
+  Object.entries(activeCounts).forEach(([c, cnt]) => {
+    if (!COUNTRIES.includes(c) && cnt > 0 && c !== 'Global') {
+      mkPill(cpills, `🌐 ${c} (${cnt})`, fCountry===c, ()=>{ fCountry=c; buildFilters(); applyFilters(); });
+    }
+  });
+
+  // Subcategory pills — context-aware based on selected country
   qpills.innerHTML = '';
-  mkPill(qpills,'All', fCat==='all', ()=>{ fCat='all'; selCat.value='all'; buildFilters(); applyFilters(); });
-  QCATS.forEach(c => mkPill(qpills, c, fCat===c, ()=>{ fCat=c; selCat.value=c; buildFilters(); applyFilters(); }));
+  // Get subcategories available in current country filter
+  const src = fCountry === 'all' ? allCh : allCh.filter(c=>c.country===fCountry);
+  const subcats = [...new Set(src.map(c=>c.subcat))].filter(Boolean).sort();
+  mkPill(qpills, 'All Types', fCat==='all', ()=>{ fCat='all'; buildFilters(); applyFilters(); });
+  subcats.forEach(sc => {
+    const cnt = src.filter(c=>c.subcat===sc).length;
+    mkPill(qpills, `${sc} (${cnt})`, fCat===sc, ()=>{ fCat=sc; buildFilters(); applyFilters(); });
+  });
 }
 
 function mkPill(parent, label, active, onClick) {
@@ -240,7 +454,7 @@ function applyFilters() {
   const q = fSearch.toLowerCase();
   filtered = allCh.filter(ch => {
     if (q && !ch.name.toLowerCase().includes(q)) return false;
-    if (fCat !== 'all' && ch.group !== fCat) return false;
+    if (fCat !== 'all' && ch.subcat !== fCat) return false;
     if (fCountry !== 'all' && ch.country !== fCountry) return false;
     return true;
   });
