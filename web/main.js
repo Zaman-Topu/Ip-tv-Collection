@@ -355,12 +355,13 @@ function parseM3U(text) {
       const ci     = line.lastIndexOf(',');
       const group  = groupM ? groupM[1].trim() : 'Others';
       if (isMovieGroup(group)) { cur = null; continue; } // skip movies
+      const chanName = ci >= 0 ? line.substring(ci+1).trim() : 'Unknown';
+      if (chanName.toLowerCase().includes('playz tv')) { cur = null; continue; }
       cur = {
         logo:  logoM ? logoM[1] : '',
         group,
-        name:  ci >= 0 ? line.substring(ci+1).trim() : 'Unknown',
+        name:  chanName || 'Unknown',
       };
-      if (!cur.name) cur.name = 'Unknown';
     } else if (cur && (line.startsWith('http')||line.startsWith('rtmp')||line.startsWith('rtsp'))) {
       if (line.includes('/enc/')||line.includes('cenc')) { cur=null; continue; }
       cur._u = _enc(line);          // ← URL stored ENCRYPTED only
