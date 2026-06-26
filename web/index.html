@@ -57,27 +57,46 @@
       -webkit-backdrop-filter: blur(24px) saturate(150%);
       border-bottom: 1px solid rgba(255, 255, 255, 0.08);
       box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
-      transition: all 0.3s ease;
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: 60px;
+      background: rgba(10, 10, 15, 0.85);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      z-index: 100;
     }
-    .logo {
-      display: flex; align-items: center; gap: 10px; cursor: pointer;
-      flex-shrink: 0; transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
-    }
-    .logo:hover { transform: scale(1.03); }
     
+    .nav-left { display: flex; align-items: center; gap: 40px; }
+
+    /* Logo */
+    .logo {
+      display: flex; align-items: center; gap: 8px;
+      cursor: pointer; user-select: none;
+    }
     .logo-badge {
-      background: linear-gradient(135deg, #ff0055, #ff2a75);
-      color: #fff; font-size: 14px; font-weight: 800;
-      padding: 6px 12px; border-radius: 8px; letter-spacing: 1.5px;
-      text-transform: uppercase;
-      box-shadow: 0 4px 15px rgba(255, 0, 85, 0.3);
+      background: linear-gradient(135deg, #ff2a5f, #ff4a85);
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-weight: 900;
+      font-size: 16px;
+      letter-spacing: 1px;
+      color: #fff;
+      box-shadow: 0 4px 15px rgba(255,42,95,0.3);
     }
     .live-dot {
+      background: rgba(255,42,95,0.1);
+      color: #ff2a5f;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 800;
       display: flex; align-items: center; gap: 6px;
-      font-size: 11px; font-weight: 800; color: #ff2a75;
-      letter-spacing: 1px; text-transform: uppercase;
-      padding: 4px 10px; background: rgba(255, 0, 85, 0.1);
-      border-radius: 99px; border: 1px solid rgba(255, 0, 85, 0.2);
+      border: 1px solid rgba(255,42,95,0.2);
     }
     .live-dot::before {
       content: ''; width: 8px; height: 8px; border-radius: 50%;
@@ -452,8 +471,10 @@
     @media(max-width: 600px) {
       /* Navbar */
       #nav { padding: 0 12px; }
+      .nav-left { gap: 10px; }
       .logo-badge { font-size: 12px; padding: 4px 8px; }
-      .live-dot { font-size: 9px; padding: 3px 6px; }
+      .live-dot { display: none; }
+      .nav-menu { display: none; /* Hide full menu on very small screens, keep only Home/GitHub if desired, or hide entirely */ }
       .nav-stat { font-size: 11px; padding: 5px 10px; }
       .nav-stat svg { display: none; }
       #app { padding-top: 60px; }
@@ -493,9 +514,29 @@
 
 <!-- Navbar -->
 <nav id="nav">
-  <div class="logo" onclick="location.reload()">
-    <div class="logo-badge">BUG TV</div>
-    <div class="live-dot">LIVE</div>
+  <div class="nav-left">
+    <div class="logo" onclick="goHome(event)">
+      <div class="logo-badge">BUG TV</div>
+      <div class="live-dot">LIVE</div>
+    </div>
+    <div class="nav-menu">
+      <a href="#" class="nav-link active" onclick="goHome(event)" id="nav-home">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+        Home
+      </a>
+      <a href="#" class="nav-link" onclick="filterMenu(event, 'Movies')" id="nav-movies">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"></rect><line x1="7" y1="2" x2="7" y2="22"></line><line x1="17" y1="2" x2="17" y2="22"></line><line x1="2" y1="12" x2="22" y2="12"></line><line x1="2" y1="7" x2="7" y2="7"></line><line x1="2" y1="17" x2="7" y2="17"></line><line x1="17" y1="17" x2="22" y2="17"></line><line x1="17" y1="7" x2="22" y2="7"></line></svg>
+        Movies
+      </a>
+      <a href="#" class="nav-link" onclick="filterMenu(event, 'Sports')" id="nav-sports">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"></path><path d="M2 12h20"></path></svg>
+        Sports
+      </a>
+      <a href="https://github.com/Zaman-Topu/Ip-tv-Collection" target="_blank" class="nav-link">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path></svg>
+        GitHub
+      </a>
+    </div>
   </div>
   <div class="nav-stat">
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="15" rx="2" ry="2"></rect><polyline points="17 2 12 7 7 2"></polyline></svg>

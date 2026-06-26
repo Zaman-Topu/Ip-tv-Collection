@@ -735,6 +735,31 @@ function renderQueue(active) {
 }
 
 // ══════════════════════════════════════════
+//  NAVIGATION & MENU
+// ══════════════════════════════════════════
+window.goHome = function(e) {
+  if (e) e.preventDefault();
+  closePlayer();
+  fSearch=''; fCat='all'; fCountry='all';
+  srchEl.value=''; selCat.value='all';
+  document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+  document.getElementById('nav-home')?.classList.add('active');
+  buildFilters(); applyFilters();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+};
+
+window.filterMenu = function(e, category) {
+  if (e) e.preventDefault();
+  closePlayer();
+  fSearch=''; fCat=category; fCountry='all';
+  srchEl.value=''; selCat.value=category;
+  document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+  e.currentTarget.classList.add('active');
+  buildFilters(); applyFilters();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+};
+
+// ══════════════════════════════════════════
 //  EVENTS
 // ══════════════════════════════════════════
 pClose.addEventListener('click', closePlayer);
