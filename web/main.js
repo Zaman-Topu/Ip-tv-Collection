@@ -591,21 +591,93 @@ function playStream(rawUrl, ch, useProxy) {
     }
   }
 
+  if (hlsInst) {
+    hlsInst.destroy();
+    hlsInst = null;
+  }
+  
   vidEl.onerror = onErr;
 
-  // Set source and play
-  vidEl.src = _tmp;
-  
-  const playPromise = vidEl.play();
-  if (playPromise !== undefined) {
-    playPromise.catch(() => {});
+  const qWrap = document.getElementById('quality-wrap');
+  const qSel = document.getElementById('sel-quality');
+  if (qWrap) qWrap.style.display = 'none';
+
+  const isHls = _tmp.includes('.m3u') || _tmp.includes('.m3u8');
+
+  if (isHls && window.Hls && Hls.isSupported()) {
+    hlsInst = new Hls({
+      maxBufferLength: 30,
+      liveSyncDurationCount: 3,
+      liveMaxLatencyDurationCount: 10,
+    });
+    hlsInst.loadSource(_tmp);
+    hlsInst.attachMedia(vidEl);
+    
+    hlsInst.on(Hls.Events.MANIFEST_PARSED, (e, data) => {
+      if (qWrap && data.levels && data.levels.length > 1) {
+        qWrap.style.display = 'flex';
+        qSel.innerHTML = '<option value="-1">Auto Quality</option>';
+        data.levels.forEach((lvl, i) => {
+          const opt = document.createElement('option');
+          opt.value = i;
+          opt.textContent = lvl.height ? `${lvl.height}p` : `Quality ${i+1}`;
+          qSel.appendChild(opt);
+        });
+        qSel.onchange = () => {
+          hlsInst.currentLevel = parseInt(qSel.value, 10);
+        };
+      }
+      const playPromise = vidEl.play();
+      if (playPromise !== undefined) { playPromise.catch(() => {}); }
+    });
+    
+    hlsInst.on(Hls.Events.ERROR, (e, data) => {
+      if (data.fatal) {
+        switch (data.type) {
+          case Hls.ErrorTypes.NETWORK_ERROR:
+            hlsInst.startLoad();
+            break;
+          case Hls.ErrorTypes.MEDIA_ERROR:
+            hlsInst.recoverMediaError();
+            break;
+          default:
+            onErr();
+            break;
+        }
+      }
+    });
+  } else {
+    vidEl.src = _tmp;
+    const playPromise = vidEl.play();
+    if (playPromise !== undefined) { playPromise.catch(() => {}); }
   }
+
+  // Anti-Lag Professional Rewind Feature
+  let bufferTimer;
+  vidEl.onwaiting = () => {
+    clearTimeout(bufferTimer);
+    bufferTimer = setTimeout(() => {
+      if (vidEl.readyState < 3) {
+        // Jump back 8 seconds to build up a healthy buffer and prevent repeated lagging
+        vidEl.currentTime = Math.max(0, vidEl.currentTime - 8);
+        const p = vidEl.play();
+        if (p !== undefined) p.catch(() => {});
+      }
+    }, 4000); // Trigger after 4 seconds of buffering
+  };
+  vidEl.onplaying = () => {
+    clearTimeout(bufferTimer);
+  };
 }
 
 function closePlayer() {
   activeCh = null;
   vidEl.pause(); 
   vidEl.src = ''; 
+  if (hlsInst) {
+    hlsInst.destroy();
+    hlsInst = null;
+  }
   pWrap.classList.remove('show');
   history.pushState(null,'',location.pathname);
 }
