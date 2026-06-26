@@ -617,9 +617,9 @@ function playStream(rawUrl, ch, useProxy) {
 
   if (isHls && window.Hls && Hls.isSupported()) {
     hlsInst = new Hls({
-      maxBufferLength: 120, // Aggressively buffer 2 minutes ahead
-      maxMaxBufferLength: 300, // Max cap at 5 minutes
-      maxBufferSize: 60 * 1000 * 1000, // 60MB max buffer size
+      maxBufferLength: 3600, // Try to buffer up to 1 hour ahead
+      maxMaxBufferLength: 7200, // Max cap at 2 hours
+      maxBufferSize: 500 * 1000 * 1000, // Allow up to 500MB of RAM for buffering
       liveSyncDurationCount: 3,
       liveMaxLatencyDurationCount: 15,
       enableWorker: true,
