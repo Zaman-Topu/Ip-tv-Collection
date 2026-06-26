@@ -617,13 +617,13 @@ function playStream(rawUrl, ch, useProxy) {
 
   if (isHls && window.Hls && Hls.isSupported()) {
     hlsInst = new Hls({
-      maxBufferLength: 3600, // Try to buffer up to 1 hour ahead
-      maxMaxBufferLength: 7200, // Max cap at 2 hours
-      maxBufferSize: 500 * 1000 * 1000, // Allow up to 500MB of RAM for buffering
+      maxBufferLength: 600, // Buffer up to 10 minutes ahead
+      maxMaxBufferLength: 1200, // Max cap at 20 minutes
+      maxBufferSize: 60 * 1000 * 1000, // Max 60MB RAM to prevent low-end device crashes
       liveSyncDurationCount: 3,
       liveMaxLatencyDurationCount: 15,
-      enableWorker: true,
-      lowLatencyMode: false // Prioritize stability over latency
+      enableWorker: true, // Offload processing to Web Worker for low-end CPUs
+      lowLatencyMode: false
     });
     hlsInst.loadSource(_tmp);
     hlsInst.attachMedia(vidEl);
