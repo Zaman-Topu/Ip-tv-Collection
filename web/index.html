@@ -97,9 +97,54 @@
       background:#000;display:block;
     }
     /* Video.js overrides to fit container perfectly */
-    .video-js{width:100% !important;height:100% !important;position:absolute !important;top:0;left:0}
+    .video-js{width:100% !important;height:100% !important;position:absolute !important;top:0;left:0;border-radius:10px;overflow:hidden;}
     .vjs-tech{width:100%;height:100%;object-fit:contain}
 
+    /* Video.js Big Play Button (videojs.org style) */
+    .video-js .vjs-big-play-button {
+      background-color: rgba(0, 0, 0, 0.7);
+      border: 2px solid var(--red);
+      border-radius: 50%;
+      width: 2em !important;
+      height: 2em !important;
+      line-height: 1.9em !important;
+      margin-top: -1em !important;
+      margin-left: -1em !important;
+      font-size: 3em;
+      transition: all 0.3s ease;
+    }
+    .video-js:hover .vjs-big-play-button,
+    .video-js .vjs-big-play-button:focus,
+    .video-js .vjs-big-play-button:hover {
+      background-color: var(--red);
+      border-color: var(--red);
+    }
+    
+    /* Control Bar Theme */
+    .video-js .vjs-control-bar {
+      background: linear-gradient(to top, rgba(0,0,0,0.9), transparent) !important;
+    }
+    .video-js .vjs-play-progress {
+      background-color: var(--red) !important;
+    }
+    .video-js .vjs-slider-bar {
+      background-color: var(--red) !important;
+    }
+    .video-js .vjs-volume-level {
+      background-color: var(--red) !important;
+    }
+    
+    /* Custom forward button */
+    .vjs-custom-forward-btn {
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: color 0.3s;
+    }
+    .vjs-custom-forward-btn:hover {
+      color: var(--red);
+    }
     /* Error overlay */
     #p-err{
       display:none;position:absolute;inset:0;z-index:6;

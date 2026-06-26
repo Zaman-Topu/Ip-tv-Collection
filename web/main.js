@@ -607,6 +607,29 @@ function playStream(rawUrl, ch, useProxy) {
       }
     });
     playerInst.on('error', onErr);
+
+    // Custom 10s Forward Button
+    const Button = videojs.getComponent('Button');
+    const ForwardButton = videojs.extend(Button, {
+      constructor: function() {
+        Button.apply(this, arguments);
+        this.controlText('Forward 10s');
+      },
+      createEl: function() {
+        return videojs.dom.createEl('button', {
+          className: 'vjs-custom-forward-btn vjs-control vjs-button',
+          innerHTML: '<span class="vjs-icon-placeholder" style="font-size:1.5em;line-height:2em;">⏩</span>',
+          title: 'Forward 10 Seconds'
+        });
+      },
+      handleClick: function() {
+        if (playerInst) {
+          playerInst.currentTime(playerInst.currentTime() + 10);
+        }
+      }
+    });
+    videojs.registerComponent('ForwardButton', ForwardButton);
+    playerInst.getChild('controlBar').addChild('ForwardButton', {}, 1);
   }
 
   // Set source and play
