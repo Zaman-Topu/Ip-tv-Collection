@@ -614,7 +614,7 @@ function playStream(rawUrl, ch, useProxy) {
     hlsInst.attachMedia(vidEl);
     
     hlsInst.on(Hls.Events.MANIFEST_PARSED, (e, data) => {
-      if (qWrap && data.levels && data.levels.length > 1) {
+      if (qWrap && data.levels && data.levels.length > 0) {
         qWrap.style.display = 'flex';
         qSel.innerHTML = '<option value="-1">Auto Quality</option>';
         data.levels.forEach((lvl, i) => {
@@ -626,6 +626,9 @@ function playStream(rawUrl, ch, useProxy) {
         qSel.onchange = () => {
           hlsInst.currentLevel = parseInt(qSel.value, 10);
         };
+      } else if (qWrap) {
+        qWrap.style.display = 'flex';
+        qSel.innerHTML = '<option value="-1">Default / Auto</option>';
       }
       const playPromise = vidEl.play();
       if (playPromise !== undefined) { playPromise.catch(() => {}); }
