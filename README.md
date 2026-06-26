@@ -83,24 +83,24 @@ pie title IPTV Channel Status Breakdown
 
 ## 📊 M3U Category Breakdown
 
-We combined 15 of the best IPTV sources on GitHub, ran a strict deduplication script, and intelligently categorized them into clean groups. No more messy lists!
+We combined 25+ of the best IPTV sources on GitHub, ran a strict deduplication script, and intelligently categorized them into clean groups. No more messy lists!
 
 | Category | Channel Count | Description |
 | :--- | :---: | :--- |
-| 🇧🇩 **[BD] Bangladesh** | 1,895 | All local Bangladeshi channels (BTV, Somoy, Jamuna, NTV, BDIX Servers) |
-| 🗺️ **[COUNTRY] Countrywise** | 1,978 | Country-specific Live TV channels sorted globally |
-| 🇮🇳 **[INDIA] India** | 918 | Hindi, Tamil, Telugu, Bengali & other regional Indian channels |
-| ⚽ **[SPORTS] Sports** | 673 | T Sports, Star Sports, Sky, Bein, ESPN, F1, Live Cricket & Football Streams |
-| 🌍 **[INTL-NEWS] News** | 507 | BBC, CNN, Al Jazeera, Sky News Live |
-| 🎵 **[MUSIC] Music** | 396 | MTV, 9XM, Gaan Bangla, VH1 |
-| 🧒 **[CARTOON] Kids** | 235 | Cartoon Network, Nick, Disney, Baby TV |
-| 🎭 **[NATOK] Drama** | 221 | Star Jalsha, Zee Bangla, Colors Bangla, Natok streams |
-| 🌐 **[ENGLISH] English**| 241 | General English entertainment, Lifestyle, TLC, History |
-| 🕌 **[RELIGION] Religion** | 173 | Islamic, Quran, Peace TV, Madani, Christian, Hindu channels |
-| 📚 **[DOC] Documentary** | 70 | Discovery, Nat Geo, Animal Planet |
-| 🌟 **[OTHERS] Others** | 613 | Uncategorized miscellaneous streams |
+| 🇧🇩 **[BD] Bangladesh** | 1,694 | All local Bangladeshi channels (BTV, Somoy, Jamuna, NTV, BDIX Servers) |
+| 🗺️ **[COUNTRY] Countrywise** | 1,643 | Country-specific Live TV channels sorted globally |
+| 🇮🇳 **[INDIA] India** | 7,222 | Hindi, Tamil, Telugu, Bengali & other regional Indian channels |
+| ⚽ **[SPORTS] Sports** | 1,326 | T Sports, Star Sports, Sky, Bein, ESPN, F1, Live Cricket & Football Streams |
+| 🌍 **[INTL-NEWS] News** | 1,338 | BBC, CNN, Al Jazeera, Sky News Live |
+| 🎵 **[MUSIC] Music** | 1,084 | MTV, 9XM, Gaan Bangla, VH1 |
+| 🧒 **[CARTOON] Kids** | 630 | Cartoon Network, Nick, Disney, Baby TV |
+| 🎭 **[NATOK] Drama** | 240 | Star Jalsha, Zee Bangla, Colors Bangla, Natok streams |
+| 🌐 **[ENGLISH] English**| 14,103 | General English entertainment, Lifestyle, TLC, History |
+| 🕌 **[RELIGION] Religion** | 819 | Islamic, Quran, Peace TV, Madani, Christian, Hindu channels |
+| 📚 **[DOC] Documentary** | 503 | Discovery, Nat Geo, Animal Planet |
+| 🌟 **[OTHERS] Others** | 13,299 | Uncategorized miscellaneous streams |
 
-**Total Unique Channels:** `32,388`
+**Total Unique Channels:** `43,901`
 
 ## 🛠️ The Ultimate Architecture
 
