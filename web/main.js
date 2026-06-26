@@ -106,9 +106,6 @@ window.getFallback = getFallback;
 
 function logoSrc(logo, name) {
   if (!logo) return getFallback(name);
-  if (logo.startsWith('http')) {
-    return `https://wsrv.nl/?url=${encodeURIComponent(logo)}&w=80&h=50&fit=contain&bg=transparent`;
-  }
   return logo;
 }
 
