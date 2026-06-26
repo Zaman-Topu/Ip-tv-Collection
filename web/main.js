@@ -617,9 +617,13 @@ function playStream(rawUrl, ch, useProxy) {
 
   if (isHls && window.Hls && Hls.isSupported()) {
     hlsInst = new Hls({
-      maxBufferLength: 30,
+      maxBufferLength: 120, // Aggressively buffer 2 minutes ahead
+      maxMaxBufferLength: 300, // Max cap at 5 minutes
+      maxBufferSize: 60 * 1000 * 1000, // 60MB max buffer size
       liveSyncDurationCount: 3,
-      liveMaxLatencyDurationCount: 10,
+      liveMaxLatencyDurationCount: 15,
+      enableWorker: true,
+      lowLatencyMode: false // Prioritize stability over latency
     });
     hlsInst.loadSource(_tmp);
     hlsInst.attachMedia(vidEl);
