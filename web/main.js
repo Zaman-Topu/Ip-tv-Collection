@@ -313,7 +313,8 @@ function detectSubCategory(group) {
   if (g.includes('education') || g.includes('learning')) return 'Education';
   if (g.includes('bangla') || g.includes('bangladesh') || g.includes('bd')) return 'General';
   if (g.includes('india') || g.includes('hindi')) return 'General';
-  return group || 'General';
+  if (g.includes('movie') || g.includes('cinema') || g.includes('film')) return 'Movies';
+  return 'General';
 }
 
 
