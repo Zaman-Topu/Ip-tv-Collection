@@ -1,192 +1,367 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Bug Tv - Live Stream Player</title>
-    <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-  </head>
-  <body class="bg-surface-base text-text-inverse antialiased font-primary">
-    
-    <!-- Top Header Navigation -->
-    <nav id="navbar" class="fixed top-0 w-full px-6 py-4 flex justify-between items-center z-50 bg-black border-b border-border-muted/10">
-      <div class="flex items-center gap-8">
-        <!-- Logo Block -->
-        <div class="flex items-center gap-2 cursor-pointer select-none" onclick="window.location.reload()">
-          <span class="bg-text-tertiary text-white font-bold px-3 py-1 rounded text-sm tracking-widest">BUG TV</span>
-          <span class="hidden sm:inline bg-surface-strong/10 border border-text-tertiary/20 text-text-tertiary text-[12px] font-bold px-2 py-0.5 rounded tracking-wide animate-pulse">● BROADCAST ONLINE</span>
-        </div>
-        
-        <!-- Navigation Links -->
-        <ul class="hidden md:flex gap-6 text-xs tracking-wider uppercase font-bold text-gray-400">
-          <li><a href="#" class="hover:text-text-tertiary transition" id="nav-home">Home</a></li>
-          <li><a href="#" class="text-text-tertiary transition" id="nav-live">All Channels</a></li>
-          <li><a href="#" class="hover:text-text-tertiary transition" id="nav-sports">All Sports</a></li>
-          <li><a href="#" class="bg-text-tertiary text-white px-3 py-1.5 rounded-full hover:bg-text-tertiary/80 transition" id="nav-worldcup">🔴 World Cup</a></li>
-        </ul>
-      </div>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="description" content="Bug TV - Free Live IPTV Player with 40,000+ channels. Watch Bangladesh, India, Sports, News and more." />
+  <meta name="theme-color" content="#09090b" />
+  <title>Bug TV - Free Live IPTV Player</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
+  <style>
+    /* ───── Reset & Base ───── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #09090b;
+      --bg2: #111113;
+      --bg3: #18181b;
+      --border: rgba(255,255,255,0.08);
+      --red: #ff0055;
+      --text: #f3f4f6;
+      --muted: #71717a;
+      --font: 'Inter', system-ui, sans-serif;
+    }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+      overflow-x: hidden;
+      -webkit-tap-highlight-color: transparent;
+    }
+    img { display: block; }
+    button { font-family: var(--font); cursor: pointer; }
 
-      <!-- Right Header Controls -->
-      <div class="flex items-center gap-4">
-        <button aria-label="Search" class="text-gray-400 hover:text-white transition">
-          <svg viewBox="0 0 24 24" class="w-5 h-5 fill-current"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
-        </button>
-        <button aria-label="Toggle Dark Mode" class="text-gray-400 hover:text-white transition">
-          <svg viewBox="0 0 24 24" class="w-5 h-5 fill-current"><path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9 9-4.03 9-9c0-.46-.04-.92-.1-1.36-.98 1.37-2.58 2.26-4.4 2.26-2.98 0-5.4-2.42-5.4-5.4 0-1.81.89-3.42 2.26-4.4-.44-.06-.9-.1-1.36-.1z"/></svg>
-        </button>
-      </div>
-    </nav>
+    /* ───── Scrollbar ───── */
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
 
-    <!-- Main Container -->
-    <div class="max-w-[1400px] mx-auto px-6 pt-28 pb-16">
-      
-      <!-- Top Title and Stats -->
-      <div class="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
-        <div>
-          <span class="text-text-tertiary text-[12px] font-bold tracking-widest uppercase">Universal Stream Directory</span>
-          <h2 class="text-4xl font-bold tracking-tight text-white mt-1">ALL TV CHANNELS</h2>
-          <p class="text-gray-400 text-xs mt-1 max-w-xl">Browse and stream live television feeds aggregated from all connected broadcast networks.</p>
-        </div>
-        <div class="bg-surface-strong/10 border border-border-default/20 rounded-full px-4 py-2 flex items-center gap-2">
-          <span class="text-[12px] font-bold text-text-tertiary" id="stats-feed-count">0 OF 0</span>
-          <span class="text-[12px] font-bold text-gray-400 tracking-wider uppercase">Feeds Online</span>
-        </div>
-      </div>
+    /* ───── Navbar ───── */
+    #navbar {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 16px;
+      background: rgba(9,9,11,0.92);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+    .logo {
+      display: flex; align-items: center; gap: 8px;
+      cursor: pointer; user-select: none; text-decoration: none;
+    }
+    .logo-badge {
+      background: var(--red); color: #fff;
+      font-size: 13px; font-weight: 700;
+      padding: 4px 10px; border-radius: 6px;
+      letter-spacing: 2px;
+    }
+    .live-dot {
+      font-size: 11px; color: var(--red);
+      font-weight: 600; letter-spacing: 1px;
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
 
-      <!-- Split Video Player Section (Hidden by default) -->
-      <div class="hidden flex-col lg:flex-row gap-6 mb-10 w-full" id="player-container">
-        
-        <!-- Left: Video Player Column -->
-        <div class="w-full lg:w-2/3 flex flex-col">
-          <!-- Video Box -->
-          <div class="relative w-full aspect-video rounded-xs overflow-hidden bg-black border border-border-default/20 group" id="video-container">
-            <video id="video-player" class="video-js vjs-default-skin vjs-16-9 vjs-big-play-centered" controls preload="auto"></video>
-            
-            <!-- Error Banner -->
-            <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-black/90 border border-border-default p-6 rounded-xs text-center hidden shadow-2xl z-50 max-w-sm" id="player-error">
-              <h3 class="text-text-tertiary text-lg font-bold mb-1">Stream Offline</h3>
-              <p class="text-gray-400 text-xs">This stream is currently offline, geo-blocked, or unavailable.</p>
-            </div>
+    .nav-right { display: flex; align-items: center; gap: 8px; }
+    .nav-stats {
+      font-size: 11px; font-weight: 700; color: var(--muted);
+      padding: 4px 10px; border: 1px solid var(--border);
+      border-radius: 99px; letter-spacing: 0.5px;
+    }
+    #stats-count { color: var(--red); }
 
-            <!-- Close Button -->
-            <button id="close-player" aria-label="Close player" class="absolute top-4 right-4 bg-black/60 hover:bg-black text-white p-2 rounded-full border border-border-default/20 transition z-50">
-              <svg viewBox="0 0 24 24" class="w-5 h-5 fill-current"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
-            </button>
+    /* ───── Main Layout ───── */
+    #app { padding-top: 60px; }
+    .container { max-width: 1400px; margin: 0 auto; padding: 16px 12px; }
+
+    /* ───── Filters ───── */
+    #filters-bar {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 14px 10px;
+      margin-bottom: 12px;
+    }
+    .filter-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 8px; }
+    .filter-row:last-child { margin-bottom: 0; }
+
+    .search-wrap { position: relative; flex: 1; min-width: 180px; }
+    .search-wrap svg { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); width: 14px; height: 14px; fill: var(--muted); pointer-events: none; }
+    #search-input {
+      width: 100%; background: var(--bg3); border: 1px solid var(--border);
+      color: var(--text); padding: 8px 12px 8px 32px;
+      border-radius: 8px; font-size: 13px; font-family: var(--font);
+      outline: none; transition: border-color 0.15s;
+    }
+    #search-input:focus { border-color: var(--red); }
+
+    select.flt {
+      background: var(--bg3); border: 1px solid var(--border);
+      color: var(--text); padding: 8px 12px;
+      border-radius: 8px; font-size: 12px; font-family: var(--font);
+      outline: none; cursor: pointer; transition: border-color 0.15s;
+    }
+    select.flt:focus { border-color: var(--red); }
+
+    .pill-btn {
+      background: var(--bg3); border: 1px solid var(--border);
+      color: var(--muted); font-size: 11px; font-weight: 700;
+      padding: 5px 10px; border-radius: 99px;
+      transition: all 0.15s; white-space: nowrap;
+      letter-spacing: 0.3px;
+    }
+    .pill-btn:hover { border-color: var(--red); color: var(--text); }
+    .pill-btn.active { background: var(--red); border-color: var(--red); color: #fff; }
+
+    #btn-reset {
+      background: none; border: 1px solid var(--border);
+      color: var(--muted); font-size: 11px; font-weight: 700;
+      padding: 5px 10px; border-radius: 8px;
+      transition: all 0.15s; letter-spacing: 0.5px;
+    }
+    #btn-reset:hover { border-color: var(--red); color: var(--red); }
+
+    /* ───── Player ───── */
+    #player-wrap {
+      display: none;
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: 12px; overflow: hidden; margin-bottom: 12px;
+    }
+    #player-wrap.show { display: flex; flex-direction: column; }
+    @media(min-width:900px) { #player-wrap.show { flex-direction: row; } }
+
+    #video-col { flex: 1; min-width: 0; }
+    #video-box {
+      position: relative; width: 100%;
+      aspect-ratio: 16/9; background: #000;
+    }
+    #vid {
+      width: 100%; height: 100%;
+      display: block; background: #000;
+    }
+    #player-close {
+      position: absolute; top: 8px; right: 8px; z-index: 10;
+      background: rgba(0,0,0,0.7); border: 1px solid var(--border);
+      color: #fff; width: 32px; height: 32px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px; transition: background 0.15s;
+    }
+    #player-close:hover { background: var(--red); }
+    #player-error {
+      display: none;
+      position: absolute; inset: 0; z-index: 5;
+      background: rgba(0,0,0,0.92);
+      align-items: center; justify-content: center;
+      flex-direction: column; gap: 8px; padding: 20px; text-align: center;
+    }
+    #player-error.show { display: flex; }
+    #player-error h3 { font-size: 15px; color: var(--red); font-weight: 700; }
+    #player-error p { font-size: 12px; color: var(--muted); max-width: 280px; line-height: 1.5; }
+    .try-proxy-btn {
+      background: var(--red); color: #fff; border: none;
+      font-size: 11px; font-weight: 700; padding: 6px 14px;
+      border-radius: 6px; margin-top: 4px; transition: opacity 0.15s;
+    }
+    .try-proxy-btn:hover { opacity: 0.85; }
+
+    #player-info {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 14px; border-top: 1px solid var(--border);
+    }
+    #pi-logo { width: 48px; height: 30px; object-fit: contain; background: #000; border-radius: 4px; }
+    #pi-title { font-size: 14px; font-weight: 700; }
+    #pi-meta { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+    #queue-col {
+      width: 100%; max-height: 260px;
+      border-top: 1px solid var(--border);
+      overflow-y: auto;
+    }
+    @media(min-width:900px) {
+      #queue-col {
+        width: 280px; min-width: 280px; max-height: none;
+        border-top: none; border-left: 1px solid var(--border);
+      }
+    }
+    .queue-header {
+      position: sticky; top: 0; z-index: 2;
+      padding: 10px 12px; background: var(--bg2);
+      border-bottom: 1px solid var(--border);
+      font-size: 11px; font-weight: 700; color: var(--muted);
+      letter-spacing: 1px;
+    }
+    .queue-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 8px 12px; border-bottom: 1px solid var(--border);
+      cursor: pointer; transition: background 0.1s;
+    }
+    .queue-item:hover { background: var(--bg3); }
+    .queue-item.playing { border-left: 3px solid var(--red); }
+    .queue-item img { width: 36px; height: 24px; object-fit: contain; border-radius: 3px; background: #000; flex-shrink: 0; }
+    .qi-name { font-size: 12px; font-weight: 600; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+
+    /* ───── Channel Grid ───── */
+    #ch-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      gap: 8px;
+    }
+    @media(max-width:480px) {
+      #ch-grid { grid-template-columns: repeat(3, 1fr); gap: 6px; }
+    }
+
+    .ch-card {
+      position: relative;
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: 10px; overflow: hidden;
+      cursor: pointer; transition: transform 0.15s, border-color 0.15s;
+      display: flex; flex-direction: column;
+      aspect-ratio: 16/11;
+    }
+    .ch-card:hover { transform: translateY(-2px); border-color: rgba(255,0,85,0.5); }
+    .ch-card:active { transform: scale(0.97); }
+
+    .ch-logo-wrap {
+      flex: 1; display: flex; align-items: center; justify-content: center;
+      padding: 8px; overflow: hidden;
+    }
+    .ch-logo-wrap img {
+      max-width: 100%; max-height: 48px;
+      object-fit: contain;
+      loading: lazy;
+    }
+    .ch-name-wrap {
+      padding: 5px 6px 6px;
+      border-top: 1px solid var(--border);
+    }
+    .ch-name {
+      font-size: 10px; font-weight: 700;
+      color: var(--text); overflow: hidden;
+      white-space: nowrap; text-overflow: ellipsis;
+      text-transform: uppercase; letter-spacing: 0.3px;
+    }
+    .ch-sub {
+      font-size: 9px; color: var(--muted); margin-top: 1px;
+      overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
+    }
+
+    /* Status badge */
+    .ch-badge {
+      position: absolute; top: 5px; left: 5px;
+      font-size: 9px; font-weight: 700; padding: 2px 5px;
+      border-radius: 4px; text-transform: uppercase; letter-spacing: 0.5px;
+      line-height: 1;
+    }
+    .badge-live { background: var(--red); color: #fff; }
+    .badge-bdix { background: #3b82f6; color: #fff; }
+    .badge-geo  { background: #eab308; color: #000; }
+    .badge-off  { background: #374151; color: #9ca3af; }
+
+    /* ───── Loading / Empty ───── */
+    #load-state {
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      min-height: 200px; gap: 12px; color: var(--muted);
+      font-size: 13px; font-weight: 600; grid-column: 1/-1;
+    }
+    .spinner {
+      width: 36px; height: 36px;
+      border: 3px solid var(--border);
+      border-top-color: var(--red);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ───── Pagination ───── */
+    #pagination {
+      display: flex; align-items: center; justify-content: center;
+      gap: 8px; padding: 16px 0;
+    }
+    .pg-btn {
+      background: var(--bg2); border: 1px solid var(--border);
+      color: var(--muted); font-size: 12px; font-weight: 700;
+      padding: 7px 14px; border-radius: 8px; transition: all 0.15s;
+    }
+    .pg-btn:hover:not(:disabled) { border-color: var(--red); color: var(--red); }
+    .pg-btn:disabled { opacity: 0.35; cursor: default; }
+    .pg-info { font-size: 12px; font-weight: 700; color: var(--muted); }
+  </style>
+</head>
+<body>
+
+<!-- Navbar -->
+<nav id="navbar">
+  <a class="logo" onclick="location.reload()" href="#">
+    <span class="logo-badge">BUG TV</span>
+    <span class="live-dot">● LIVE</span>
+  </a>
+  <div class="nav-right">
+    <div class="nav-stats"><span id="stats-count">0</span> / <span id="stats-total">0</span> Channels</div>
+  </div>
+</nav>
+
+<div id="app">
+  <div class="container">
+
+    <!-- Player -->
+    <div id="player-wrap">
+      <div id="video-col">
+        <div id="video-box">
+          <video id="vid" playsinline controls></video>
+          <div id="player-error">
+            <h3>Stream Unavailable</h3>
+            <p id="err-msg">This stream is offline, geo-blocked, or requires a specific ISP.</p>
+            <button class="try-proxy-btn" id="try-proxy-btn">Try with CORS Proxy</button>
           </div>
-
-          <!-- Video Metadata Details -->
-          <div class="flex items-center gap-4 mt-4 bg-surface-strong p-4 rounded-xs border border-border-default">
-            <img src="" class="w-16 h-10 object-contain bg-black p-1 rounded border border-border-default" id="player-details-logo" onerror="this.src='https://via.placeholder.com/150/ffffff/000000?text=TV'">
-            <div>
-              <div class="flex items-center gap-2">
-                <span class="bg-text-tertiary text-white text-[11px] font-bold px-1.5 py-0.5 rounded uppercase">Live Feed</span>
-                <span class="bg-gray-200 text-text-primary text-[11px] font-bold px-1.5 py-0.5 rounded uppercase" id="player-details-country">-</span>
-                <span class="bg-gray-100 text-text-secondary text-[11px] font-bold px-1.5 py-0.5 rounded uppercase" id="player-details-server">-</span>
-              </div>
-              <h3 class="text-text-primary text-lg font-bold mt-1" id="player-details-title">Channel Name</h3>
-            </div>
-          </div>
+          <button id="player-close" title="Close">✕</button>
         </div>
-
-        <!-- Right: Filtered Queue Sidebar Column -->
-        <div class="w-full lg:w-1/3 flex flex-col bg-surface-strong border border-border-default rounded-xs p-4 h-[35vh] lg:h-[480px]">
-          <div class="border-b border-border-default pb-3 mb-3">
-            <h3 class="text-text-primary text-xs font-bold uppercase tracking-wider">Filtered Queue</h3>
-            <p class="text-text-secondary text-[12px] font-medium mt-0.5">Live streams matching active filters: <span class="text-text-tertiary font-bold" id="queue-count">0</span></p>
-          </div>
-          
-          <!-- Scrollable Queue Container -->
-          <div class="flex-1 overflow-y-auto pr-1 related-list" id="player-queue-list">
-            <!-- Dynamic list generated by JS -->
-          </div>
-        </div>
-      </div>
-
-      <!-- Smart Filters Container -->
-      <div class="bg-surface-strong border border-border-default rounded-xs p-6 mb-8 shadow-1">
-        <div class="flex justify-between items-center border-b border-border-default pb-4 mb-4">
-          <div class="flex items-center gap-2">
-            <span class="text-text-tertiary text-xs">🎛️</span>
-            <h3 class="text-text-primary text-xs font-bold uppercase tracking-wider">Smart Filters</h3>
-          </div>
-          <button class="text-text-tertiary hover:underline text-[12px] font-bold uppercase tracking-wider" id="filter-reset">✕ Reset All Filters</button>
-        </div>
-
-        <!-- Inputs Grid -->
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-          <!-- Database Mode -->
+        <div id="player-info">
+          <img id="pi-logo" src="" alt="" />
           <div>
-            <label class="block text-text-secondary text-[12px] font-bold uppercase tracking-wider mb-2">Database Engine</label>
-            <select id="filter-db-mode" class="w-full bg-surface-raised border border-border-default text-text-primary px-3 py-2 rounded text-[13px] font-medium outline-none focus:border-text-tertiary transition cursor-pointer">
-              <option value="active" selected>⚡ Active Streams (Fast)</option>
-              <option value="geo">🌍 Geo-Blocked (VPN Needed)</option>
-              <option value="complete">📚 Complete Master DB</option>
-            </select>
-          </div>
-
-          <!-- Search input -->
-          <div>
-            <label class="block text-text-secondary text-[12px] font-bold uppercase tracking-wider mb-2">Search Broadcast</label>
-            <div class="relative">
-              <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400 pointer-events-none">
-                <svg viewBox="0 0 24 24" class="w-4 h-4 fill-current"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
-              </span>
-              <input type="text" id="search-input" class="w-full bg-surface-raised border border-border-default text-text-primary pl-9 pr-4 py-2 rounded text-[13px] font-medium outline-none focus:border-text-tertiary transition" placeholder="SEARCH CHANNEL NAME..." />
-            </div>
-          </div>
-
-          <!-- Category dropdown -->
-          <div>
-            <label class="block text-text-secondary text-[12px] font-bold uppercase tracking-wider mb-2">Category</label>
-            <select id="filter-category" class="w-full bg-surface-raised border border-border-default text-text-primary px-3 py-2 rounded text-[13px] font-medium outline-none focus:border-text-tertiary transition cursor-pointer">
-              <option value="all">ALL CATEGORIES</option>
-            </select>
-          </div>
-
-          <!-- Server dropdown -->
-          <div>
-            <label class="block text-text-secondary text-[12px] font-bold uppercase tracking-wider mb-2">Stream Hub / Server</label>
-            <select id="filter-server" class="w-full bg-surface-raised border border-border-default text-text-primary px-3 py-2 rounded text-[13px] font-medium outline-none focus:border-text-tertiary transition cursor-pointer">
-              <option value="all">ALL SERVER HUBS</option>
-            </select>
-          </div>
-        </div>
-
-        <!-- Country Filters -->
-        <div class="border-t border-border-default pt-4 mb-4">
-          <div class="flex justify-between items-center mb-2">
-            <span class="text-text-secondary text-[12px] font-bold uppercase tracking-wider">Filter By Country</span>
-            <button class="text-text-tertiary hover:underline text-[11px] font-bold uppercase tracking-wider hidden" id="clear-country-filter">✕ Clear</button>
-          </div>
-          <div class="flex flex-wrap gap-2" id="filter-countries-list">
-            <!-- Dynamic Country Pills generated by JS -->
-          </div>
-        </div>
-
-        <!-- Quick Category Shortcuts -->
-        <div class="border-t border-border-default pt-4">
-          <span class="block text-text-secondary text-[12px] font-bold uppercase tracking-wider mb-2">Quick Category</span>
-          <div class="flex flex-wrap gap-2" id="filter-quick-categories">
-            <!-- Dynamic Category Pills generated by JS -->
+            <div id="pi-title">-</div>
+            <div id="pi-meta">-</div>
           </div>
         </div>
       </div>
-
-      <!-- Channel Grid Content -->
-      <main id="category-container" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 min-h-96">
-        <div class="col-span-full flex justify-center items-center h-64">
-          <div class="spinner"></div>
-        </div>
-      </main>
-
-      <!-- Pagination Container -->
-      <div id="pagination-container" class="flex justify-center items-center gap-4 mt-10"></div>
+      <div id="queue-col">
+        <div class="queue-header">UP NEXT — <span id="queue-count">0</span></div>
+        <div id="queue-list"></div>
+      </div>
     </div>
 
-    <!-- Scripts -->
-    <script type="module" src="/main.js"></script>
-  </body>
+    <!-- Filters -->
+    <div id="filters-bar">
+      <div class="filter-row">
+        <div class="search-wrap">
+          <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+          <input type="search" id="search-input" placeholder="Search channel..." autocomplete="off" />
+        </div>
+        <select class="flt" id="sel-db">
+          <option value="active">⚡ Active (Fast)</option>
+          <option value="geo">🌍 Geo-Blocked</option>
+          <option value="complete">📚 Full Database</option>
+        </select>
+        <select class="flt" id="sel-cat">
+          <option value="all">All Categories</option>
+        </select>
+        <button id="btn-reset">✕ Reset</button>
+      </div>
+      <div class="filter-row" id="country-pills"></div>
+      <div class="filter-row" id="cat-pills"></div>
+    </div>
+
+    <!-- Grid -->
+    <div id="ch-grid">
+      <div id="load-state"><div class="spinner"></div><span>Loading channels...</span></div>
+    </div>
+    <div id="pagination"></div>
+
+  </div>
+</div>
+
+<script type="module" src="/main.js"></script>
+</body>
 </html>
