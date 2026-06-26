@@ -379,6 +379,57 @@
     .pgb:disabled{opacity:.3;cursor:default}
     .pgi{font-size:11px;font-weight:700;color:var(--muted)}
 
+    /* ═══════════════════════════════════════════
+       FOOTER
+    ═══════════════════════════════════════════ */
+    #footer {
+      margin-top: 40px;
+      padding: 30px 20px 20px;
+      background: rgba(15, 15, 20, 0.6);
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      text-align: center;
+    }
+    .f-inner {
+      max-width: 800px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .f-logo {
+      font-size: 18px;
+      font-weight: 900;
+      letter-spacing: 1px;
+      color: #fff;
+    }
+    .f-dev {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+    .f-dev strong {
+      color: #e2e8f0;
+      font-weight: 800;
+    }
+    .f-disclaimer {
+      font-size: 11px;
+      line-height: 1.6;
+      color: rgba(255, 255, 255, 0.4);
+      background: rgba(0, 0, 0, 0.2);
+      padding: 12px 16px;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.03);
+    }
+    .f-disclaimer strong {
+      color: rgba(255, 255, 255, 0.6);
+    }
+    .f-copy {
+      font-size: 11px;
+      font-weight: 600;
+      color: rgba(255, 255, 255, 0.2);
+      margin-top: 10px;
+    }
+
     /* ── Mobile Polish ── */
     @media(max-width: 600px) {
       /* Navbar */
@@ -412,6 +463,11 @@
       .c-img img { max-height: 40px; }
       .c-name { font-size: 10px; }
       .c-sub { font-size: 9px; }
+
+      /* Footer */
+      #footer { padding: 24px 16px 16px; margin-top: 30px; }
+      .f-logo { font-size: 16px; }
+      .f-disclaimer { font-size: 10px; padding: 10px 12px; }
     }
   </style>
 </head>
@@ -510,6 +566,22 @@
 
 </div>
 </div>
+
+<!-- Footer -->
+<footer id="footer">
+  <div class="f-inner">
+    <div class="f-credits">
+      <div class="f-logo">BUG TV</div>
+      <div class="f-dev">Developed by <strong>Zaman Topu</strong></div>
+    </div>
+    <div class="f-disclaimer">
+      <strong>Disclaimer:</strong> We do not host, provide, or archive any of the media streams. All channels are curated from publicly available sources on the internet. We hold no responsibility for the content broadcasted by these channels.
+    </div>
+    <div class="f-copy">
+      &copy; 2024 BUG TV. All Rights Reserved.
+    </div>
+  </div>
+</footer>
 
 <script type="module" src="/main.js"></script>
 </body>
