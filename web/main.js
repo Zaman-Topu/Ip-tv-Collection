@@ -350,7 +350,15 @@ function parseM3U(text) {
     const line = lines[i].trim();
     if (!line) continue;
     if (line.startsWith('#EXTINF:')) {
-      const logoM  = line.match(/tvg-logo="([^"]+)"/);
+      let logo = '';
+      const logoM = line.match(/tvg-logo=(?:"([^"]+)"|'([^']+)'|([^,\s]+))/);
+      if (logoM) {
+        logo = logoM[1] || logoM[2] || logoM[3] || '';
+      }
+      if (logo && logo.startsWith('http://')) {
+        logo = 'https://wsrv.nl/?url=' + encodeURIComponent(logo);
+      }
+
       const groupM = line.match(/group-title="([^"]+)"/);
       const ci     = line.lastIndexOf(',');
       const group  = groupM ? groupM[1].trim() : 'Others';
@@ -358,7 +366,7 @@ function parseM3U(text) {
       const chanName = ci >= 0 ? line.substring(ci+1).trim() : 'Unknown';
       if (chanName.toLowerCase().includes('playz tv')) { cur = null; continue; }
       cur = {
-        logo:  logoM ? logoM[1] : '',
+        logo:  logo,
         group,
         name:  chanName || 'Unknown',
       };
