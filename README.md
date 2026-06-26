@@ -3,26 +3,41 @@
   
   <br><br>
   
-  <h1>📺 Ultimate Dynamic IPTV Aggregator (Auto-Updating)</h1>
-  <p><b>The most advanced, auto-testing, deduplicating IPTV Aggregator engine on GitHub.</b></p>
+  <h1>📺 BUG TV - Ultimate Dynamic IPTV Aggregator</h1>
+  <p><b>The most advanced, auto-testing, deduplicating IPTV Aggregator engine & Web Player on GitHub.</b></p>
   
   [![Channels](https://img.shields.io/badge/Channels-50k+-blue?style=for-the-badge&logo=tv)](#)
-  [![Updated](https://img.shields.io/badge/Auto_Updated-Every_Night-brightgreen?style=for-the-badge&logo=clock)](#)
+  [![Updated](https://img.shields.io/badge/Auto_Updated-Every_Night-brightgreen?style=for-the-badge&logo=githubactions)](#)
   [![Format](https://img.shields.io/badge/Format-M3U8-orange?style=for-the-badge)](#)
-  [![Security](https://img.shields.io/badge/Security-Policy-red?style=for-the-badge)](SECURITY.md)
+  [![Web Player](https://img.shields.io/badge/Web_Player-Live_Now-ff0055?style=for-the-badge&logo=googlechrome)](https://zaman-topu.github.io/Ip-tv-Collection/web/)
 </div>
 
 <br>
 
 Welcome to the **Ultimate Dynamic IPTV Aggregator**. Every single night, our automated GitHub Action connects to **25+ of the top IPTV repositories**, merges their streams, removes duplicates, physically tests thousands of streams, and generates four ultra-clean databases. 
 
-Whether you are looking for **Bangladeshi Live TV (BDIX)**, **Global Sports Streams**, or **Free Movies**, it's all here and it's guaranteed to work.
+We now feature a **Premium Web Player** with a modern glassmorphism design, allowing you to stream thousands of channels directly from your browser without installing any third-party IPTV apps!
 
-## 🚀 How to use in your TV / IPTV App
+---
 
-This playlist is perfectly formatted for all modern IPTV applications, including **TiviMate**, **IPTV Smarters Pro**, **Televizo**, **SS IPTV**, and **VLC**.
+## 🚀 BUG TV Web Player (NEW)
 
-We offer **4 distinct databases** to suit your needs:
+Experience our new state-of-the-art web streaming platform, built with speed, SEO, and premium aesthetics in mind. 
+
+🔗 **[Launch BUG TV Web Player](https://zaman-topu.github.io/Ip-tv-Collection/web/)**
+
+**Features:**
+- ✨ **Premium Glassmorphism Design:** A stunning, immersive dark mode aesthetic.
+- ⚡ **Lightning Fast:** Instant channel switching with our anti-lag rewind algorithms.
+- 🏷️ **Smart Badges:** Automatically identifies `Live`, `BDIX` (Local), and `Geo-Blocked` streams.
+- 📱 **Fully Responsive:** Works flawlessly on Mobile, Desktop, and Android TV browsers.
+- 🔍 **SEO Optimized:** Fully indexed by Google Search Console for maximum discoverability.
+
+---
+
+## 📲 How to use in your TV / IPTV App
+
+If you prefer using standalone apps like **TiviMate**, **IPTV Smarters Pro**, **Televizo**, or **VLC**, simply copy and paste one of our auto-updating playlist links below:
 
 ### ⚡ 1. The Active Database (Recommended)
 This list ONLY contains 100% verified working streams and local BDIX links. It is lightweight and ultra-fast.
@@ -47,6 +62,15 @@ Our system automatically generates a customized, lightning-fast JSON EPG matched
 ```http
 https://raw.githubusercontent.com/Zaman-Topu/Ip-tv-Collection/main/epg.json
 ```
+
+---
+
+## 🛡️ Custom Channel Protection (NEW)
+
+Are you tired of bots overwriting your perfectly working local ISP/BDIX links?
+We've introduced the **`custom_playlist.m3u`** file. 
+
+If you add a working link to this file, our automated aggregator bot will **respect and protect** it. When the bot deduplicates the massive 50K+ list every night, it will skip over any channels you've explicitly added to `custom_playlist.m3u`, ensuring your favorite links NEVER die!
 
 ---
 
@@ -98,27 +122,10 @@ We combined 25+ of the best IPTV sources on GitHub, ran a strict deduplication s
 | 🌐 **[ENGLISH] English**| 14,103 | General English entertainment, Lifestyle, TLC, History |
 | 🕌 **[RELIGION] Religion** | 819 | Islamic, Quran, Peace TV, Madani, Christian, Hindu channels |
 | 📚 **[DOC] Documentary** | 503 | Discovery, Nat Geo, Animal Planet |
-| 🌟 **[OTHERS] Others** | 13,299 | Uncategorized miscellaneous streams |
-
-**Total Unique Channels:** `43,901`
-
-## 🛠️ The Ultimate Architecture
-
-* **🤖 25+ Source Aggregation:** Pulls dynamically from the best repositories worldwide.
-* **🚫 Zero Duplicates:** Advanced URL-matching completely removes duplicate channels.
-* **⚡ 4-Tier Database Generation:** Automatically separates Active, Geo-blocked, and Dead streams into their own lists.
-* **📅 JSON EPG Generator:** Custom Python script matches XMLTV data to active streams to produce a lightweight JSON EPG.
-* **📺 Smart Web Player:** Integrated web player that utilizes the JSON EPG to show "Now Playing" titles directly on the stream cards.
 
 ---
 
-## 🛡️ Security & Privacy Policy
-
-We take security seriously. Please read our official [Security Policy](SECURITY.md) for information on reporting vulnerabilities, malicious links, or handling DMCA takedown requests.
-
-<br>
-
 <div align="center">
-  <i>Built and Maintained by <a href="https://github.com/Zaman-Topu">Zaman-Topu</a></i><br>
-  ⭐⭐⭐ <b>If you love this professional architecture, please STAR this repository!</b> ⭐⭐⭐
+  <p><b>Disclaimer:</b> We do not host, stream, or control any of the channels provided in this repository. All streams are publicly available links collected from the internet. We do not endorse or take responsibility for the content. If you own the rights to any content and wish for it to be removed, please contact the original hosting provider or open an issue for removal.</p>
+  <p>Developed with ❤️ by <a href="https://www.facebook.com/zamantopu.official/">Zaman Topu (BUG MOHOL)</a></p>
 </div>
