@@ -73,6 +73,9 @@ async def check_url(session, url):
         headers = {'Range': 'bytes=0-100', 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
         async with session.get(url, headers=headers, timeout=8, allow_redirects=True) as resp:
             if resp.status in (200, 206, 302, 301):
+                ctype = resp.headers.get('Content-Type', '').lower()
+                if 'text/html' in ctype:
+                    return 'blocked'
                 return 'active'
             elif resp.status in (403, 401, 451):
                 return 'blocked'
