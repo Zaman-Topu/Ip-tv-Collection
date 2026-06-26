@@ -126,6 +126,33 @@
     .nav-link.active { color: #fff; background: rgba(255,42,95,0.1); border: 1px solid rgba(255,42,95,0.2); }
     .nav-link.active svg { opacity: 1; stroke: #ff2a5f; }
     
+    .nav-sports {
+      position: relative;
+      background: rgba(255, 100, 0, 0.1);
+      border: 1px solid rgba(255, 100, 0, 0.2);
+      color: #ff9800;
+    }
+    .nav-sports svg { opacity: 1; stroke: #ff9800; }
+    .nav-sports:hover { background: rgba(255, 100, 0, 0.2); color: #fff; }
+    .nav-sports:hover svg { stroke: #ff5722; }
+    .nav-sports.active { background: linear-gradient(135deg, #ff5722, #ff9800); color: #fff; border-color: transparent; }
+    .nav-sports.active svg { stroke: #fff; }
+    
+    .hot-badge {
+      position: absolute;
+      top: -8px; right: -8px;
+      background: #ff2a5f;
+      color: #fff;
+      font-size: 9px;
+      font-weight: 900;
+      padding: 2px 6px;
+      border-radius: 10px;
+      letter-spacing: 0.5px;
+      box-shadow: 0 2px 8px rgba(255, 42, 95, 0.5);
+      animation: pulse 2s infinite;
+      text-transform: uppercase;
+    }
+    
     .nav-stat {
       display: flex; align-items: center; gap: 8px;
       font-size: 13px; font-weight: 600; color: #e2e8f0;
@@ -545,11 +572,8 @@
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
         Home
       </a>
-      <a href="#" class="nav-link" onclick="filterMenu(event, 'Movies')" id="nav-movies">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"></rect><line x1="7" y1="2" x2="7" y2="22"></line><line x1="17" y1="2" x2="17" y2="22"></line><line x1="2" y1="12" x2="22" y2="12"></line><line x1="2" y1="7" x2="7" y2="7"></line><line x1="2" y1="17" x2="7" y2="17"></line><line x1="17" y1="17" x2="22" y2="17"></line><line x1="17" y1="7" x2="22" y2="7"></line></svg>
-        Movies
-      </a>
-      <a href="#" class="nav-link" onclick="filterMenu(event, 'Sports')" id="nav-sports">
+      <a href="#" class="nav-link nav-sports" onclick="filterMenu(event, 'Sports')" id="nav-sports">
+        <span class="hot-badge">HOT</span>
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"></path><path d="M2 12h20"></path></svg>
         Sports
       </a>
