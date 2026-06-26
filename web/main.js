@@ -96,17 +96,23 @@ const qList    = document.getElementById('q-list');
 const qCnt     = document.getElementById('q-cnt');
 
 // ══════════════════════════════════════════
-//  FALLBACK IMAGE (inline SVG — no network request)
+//  DYNAMIC FALLBACK LOGO
 // ══════════════════════════════════════════
-const FALLBACK = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='40'%3E%3Crect width='64' height='40' rx='3' fill='%23111'/%3E%3Ctext x='50%25' y='55%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='9' fill='%23444'%3ETV%3C/text%3E%3C/svg%3E`;
+function getFallback(name) {
+  const l = name ? name.trim().charAt(0).toUpperCase() : 'T';
+  const colors = ['#e11d48', '#2563eb', '#16a34a', '#d97706', '#9333ea', '#0891b2', '#be123c', '#0f766e', '#b45309'];
+  const hash = name ? name.split('').reduce((a, b) => a + b.charCodeAt(0), 0) : 0;
+  const c = colors[hash % colors.length];
+  const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='80' height='50'><rect width='80' height='50' rx='4' fill='${c}'/><text x='50%' y='55%' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='24' font-weight='bold' fill='#ffffff'>${l}</text></svg>`;
+  return `data:image/svg+xml,${encodeURIComponent(svg)}`;
+}
 
-function logoSrc(logo) {
-  if (!logo) return FALLBACK;
-  // Route logos through proxy to avoid CORS issues + hide direct logo source
+function logoSrc(logo, name) {
+  if (!logo) return getFallback(name);
   if (logo.startsWith('http')) {
     return `https://wsrv.nl/?url=${encodeURIComponent(logo)}&w=80&h=50&fit=contain&bg=transparent`;
   }
-  return logo || FALLBACK;
+  return logo;
 }
 
 // ══════════════════════════════════════════
@@ -504,7 +510,7 @@ function makeCard(ch) {
 
   card.innerHTML = `
     ${badge}
-    <div class="c-img"><img src="${logoSrc(ch.logo)}" alt="${ch.name}" loading="lazy" onerror="this.src='${FALLBACK}'"></div>
+    <div class="c-img"><img src="${logoSrc(ch.logo, ch.name)}" alt="${ch.name}" loading="lazy" onerror="this.onerror=null; this.src=getFallback('${ch.name.replace(/'/g, "\\'")}')"></div>
     <div class="c-info">
       <div class="c-name">${ch.name}</div>
       <div class="c-sub">${ch.country} · ${ch.group}</div>
@@ -544,8 +550,8 @@ function openPlayer(ch, forceProxy = false) {
   pWrap.scrollIntoView({behavior:'smooth',block:'start'});
 
   // Logo
-  piLogo.src = logoSrc(ch.logo);
-  piLogo.onerror = () => { piLogo.src = FALLBACK; };
+  piLogo.src = logoSrc(ch.logo, ch.name);
+  piLogo.onerror = () => { piLogo.onerror=null; piLogo.src = getFallback(ch.name); };
 
   // Info
   piTitle.textContent   = ch.name;
@@ -722,7 +728,7 @@ function renderQueue(active) {
     const d = document.createElement('div');
     d.className = 'qi' + (ch._u === active._u ? ' on' : '');
     d.innerHTML = `
-      <img class="qi-thumb" src="${logoSrc(ch.logo)}" alt="" loading="lazy" onerror="this.src='${FALLBACK}'">
+      <img class="qi-thumb" src="${logoSrc(ch.logo, ch.name)}" alt="" loading="lazy" onerror="this.onerror=null; this.src=getFallback('${ch.name.replace(/'/g, "\\'")}')">
       <div class="qi-info">
         <div class="qi-n">${ch.name}</div>
         <div class="qi-s">${ch.country} · ${ch.subcat || ch.group}</div>
