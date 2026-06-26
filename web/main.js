@@ -1,5 +1,5 @@
-import Hls from 'hls.js';
-
+import videojs from 'video.js';
+import 'video.js/dist/video-js.css';
 // ══════════════════════════════════════════
 //  URL OBFUSCATION — XOR cipher with session key
 //  URLs are NEVER stored as plain strings in memory
@@ -566,9 +566,9 @@ function openPlayer(ch, forceProxy = false) {
   playStream(rawUrl, ch, forceProxy);
 }
 
+let playerInst = null;
+
 function playStream(rawUrl, ch, useProxy) {
-  if (hlsInst) { hlsInst.destroy(); hlsInst = null; }
-  vidEl.pause(); vidEl.removeAttribute('src'); vidEl.load();
   pErr.classList.remove('show');
 
   // Reset badges
@@ -604,124 +604,38 @@ function playStream(rawUrl, ch, useProxy) {
     }
   }
 
-  // Remove spinner on native play event (catches both HLS and native video load)
-  vidEl.onplaying = () => { if (vidSpin) vidSpin.classList.remove('show'); };
-
-
-  // Buffer progress animation
-  let bufTimer = null;
-  function startBufAnim() {
-    if (vidSpin) vidSpin.classList.add('show');
-    let pct = 0;
-    bufTimer = setInterval(() => {
-      pct = Math.min(pct + Math.random()*9, 88);
-      if (bufFill) bufFill.style.width = pct + '%';
-    }, 200);
-  }
-  function finishBuf() {
-    clearInterval(bufTimer);
-    if (vidSpin) vidSpin.classList.remove('show');
-    if (bufFill) {
-      bufFill.style.width = '100%';
-      setTimeout(() => { if(bufFill) bufFill.style.width = '0%'; }, 600);
-    }
-  }
-
-  function showQuality(level) {
-    let label = '● LIVE';
-    if (level && level.height) {
-      const h = level.height;
-      label = h>=1080 ? '1080p' : h>=720 ? '720p HD' : h>=480 ? '480p' : h>=360 ? '360p' : `${h}p`;
-    } else if (level && level.bitrate) {
-      const kb = Math.round(level.bitrate/1000);
-      label = kb>=4000?'1080p':kb>=2000?'720p HD':kb>=800?'480p':kb>=400?'360p':'Low';
-    }
-    if (qualBadge) { qualBadge.textContent = label; qualBadge.style.display = 'block'; }
-    if (piQlabel)  { piQlabel.textContent  = label; piQlabel.style.display  = 'inline-block'; }
-  }
-
-  const isHLS = _tmp.includes('.m3u') || _tmp.includes('.m3u8');
-
-  if (isHLS && Hls.isSupported()) {
-    startBufAnim();
-    hlsInst = new Hls({
-      // Buffer settings — smooth & robust
-      maxBufferLength: 30,           // 30s buffer target
-      maxMaxBufferLength: 60,        // up to 60s max
-      maxBufferSize: 60*1000*1000,   // 60MB max buffer
-      maxBufferHole: 0.5,
-      highBufferWatchdogPeriod: 2,
-      nudgeOffset: 0.1,
-      nudgeMaxRetry: 5,
-      // ABR (Adaptive Bitrate)
-      startLevel: -1,                // auto-select quality
-      abrEwmaDefaultEstimate: 1000000, // start at 1Mbps estimate
-      abrBandWidthFactor: 0.9,
-      abrBandWidthUpFactor: 0.7,
-      // Recovery
-      fragLoadingMaxRetry: 6,
-      manifestLoadingMaxRetry: 4,
-      levelLoadingMaxRetry: 4,
-      fragLoadingRetryDelay: 1000,
-      // Performance
-      enableWorker: true,
-      lowLatencyMode: false,         // false = better buffering (not low-latency)
-      progressive: false,
-      testBandwidth: true,
-      debug: false,
-    });
-
-    hlsInst.loadSource(_tmp);
-    hlsInst.attachMedia(vidEl);
-
-    hlsInst.on(Hls.Events.MANIFEST_PARSED, (_, data) => {
-      finishBuf();
-      // Show quality of chosen level
-      if (data.levels && data.levels.length > 0) {
-        const lvl = hlsInst.currentLevel >= 0
-          ? data.levels[hlsInst.currentLevel]
-          : data.levels[data.levels.length - 1];
-        showQuality(lvl);
-      }
-      vidEl.play().catch(()=>{});
-    });
-
-    hlsInst.on(Hls.Events.LEVEL_SWITCHED, (_, data) => {
-      if (hlsInst && hlsInst.levels && hlsInst.levels[data.level]) {
-        showQuality(hlsInst.levels[data.level]);
-      }
-    });
-
-    hlsInst.on(Hls.Events.ERROR, (_, d) => {
-      if (d.fatal) {
-        if (d.type === Hls.ErrorTypes.NETWORK_ERROR) {
-          // Network error — try to recover
-          hlsInst.startLoad();
-        } else if (d.type === Hls.ErrorTypes.MEDIA_ERROR) {
-          hlsInst.recoverMediaError();
-        } else {
-          onErr();
+  if (!playerInst) {
+    playerInst = videojs(vidEl, {
+      fluid: true,
+      html5: {
+        vhs: {
+          overrideNative: true // Use Video.js HTTP Streaming (VHS) over native where possible
         }
       }
     });
 
-  } else if (isHLS && vidEl.canPlayType('application/vnd.apple.mpegurl')) {
-
-    // Safari native
-    vidEl.src = _tmp;
-    vidEl.play().catch(()=>{});
-    vidEl.onerror = onErr;
-  } else {
-    vidEl.src = _tmp;
-    vidEl.play().catch(()=>{});
-    vidEl.onerror = onErr;
+    playerInst.on('error', onErr);
+    playerInst.on('playing', () => { if (vidSpin) vidSpin.classList.remove('show'); });
+    playerInst.on('waiting', () => { if (vidSpin) vidSpin.classList.add('show'); });
   }
+
+  // Set source and play
+  playerInst.src({
+    src: _tmp,
+    type: (_tmp.includes('.m3u') || _tmp.includes('.m3u8')) ? 'application/x-mpegURL' : 'video/mp4'
+  });
+  
+  playerInst.ready(() => {
+    playerInst.play().catch(() => {});
+  });
 }
 
 function closePlayer() {
   activeCh = null;
-  if (hlsInst) { hlsInst.destroy(); hlsInst = null; }
-  vidEl.pause(); vidEl.removeAttribute('src'); vidEl.load();
+  if (playerInst) { 
+    playerInst.pause(); 
+    playerInst.src(''); 
+  }
   if (vidSpin) vidSpin.classList.remove('show');
   pWrap.classList.remove('show');
   history.pushState(null,'',location.pathname);
