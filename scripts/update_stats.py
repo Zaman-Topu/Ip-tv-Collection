@@ -14,6 +14,7 @@ ACTIVE_M3U_FILE = "FINAL_IPTV_ACTIVE.m3u"
 GEO_M3U_FILE = "FINAL_IPTV_GEO.m3u"
 DEAD_M3U_FILE = "FINAL_IPTV_DEAD.m3u"
 README_FILE = "README.md"
+CUSTOM_FILE = "custom_playlist.m3u"
 
 SOURCE_URLS = [
     "https://raw.githubusercontent.com/abusaeeidx/Mrgify-BDIX-IPTV/main/playlist.m3u",
@@ -104,7 +105,32 @@ async def main():
         tasks = [fetch_playlist(session, url) for url in SOURCE_URLS]
         results = await asyncio.gather(*tasks)
 
-        print("Merging and deduplicating playlists...")
+        print("Loading custom playlist to prioritize working links...")
+        custom_names = set()
+        import os
+        if os.path.exists(CUSTOM_FILE):
+            with open(CUSTOM_FILE, 'r', encoding='utf-8') as f:
+                lines = f.readlines()
+                c_extinf = None
+                for line in lines:
+                    line = line.strip()
+                    if not line: continue
+                    if line.startswith('#EXTINF'):
+                        c_extinf = line
+                    elif not line.startswith('#'):
+                        if line not in seen_urls:
+                            seen_urls.add(line)
+                            channel_entries.append({'extinf': c_extinf, 'url': line})
+                            # Extract base name to protect it
+                            import re
+                            name_match = re.search(r',([^,]+)$', c_extinf) if c_extinf else None
+                            if name_match:
+                                base_name = re.sub(r'\(.*?\)', '', name_match.group(1)).strip().lower()
+                                custom_names.add(base_name)
+                        c_extinf = None
+        print(f"Loaded {len(custom_names)} custom channels to protect from overwriting.")
+
+        print("Merging and deduplicating scraped playlists...")
         for text in results:
             if not text: continue
             current_extinf = None
@@ -116,8 +142,16 @@ async def main():
                     current_extinf = line
                 elif not line.startswith('#'):
                     if line not in seen_urls:
-                        seen_urls.add(line)
-                        channel_entries.append({'extinf': current_extinf, 'url': line})
+                        # Only add if we don't already have a custom working version of this channel
+                        import re
+                        name_match = re.search(r',([^,]+)$', current_extinf) if current_extinf else None
+                        base_name = ""
+                        if name_match:
+                            base_name = re.sub(r'\(.*?\)', '', name_match.group(1)).strip().lower()
+                        
+                        if base_name not in custom_names:
+                            seen_urls.add(line)
+                            channel_entries.append({'extinf': current_extinf, 'url': line})
                     current_extinf = None
 
         print(f"Deduplicated total: {len(channel_entries)} unique channels.")

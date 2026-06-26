@@ -733,19 +733,30 @@ function closePlayer() {
 }
 
 function renderQueue(active) {
-  const related = allCh.filter(c => c.group === active.group || c.country === active.country).slice(0, 60);
-  const sorted  = [active, ...related.filter(c => c._u !== active._u)];
+  const sc = s => s==='active'?4:s==='isp_bdix'?3:s==='blocked'?2:s==='unknown'?1:0;
+  
+  let related = allCh.filter(c => c.group === active.group || c.country === active.country && c._u !== active._u);
+  related.sort((a,b) => sc(getStatus(b)) - sc(getStatus(a)));
+  related = related.slice(0, 60);
+  
+  const sorted  = [active, ...related];
   qCnt.textContent = sorted.length;
   qList.innerHTML  = '';
   const frag = document.createDocumentFragment();
   sorted.forEach(ch => {
+    const st = getStatus(ch);
+    let badge = '';
+    if      (st==='active')   badge = '<span class="badge b-live" style="position:static;font-size:7px;padding:1px 3px;margin-right:4px;">Live</span>';
+    else if (st==='isp_bdix') badge = '<span class="badge b-bdix" style="position:static;font-size:7px;padding:1px 3px;margin-right:4px;">BDIX</span>';
+    else if (st==='blocked')  badge = '<span class="badge b-geo" style="position:static;font-size:7px;padding:1px 3px;margin-right:4px;">Geo</span>';
+    
     const d = document.createElement('div');
     d.className = 'qi' + (ch._u === active._u ? ' on' : '');
     d.innerHTML = `
       <img class="qi-thumb" src="${logoSrc(ch.logo, ch.name)}" alt="" loading="lazy" onerror="this.onerror=null; this.src=getFallback('${ch.name.replace(/'/g, "\\'")}')">
       <div class="qi-info">
         <div class="qi-n">${ch.name}</div>
-        <div class="qi-s">${ch.country} · ${ch.subcat || ch.group}</div>
+        <div class="qi-s">${badge}${ch.country} · ${ch.subcat || ch.group}</div>
       </div>`;
     d.addEventListener('click', () => openPlayer(ch));
     frag.appendChild(d);
