@@ -766,26 +766,11 @@ window.filterMenu = function(e, category) {
 pClose.addEventListener('click', closePlayer);
 btnProxy.addEventListener('click', () => { if (activeCh) openPlayer(activeCh, true); });
 
-btnReport.addEventListener('click', async () => {
+btnReport.addEventListener('click', () => {
   if (!activeCh) return;
-  const originalText = btnReport.innerHTML;
-  btnReport.innerHTML = 'Reporting...';
-  btnReport.disabled = true;
-
-  // IMPORTANT: For security, never put a real Discord Webhook or Telegram Bot Token in a public GitHub file.
-  // Instead, you can use a free form service like Formspree, or just open a Telegram DM.
-  // For now, we will open the user's Telegram app/web with a pre-filled message to a specific admin/group.
-  
-  setTimeout(() => {
-    // Option 1: Open Telegram
-    // window.open(`https://t.me/AnonymousOrigin?text=Report:%20${encodeURIComponent(activeCh.name)}%20is%20not%20working!`, '_blank');
-    
-    // Option 2: Show success alert (Simulated)
-    alert(`Thank you! "${activeCh.name}" has been reported to the BUG MOHOL admins.`);
-    
-    btnReport.innerHTML = originalText;
-    btnReport.disabled = false;
-  }, 800);
+  // Redirect to Telegram with a pre-filled message (works best if AnonymousOrigin is a bot or user ID)
+  const msg = `⚠️ Report: The channel "${activeCh.name}" is not working on BUG TV.`;
+  window.open(`https://t.me/AnonymousOrigin?text=${encodeURIComponent(msg)}`, '_blank');
 });
 
 srchEl.addEventListener('input', e => {
