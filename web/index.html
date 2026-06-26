@@ -121,8 +121,8 @@
       transition: all 0.2s ease;
     }
     .nav-link svg { width: 16px; height: 16px; opacity: 0.7; transition: all 0.2s ease; }
-    .nav-link:hover { color: #fff; background: rgba(255,255,255,0.05); }
-    .nav-link:hover svg { opacity: 1; stroke: #ff2a5f; }
+    .nav-link:hover, .nav-link:focus { color: #fff; background: rgba(255,255,255,0.05); outline: none; }
+    .nav-link:hover svg, .nav-link:focus svg { opacity: 1; stroke: #ff2a5f; }
     .nav-link.active { color: #fff; background: rgba(255,42,95,0.1); border: 1px solid rgba(255,42,95,0.2); }
     .nav-link.active svg { opacity: 1; stroke: #ff2a5f; }
     
@@ -133,8 +133,8 @@
       color: #ff9800;
     }
     .nav-sports svg { opacity: 1; stroke: #ff9800; }
-    .nav-sports:hover { background: rgba(255, 100, 0, 0.2); color: #fff; }
-    .nav-sports:hover svg { stroke: #ff5722; }
+    .nav-sports:hover, .nav-sports:focus { background: rgba(255, 100, 0, 0.2); color: #fff; outline: none; }
+    .nav-sports:hover svg, .nav-sports:focus svg { stroke: #ff5722; }
     .nav-sports.active { background: linear-gradient(135deg, #ff5722, #ff9800); color: #fff; border-color: transparent; }
     .nav-sports.active svg { stroke: #fff; }
     
@@ -408,18 +408,21 @@
     @media(max-width:400px){#grid{grid-template-columns:repeat(3,1fr);gap:5px}}
     @media(min-width:800px){#grid{grid-template-columns:repeat(auto-fill,minmax(140px,1fr))}}
 
-    .card{
-      position:relative;background:var(--bg2);border:1px solid var(--border);
-      border-radius:9px;overflow:hidden;cursor:pointer;
-      transition:transform .15s ease,border-color .15s ease,box-shadow .15s ease;
-      display:flex;flex-direction:column;aspect-ratio:16/11;
+    .card {
+      background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 12px; overflow: hidden; cursor: pointer; transition: all 0.25s ease;
+      display: flex; flex-direction: column; outline: none;
     }
-    .card:hover{
-      transform:translateY(-2px);
-      border-color:rgba(255,0,85,0.35);
-      box-shadow:0 8px 24px rgba(0,0,0,.4);
+    .card:hover, .card:focus {
+      background: rgba(255, 255, 255, 0.08); border-color: rgba(255, 255, 255, 0.2);
+      transform: translateY(-4px); box-shadow: 0 10px 20px rgba(0,0,0,0.4);
     }
-    .card:active{transform:scale(0.97)}
+    /* Explicit focus state for Android TV Remote */
+    .card:focus {
+      border-color: #ff2a5f;
+      box-shadow: 0 0 0 3px rgba(255, 42, 95, 0.4), 0 10px 20px rgba(0,0,0,0.4);
+    }
+    .card:active { transform: scale(0.96); }
 
     .c-img{
       flex:1;display:flex;align-items:center;justify-content:center;

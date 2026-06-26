@@ -774,6 +774,97 @@ selDb.addEventListener('change', e => { dbKey=e.target.value; loadDb(); });
 breset.addEventListener('click', ()=>{ fSearch=''; fCat='all'; fCountry='all'; srchEl.value=''; selCat.value='all'; buildFilters(); applyFilters(); });
 window.addEventListener('popstate', e => { if (e.state?.n) { const ch=allCh.find(c=>c.name===e.state.n); if(ch) openPlayer(ch); } else closePlayer(); });
 
+// Keyboard Shortcuts & Android TV Remote Control
+window.addEventListener('keydown', e => {
+  // Ignore shortcuts if typing in search box
+  if (document.activeElement === srchEl) return;
+
+  const isPlayerOpen = pWrap.classList.contains('show');
+
+  if (isPlayerOpen) {
+    switch(e.key.toLowerCase()) {
+      case 'escape':
+      case 'backspace':
+        e.preventDefault();
+        closePlayer();
+        break;
+      case ' ':
+      case 'enter':
+        // Don't intercept Enter if focused on a specific button (like close or proxy)
+        if (e.key === 'Enter' && document.activeElement !== document.body && document.activeElement !== vidEl) return;
+        e.preventDefault();
+        vidEl.paused ? vidEl.play() : vidEl.pause();
+        break;
+      case 'f':
+        e.preventDefault();
+        if (!document.fullscreenElement) {
+          vidEl.requestFullscreen?.() || vidEl.webkitRequestFullscreen?.();
+        } else {
+          document.exitFullscreen?.() || document.webkitExitFullscreen?.();
+        }
+        break;
+      case 'm':
+        e.preventDefault();
+        vidEl.muted = !vidEl.muted;
+        break;
+      case 'arrowup':
+      case 'arrowdown':
+        e.preventDefault();
+        // TV Remote up/down changes channel in player
+        const related = allCh.filter(c => c.group === activeCh?.group || c.country === activeCh?.country).slice(0, 60);
+        const sorted = [activeCh, ...related.filter(c => c._u !== activeCh?._u)];
+        if (sorted.length > 1) {
+          let nextIdx = e.key === 'ArrowDown' ? 1 : sorted.length - 1;
+          openPlayer(sorted[nextIdx]);
+        }
+        break;
+    }
+  } else {
+    // Spatial Navigation for Grid (TV Remote)
+    if (['ArrowRight', 'ArrowLeft', 'ArrowUp', 'ArrowDown'].includes(e.key)) {
+      const focusables = Array.from(document.querySelectorAll('.card, .nav-link, .logo, input, select'));
+      const active = document.activeElement;
+      
+      if (!focusables.includes(active)) {
+        // If nothing is focused, focus the first card or nav link
+        const firstCard = document.querySelector('.card');
+        if (firstCard) { e.preventDefault(); firstCard.focus(); }
+        return;
+      }
+      
+      // Basic native-like focus moving by grid position
+      const rect = active.getBoundingClientRect();
+      let bestDist = Infinity;
+      let bestEl = null;
+
+      focusables.forEach(el => {
+        if (el === active) return;
+        const r = el.getBoundingClientRect();
+        let dx = 0, dy = 0;
+        
+        if (e.key === 'ArrowRight' && r.left >= rect.right - 10) { dx = r.left - rect.right; dy = Math.abs(r.top - rect.top); }
+        else if (e.key === 'ArrowLeft' && r.right <= rect.left + 10) { dx = rect.left - r.right; dy = Math.abs(r.top - rect.top); }
+        else if (e.key === 'ArrowDown' && r.top >= rect.bottom - 10) { dy = r.top - rect.bottom; dx = Math.abs(r.left - rect.left); }
+        else if (e.key === 'ArrowUp' && r.bottom <= rect.top + 10) { dy = rect.top - r.bottom; dx = Math.abs(r.left - rect.left); }
+        else return; // Not in direction
+
+        // Weight distance (prefer straight lines)
+        const dist = Math.sqrt(dx*dx + dy*dy*10); 
+        if (dist < bestDist) {
+          bestDist = dist;
+          bestEl = el;
+        }
+      });
+
+      if (bestEl) {
+        e.preventDefault();
+        bestEl.focus();
+        bestEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }
+  }
+});
+
 // ══════════════════════════════════════════
 //  BOOT
 // ══════════════════════════════════════════
