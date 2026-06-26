@@ -105,11 +105,14 @@ function getFallback(name) {
 }
 window.getFallback = getFallback;
 
-function logoSrc(logo, name) {
-  if (!logo) return getFallback(name);
-  return logo;
+function logoSrc(url, name) {
+  if (!url) return getFallback(name);
+  if (location.protocol === 'https:' && url.startsWith('http://')) {
+    // Proxy HTTP images through wsrv.nl to bypass Mixed Content restrictions
+    return `https://wsrv.nl/?url=${encodeURIComponent(url)}`;
+  }
+  return url;
 }
-
 // ══════════════════════════════════════════
 //  COMPREHENSIVE COUNTRY DETECTION
 // ══════════════════════════════════════════
