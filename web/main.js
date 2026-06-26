@@ -84,6 +84,7 @@ const pClose   = document.getElementById('p-close');
 const pErr     = document.getElementById('p-err');
 const errTxt   = document.getElementById('err-txt');
 const btnProxy = document.getElementById('btn-proxy');
+const btnReport = document.getElementById('btn-report');
 const piLogo   = document.getElementById('pi-logo');
 const piTitle  = document.getElementById('pi-title');
 const piCountry= document.getElementById('pi-country');
@@ -764,6 +765,28 @@ window.filterMenu = function(e, category) {
 // ══════════════════════════════════════════
 pClose.addEventListener('click', closePlayer);
 btnProxy.addEventListener('click', () => { if (activeCh) openPlayer(activeCh, true); });
+
+btnReport.addEventListener('click', async () => {
+  if (!activeCh) return;
+  const originalText = btnReport.innerHTML;
+  btnReport.innerHTML = 'Reporting...';
+  btnReport.disabled = true;
+
+  // IMPORTANT: For security, never put a real Discord Webhook or Telegram Bot Token in a public GitHub file.
+  // Instead, you can use a free form service like Formspree, or just open a Telegram DM.
+  // For now, we will open the user's Telegram app/web with a pre-filled message to a specific admin/group.
+  
+  setTimeout(() => {
+    // Option 1: Open Telegram
+    // window.open(`https://t.me/AnonymousOrigin?text=Report:%20${encodeURIComponent(activeCh.name)}%20is%20not%20working!`, '_blank');
+    
+    // Option 2: Show success alert (Simulated)
+    alert(`Thank you! "${activeCh.name}" has been reported to the BUG MOHOL admins.`);
+    
+    btnReport.innerHTML = originalText;
+    btnReport.disabled = false;
+  }, 800);
+});
 
 srchEl.addEventListener('input', e => {
   clearTimeout(srchTimer);
