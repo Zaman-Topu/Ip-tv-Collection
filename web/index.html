@@ -3,363 +3,253 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <meta name="description" content="Bug TV - Free Live IPTV Player with 40,000+ channels. Watch Bangladesh, India, Sports, News and more." />
+  <meta name="description" content="Bug TV - Free Live IPTV Player. Watch Bangladesh, India, Sports, News live." />
   <meta name="theme-color" content="#09090b" />
-  <title>Bug TV - Free Live IPTV Player</title>
+  <title>Bug TV — Live IPTV</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
   <style>
-    /* ───── Reset & Base ───── */
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    :root {
-      --bg: #09090b;
-      --bg2: #111113;
-      --bg3: #18181b;
-      --border: rgba(255,255,255,0.08);
-      --red: #ff0055;
-      --text: #f3f4f6;
-      --muted: #71717a;
-      --font: 'Inter', system-ui, sans-serif;
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --bg:#09090b;--bg2:#111113;--bg3:#18181b;
+      --border:rgba(255,255,255,0.08);
+      --red:#ff0055;--text:#f3f4f6;--muted:#71717a;
+      --font:'Inter',system-ui,sans-serif;
     }
-    html { scroll-behavior: smooth; }
-    body {
-      font-family: var(--font);
-      background: var(--bg);
-      color: var(--text);
-      overflow-x: hidden;
-      -webkit-tap-highlight-color: transparent;
-    }
-    img { display: block; }
-    button { font-family: var(--font); cursor: pointer; }
+    html{scroll-behavior:smooth}
+    body{font-family:var(--font);background:var(--bg);color:var(--text);overflow-x:hidden;-webkit-tap-highlight-color:transparent}
+    img{display:block}
+    button{font-family:var(--font);cursor:pointer;border:none;background:none}
+    ::-webkit-scrollbar{width:3px}
+    ::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:99px}
 
-    /* ───── Scrollbar ───── */
-    ::-webkit-scrollbar { width: 4px; }
-    ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
+    /* ─── Navbar ─── */
+    #nav{
+      position:fixed;top:0;left:0;right:0;z-index:200;
+      display:flex;align-items:center;justify-content:space-between;
+      padding:10px 16px;
+      background:rgba(9,9,11,0.95);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+      border-bottom:1px solid var(--border);
+    }
+    .logo-badge{background:var(--red);color:#fff;font-size:12px;font-weight:700;padding:3px 9px;border-radius:5px;letter-spacing:2px;cursor:pointer}
+    .nav-mid{display:flex;align-items:center;gap:8px}
+    .live-badge{font-size:10px;font-weight:700;color:var(--red);letter-spacing:1px;animation:pulse 2s infinite}
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
+    .nav-stat{font-size:11px;font-weight:600;color:var(--muted);padding:3px 10px;border:1px solid var(--border);border-radius:99px}
+    #stat-c{color:var(--red)}
 
-    /* ───── Navbar ───── */
-    #navbar {
-      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 12px 16px;
-      background: rgba(9,9,11,0.92);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      border-bottom: 1px solid var(--border);
-    }
-    .logo {
-      display: flex; align-items: center; gap: 8px;
-      cursor: pointer; user-select: none; text-decoration: none;
-    }
-    .logo-badge {
-      background: var(--red); color: #fff;
-      font-size: 13px; font-weight: 700;
-      padding: 4px 10px; border-radius: 6px;
-      letter-spacing: 2px;
-    }
-    .live-dot {
-      font-size: 11px; color: var(--red);
-      font-weight: 600; letter-spacing: 1px;
-      animation: pulse 2s infinite;
-    }
-    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+    /* ─── Layout ─── */
+    #app{padding-top:56px}
+    .wrap{max-width:1400px;margin:0 auto;padding:10px 10px}
 
-    .nav-right { display: flex; align-items: center; gap: 8px; }
-    .nav-stats {
-      font-size: 11px; font-weight: 700; color: var(--muted);
-      padding: 4px 10px; border: 1px solid var(--border);
-      border-radius: 99px; letter-spacing: 0.5px;
+    /* ─── Inline compact player ─── */
+    #player-section{
+      display:none;
+      gap:8px;
+      margin-bottom:10px;
+      align-items:flex-start;
     }
-    #stats-count { color: var(--red); }
-
-    /* ───── Main Layout ───── */
-    #app { padding-top: 60px; }
-    .container { max-width: 1400px; margin: 0 auto; padding: 16px 12px; }
-
-    /* ───── Filters ───── */
-    #filters-bar {
-      background: var(--bg2);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 14px 14px 10px;
-      margin-bottom: 12px;
-    }
-    .filter-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 8px; }
-    .filter-row:last-child { margin-bottom: 0; }
-
-    .search-wrap { position: relative; flex: 1; min-width: 180px; }
-    .search-wrap svg { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); width: 14px; height: 14px; fill: var(--muted); pointer-events: none; }
-    #search-input {
-      width: 100%; background: var(--bg3); border: 1px solid var(--border);
-      color: var(--text); padding: 8px 12px 8px 32px;
-      border-radius: 8px; font-size: 13px; font-family: var(--font);
-      outline: none; transition: border-color 0.15s;
-    }
-    #search-input:focus { border-color: var(--red); }
-
-    select.flt {
-      background: var(--bg3); border: 1px solid var(--border);
-      color: var(--text); padding: 8px 12px;
-      border-radius: 8px; font-size: 12px; font-family: var(--font);
-      outline: none; cursor: pointer; transition: border-color 0.15s;
-    }
-    select.flt:focus { border-color: var(--red); }
-
-    .pill-btn {
-      background: var(--bg3); border: 1px solid var(--border);
-      color: var(--muted); font-size: 11px; font-weight: 700;
-      padding: 5px 10px; border-radius: 99px;
-      transition: all 0.15s; white-space: nowrap;
-      letter-spacing: 0.3px;
-    }
-    .pill-btn:hover { border-color: var(--red); color: var(--text); }
-    .pill-btn.active { background: var(--red); border-color: var(--red); color: #fff; }
-
-    #btn-reset {
-      background: none; border: 1px solid var(--border);
-      color: var(--muted); font-size: 11px; font-weight: 700;
-      padding: 5px 10px; border-radius: 8px;
-      transition: all 0.15s; letter-spacing: 0.5px;
-    }
-    #btn-reset:hover { border-color: var(--red); color: var(--red); }
-
-    /* ───── Player ───── */
-    #player-wrap {
-      display: none;
-      background: var(--bg2); border: 1px solid var(--border);
-      border-radius: 12px; overflow: hidden; margin-bottom: 12px;
-    }
-    #player-wrap.show { display: flex; flex-direction: column; }
-    @media(min-width:900px) { #player-wrap.show { flex-direction: row; } }
-
-    #video-col { flex: 1; min-width: 0; }
-    #video-box {
-      position: relative; width: 100%;
-      aspect-ratio: 16/9; background: #000;
-    }
-    #vid {
-      width: 100%; height: 100%;
-      display: block; background: #000;
-    }
-    #player-close {
-      position: absolute; top: 8px; right: 8px; z-index: 10;
-      background: rgba(0,0,0,0.7); border: 1px solid var(--border);
-      color: #fff; width: 32px; height: 32px; border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 16px; transition: background 0.15s;
-    }
-    #player-close:hover { background: var(--red); }
-    #player-error {
-      display: none;
-      position: absolute; inset: 0; z-index: 5;
-      background: rgba(0,0,0,0.92);
-      align-items: center; justify-content: center;
-      flex-direction: column; gap: 8px; padding: 20px; text-align: center;
-    }
-    #player-error.show { display: flex; }
-    #player-error h3 { font-size: 15px; color: var(--red); font-weight: 700; }
-    #player-error p { font-size: 12px; color: var(--muted); max-width: 280px; line-height: 1.5; }
-    .try-proxy-btn {
-      background: var(--red); color: #fff; border: none;
-      font-size: 11px; font-weight: 700; padding: 6px 14px;
-      border-radius: 6px; margin-top: 4px; transition: opacity 0.15s;
-    }
-    .try-proxy-btn:hover { opacity: 0.85; }
-
-    #player-info {
-      display: flex; align-items: center; gap: 10px;
-      padding: 10px 14px; border-top: 1px solid var(--border);
-    }
-    #pi-logo { width: 48px; height: 30px; object-fit: contain; background: #000; border-radius: 4px; }
-    #pi-title { font-size: 14px; font-weight: 700; }
-    #pi-meta { font-size: 11px; color: var(--muted); margin-top: 2px; }
-
-    #queue-col {
-      width: 100%; max-height: 260px;
-      border-top: 1px solid var(--border);
-      overflow-y: auto;
-    }
-    @media(min-width:900px) {
-      #queue-col {
-        width: 280px; min-width: 280px; max-height: none;
-        border-top: none; border-left: 1px solid var(--border);
-      }
-    }
-    .queue-header {
-      position: sticky; top: 0; z-index: 2;
-      padding: 10px 12px; background: var(--bg2);
-      border-bottom: 1px solid var(--border);
-      font-size: 11px; font-weight: 700; color: var(--muted);
-      letter-spacing: 1px;
-    }
-    .queue-item {
-      display: flex; align-items: center; gap: 10px;
-      padding: 8px 12px; border-bottom: 1px solid var(--border);
-      cursor: pointer; transition: background 0.1s;
-    }
-    .queue-item:hover { background: var(--bg3); }
-    .queue-item.playing { border-left: 3px solid var(--red); }
-    .queue-item img { width: 36px; height: 24px; object-fit: contain; border-radius: 3px; background: #000; flex-shrink: 0; }
-    .qi-name { font-size: 12px; font-weight: 600; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
-
-    /* ───── Channel Grid ───── */
-    #ch-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-      gap: 8px;
-    }
-    @media(max-width:480px) {
-      #ch-grid { grid-template-columns: repeat(3, 1fr); gap: 6px; }
+    #player-section.show{display:flex;flex-direction:column}
+    @media(min-width:860px){
+      #player-section.show{flex-direction:row}
     }
 
-    .ch-card {
-      position: relative;
-      background: var(--bg2); border: 1px solid var(--border);
-      border-radius: 10px; overflow: hidden;
-      cursor: pointer; transition: transform 0.15s, border-color 0.15s;
-      display: flex; flex-direction: column;
-      aspect-ratio: 16/11;
+    /* Video box */
+    #vbox{
+      position:relative;
+      flex:0 0 auto;
+      width:100%;
+      background:#000;border-radius:10px;overflow:hidden;
+      border:1px solid var(--border);
     }
-    .ch-card:hover { transform: translateY(-2px); border-color: rgba(255,0,85,0.5); }
-    .ch-card:active { transform: scale(0.97); }
+    @media(min-width:860px){#vbox{width:420px;max-width:420px}}
+    #vbox::before{content:'';display:block;padding-top:56.25%}
+    #vid{position:absolute;inset:0;width:100%;height:100%;background:#000}
+    
+    #p-err{
+      display:none;position:absolute;inset:0;z-index:5;
+      background:rgba(0,0,0,0.93);flex-direction:column;
+      align-items:center;justify-content:center;gap:6px;padding:16px;text-align:center;
+    }
+    #p-err.show{display:flex}
+    #p-err h3{font-size:13px;color:var(--red);font-weight:700}
+    #p-err p{font-size:11px;color:var(--muted);max-width:260px;line-height:1.5}
+    .proxy-btn{background:var(--red);color:#fff;font-size:11px;font-weight:700;padding:5px 12px;border-radius:6px;margin-top:4px}
 
-    .ch-logo-wrap {
-      flex: 1; display: flex; align-items: center; justify-content: center;
-      padding: 8px; overflow: hidden;
+    #p-close{
+      position:absolute;top:7px;right:7px;z-index:10;
+      background:rgba(0,0,0,0.7);color:#fff;width:28px;height:28px;
+      border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;
+      transition:background .15s;border:1px solid var(--border);
     }
-    .ch-logo-wrap img {
-      max-width: 100%; max-height: 48px;
-      object-fit: contain;
-      loading: lazy;
-    }
-    .ch-name-wrap {
-      padding: 5px 6px 6px;
-      border-top: 1px solid var(--border);
-    }
-    .ch-name {
-      font-size: 10px; font-weight: 700;
-      color: var(--text); overflow: hidden;
-      white-space: nowrap; text-overflow: ellipsis;
-      text-transform: uppercase; letter-spacing: 0.3px;
-    }
-    .ch-sub {
-      font-size: 9px; color: var(--muted); margin-top: 1px;
-      overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
-    }
+    #p-close:hover{background:var(--red)}
 
-    /* Status badge */
-    .ch-badge {
-      position: absolute; top: 5px; left: 5px;
-      font-size: 9px; font-weight: 700; padding: 2px 5px;
-      border-radius: 4px; text-transform: uppercase; letter-spacing: 0.5px;
-      line-height: 1;
+    /* Channel info + queue beside video */
+    #player-right{flex:1;min-width:0;display:flex;flex-direction:column;gap:6px}
+    #p-info{
+      background:var(--bg2);border:1px solid var(--border);border-radius:8px;
+      padding:10px;display:flex;align-items:center;gap:10px;flex-shrink:0;
     }
-    .badge-live { background: var(--red); color: #fff; }
-    .badge-bdix { background: #3b82f6; color: #fff; }
-    .badge-geo  { background: #eab308; color: #000; }
-    .badge-off  { background: #374151; color: #9ca3af; }
+    #pi-logo{width:44px;height:28px;object-fit:contain;border-radius:3px;background:#000}
+    #pi-title{font-size:13px;font-weight:700;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+    #pi-meta{font-size:10px;color:var(--muted);margin-top:2px}
 
-    /* ───── Loading / Empty ───── */
-    #load-state {
-      display: flex; flex-direction: column;
-      align-items: center; justify-content: center;
-      min-height: 200px; gap: 12px; color: var(--muted);
-      font-size: 13px; font-weight: 600; grid-column: 1/-1;
+    #queue-box{
+      background:var(--bg2);border:1px solid var(--border);border-radius:8px;
+      overflow:hidden;flex:1;max-height:180px;overflow-y:auto;
     }
-    .spinner {
-      width: 36px; height: 36px;
-      border: 3px solid var(--border);
-      border-top-color: var(--red);
-      border-radius: 50%;
-      animation: spin 0.7s linear infinite;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
+    @media(min-width:860px){#queue-box{max-height:220px}}
+    .q-hdr{padding:7px 10px;font-size:10px;font-weight:700;color:var(--muted);letter-spacing:1px;border-bottom:1px solid var(--border);background:var(--bg2);position:sticky;top:0;z-index:2}
+    .qi{display:flex;align-items:center;gap:8px;padding:6px 10px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .1s}
+    .qi:hover{background:var(--bg3)}
+    .qi.on{border-left:2px solid var(--red);background:var(--bg3)}
+    .qi img{width:32px;height:20px;object-fit:contain;border-radius:2px;background:#000;flex-shrink:0}
+    .qi-n{font-size:11px;font-weight:600;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
 
-    /* ───── Pagination ───── */
-    #pagination {
-      display: flex; align-items: center; justify-content: center;
-      gap: 8px; padding: 16px 0;
+    /* ─── Filters ─── */
+    #filters{
+      background:var(--bg2);border:1px solid var(--border);
+      border-radius:10px;padding:10px;margin-bottom:10px;
     }
-    .pg-btn {
-      background: var(--bg2); border: 1px solid var(--border);
-      color: var(--muted); font-size: 12px; font-weight: 700;
-      padding: 7px 14px; border-radius: 8px; transition: all 0.15s;
+    .f-row{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:6px}
+    .f-row:last-child{margin-bottom:0}
+
+    .srch-w{position:relative;flex:1;min-width:160px}
+    .srch-w svg{position:absolute;left:9px;top:50%;transform:translateY(-50%);width:13px;height:13px;fill:var(--muted);pointer-events:none}
+    #srch{
+      width:100%;background:var(--bg3);border:1px solid var(--border);
+      color:var(--text);padding:7px 10px 7px 29px;
+      border-radius:7px;font-size:12px;font-family:var(--font);
+      outline:none;transition:border-color .15s;
     }
-    .pg-btn:hover:not(:disabled) { border-color: var(--red); color: var(--red); }
-    .pg-btn:disabled { opacity: 0.35; cursor: default; }
-    .pg-info { font-size: 12px; font-weight: 700; color: var(--muted); }
+    #srch:focus{border-color:var(--red)}
+
+    .fsel{
+      background:var(--bg3);border:1px solid var(--border);color:var(--text);
+      padding:7px 10px;border-radius:7px;font-size:11px;font-family:var(--font);
+      outline:none;cursor:pointer;transition:border-color .15s;max-width:160px;
+    }
+    .fsel:focus{border-color:var(--red)}
+
+    .pill{
+      background:var(--bg3);border:1px solid var(--border);color:var(--muted);
+      font-size:10px;font-weight:700;padding:4px 9px;border-radius:99px;
+      transition:all .15s;white-space:nowrap;letter-spacing:0.3px;
+    }
+    .pill:hover{border-color:var(--red);color:var(--text)}
+    .pill.on{background:var(--red);border-color:var(--red);color:#fff}
+
+    #breset{
+      background:none;border:1px solid var(--border);color:var(--muted);
+      font-size:10px;font-weight:700;padding:4px 9px;border-radius:6px;
+      transition:all .15s;letter-spacing:0.5px;
+    }
+    #breset:hover{border-color:var(--red);color:var(--red)}
+
+    /* ─── Grid ─── */
+    #grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fill,minmax(130px,1fr));
+      gap:7px;
+    }
+    @media(max-width:420px){#grid{grid-template-columns:repeat(3,1fr);gap:5px}}
+
+    .card{
+      position:relative;background:var(--bg2);border:1px solid var(--border);
+      border-radius:9px;overflow:hidden;cursor:pointer;
+      transition:transform .15s,border-color .15s;
+      display:flex;flex-direction:column;aspect-ratio:16/11;
+    }
+    .card:hover{transform:translateY(-2px);border-color:rgba(255,0,85,0.4)}
+    .card:active{transform:scale(0.97)}
+
+    .c-img{flex:1;display:flex;align-items:center;justify-content:center;padding:6px;overflow:hidden}
+    .c-img img{max-width:100%;max-height:44px;object-fit:contain}
+    .c-info{padding:4px 5px 5px;border-top:1px solid var(--border)}
+    .c-name{font-size:9px;font-weight:700;color:var(--text);overflow:hidden;white-space:nowrap;text-overflow:ellipsis;text-transform:uppercase;letter-spacing:0.3px}
+    .c-sub{font-size:8px;color:var(--muted);margin-top:1px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+
+    .badge{position:absolute;top:4px;left:4px;font-size:8px;font-weight:700;padding:2px 4px;border-radius:3px;text-transform:uppercase;letter-spacing:0.3px}
+    .b-live{background:var(--red);color:#fff}
+    .b-bdix{background:#3b82f6;color:#fff}
+    .b-geo{background:#ca8a04;color:#fff}
+
+    /* ─── Loading/Empty ─── */
+    #loading{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:180px;gap:10px;color:var(--muted);font-size:12px;font-weight:600;grid-column:1/-1}
+    .spin{width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--red);border-radius:50%;animation:spin .7s linear infinite}
+    @keyframes spin{to{transform:rotate(360deg)}}
+
+    /* ─── Pagination ─── */
+    #pages{display:flex;align-items:center;justify-content:center;gap:7px;padding:14px 0}
+    .pgb{background:var(--bg2);border:1px solid var(--border);color:var(--muted);font-size:11px;font-weight:700;padding:6px 12px;border-radius:7px;transition:all .15s}
+    .pgb:hover:not(:disabled){border-color:var(--red);color:var(--red)}
+    .pgb:disabled{opacity:.3;cursor:default}
+    .pgi{font-size:11px;font-weight:700;color:var(--muted)}
   </style>
 </head>
 <body>
 
-<!-- Navbar -->
-<nav id="navbar">
-  <a class="logo" onclick="location.reload()" href="#">
-    <span class="logo-badge">BUG TV</span>
-    <span class="live-dot">● LIVE</span>
-  </a>
-  <div class="nav-right">
-    <div class="nav-stats"><span id="stats-count">0</span> / <span id="stats-total">0</span> Channels</div>
+<nav id="nav">
+  <div class="nav-mid">
+    <span class="logo-badge" onclick="location.reload()">BUG TV</span>
+    <span class="live-badge">● LIVE</span>
   </div>
+  <div class="nav-stat"><span id="stat-c">0</span> / <span id="stat-t">0</span> Channels</div>
 </nav>
 
 <div id="app">
-  <div class="container">
+<div class="wrap">
 
-    <!-- Player -->
-    <div id="player-wrap">
-      <div id="video-col">
-        <div id="video-box">
-          <video id="vid" playsinline controls></video>
-          <div id="player-error">
-            <h3>Stream Unavailable</h3>
-            <p id="err-msg">This stream is offline, geo-blocked, or requires a specific ISP.</p>
-            <button class="try-proxy-btn" id="try-proxy-btn">Try with CORS Proxy</button>
-          </div>
-          <button id="player-close" title="Close">✕</button>
-        </div>
-        <div id="player-info">
-          <img id="pi-logo" src="" alt="" />
-          <div>
-            <div id="pi-title">-</div>
-            <div id="pi-meta">-</div>
-          </div>
+  <!-- Player -->
+  <div id="player-section">
+    <div id="vbox">
+      <video id="vid" playsinline controls></video>
+      <div id="p-err">
+        <h3>Stream Unavailable</h3>
+        <p id="err-txt">This stream is offline or geo-blocked.</p>
+        <button class="proxy-btn" id="btn-proxy">Retry with Proxy</button>
+      </div>
+      <button id="p-close">✕</button>
+    </div>
+    <div id="player-right">
+      <div id="p-info">
+        <img id="pi-logo" src="" alt="" />
+        <div>
+          <div id="pi-title">-</div>
+          <div id="pi-meta">-</div>
         </div>
       </div>
-      <div id="queue-col">
-        <div class="queue-header">UP NEXT — <span id="queue-count">0</span></div>
-        <div id="queue-list"></div>
+      <div id="queue-box">
+        <div class="q-hdr">RELATED — <span id="q-cnt">0</span></div>
+        <div id="q-list"></div>
       </div>
     </div>
-
-    <!-- Filters -->
-    <div id="filters-bar">
-      <div class="filter-row">
-        <div class="search-wrap">
-          <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
-          <input type="search" id="search-input" placeholder="Search channel..." autocomplete="off" />
-        </div>
-        <select class="flt" id="sel-db">
-          <option value="active">⚡ Active (Fast)</option>
-          <option value="geo">🌍 Geo-Blocked</option>
-          <option value="complete">📚 Full Database</option>
-        </select>
-        <select class="flt" id="sel-cat">
-          <option value="all">All Categories</option>
-        </select>
-        <button id="btn-reset">✕ Reset</button>
-      </div>
-      <div class="filter-row" id="country-pills"></div>
-      <div class="filter-row" id="cat-pills"></div>
-    </div>
-
-    <!-- Grid -->
-    <div id="ch-grid">
-      <div id="load-state"><div class="spinner"></div><span>Loading channels...</span></div>
-    </div>
-    <div id="pagination"></div>
-
   </div>
+
+  <!-- Filters -->
+  <div id="filters">
+    <div class="f-row">
+      <div class="srch-w">
+        <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+        <input type="search" id="srch" placeholder="Search channel..." autocomplete="off" />
+      </div>
+      <select class="fsel" id="sel-db">
+        <option value="active">⚡ Active Only</option>
+        <option value="geo">🌍 Geo-Blocked</option>
+        <option value="complete">📚 Full DB</option>
+      </select>
+      <select class="fsel" id="sel-cat"><option value="all">All Categories</option></select>
+      <button id="breset">✕ Reset</button>
+    </div>
+    <div class="f-row" id="cpills"></div>
+    <div class="f-row" id="qpills"></div>
+  </div>
+
+  <!-- Grid -->
+  <div id="grid"><div id="loading"><div class="spin"></div><span>Loading channels...</span></div></div>
+  <div id="pages"></div>
+
+</div>
 </div>
 
 <script type="module" src="/main.js"></script>
