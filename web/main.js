@@ -81,9 +81,6 @@ const container = document.getElementById('category-container');
 const feedCountEl = document.getElementById('stats-feed-count');
 
 // State
-let allTvChannels = [];
-let currentFilteredChannels = [];
-let channelStatusMap = {};
 let activePlayingChannel = null;
 
 // Filter State
@@ -716,46 +713,6 @@ document.getElementById('filter-db-mode').addEventListener('change', (e) => {
     loadDatabase();
   }
 });
-  
-  if (allTvChannels.length === 0) {
-    container.innerHTML = '<div class="flex flex-col justify-center items-center h-64 gap-4"><div class="spinner"></div><p class="text-gray-400 text-sm" id="load-msg">Loading main channels...</p></div>';
-
-    // Step 1: Load main channels first
-    const mainTv = await loadPlaylist(M3U_URL_LIVE);
-
-    allTvChannels = mainTv;
-    currentFilteredChannels = allTvChannels;
-    
-    populateFilters();
-    applyFilters();
-    
-    // Auto-play channel from URL parameter if specified
-    handleUrlParams();
-
-    // Step 2: Load extra sources in background
-    Promise.all(EXTRA_LIVE_SOURCES.map(url => loadPlaylist(url))).then(extraResults => {
-      const seenUrls = new Set(allTvChannels.map(ch => ch.url));
-      const newChannels = [];
-      for (const ch of extraResults.flat()) {
-        if (ch.url && !seenUrls.has(ch.url)) {
-          seenUrls.add(ch.url);
-          newChannels.push(ch);
-        }
-      }
-      if (newChannels.length > 0) {
-        allTvChannels = [...allTvChannels, ...newChannels];
-        populateFilters();
-        applyFilters();
-        
-        // Re-check URL parameter auto-play (in case target channel was in the extra playlist)
-        handleUrlParams();
-      }
-    });
-  } else {
-    applyFilters();
-    handleUrlParams();
-  }
-}
 
 // Initialise App
 initApp();
