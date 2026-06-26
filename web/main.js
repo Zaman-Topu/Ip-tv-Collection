@@ -587,13 +587,15 @@ function playStream(rawUrl, ch, useProxy) {
   }
   const _tmp = url;
 
-  function onErr() {
+  function onErr(customMsg) {
     if (!useProxy && !isPrivate) {
       playStream(rawUrl, ch, true); // try with proxy on error
     } else {
       pErr.classList.add('show');
       if (isPrivate) {
         errTxt.innerHTML = 'BDIX stream — open browser settings → Allow insecure content.';
+      } else if (typeof customMsg === 'string') {
+        errTxt.innerHTML = customMsg;
       } else {
         errTxt.textContent = 'Stream offline or geo-blocked. Try another channel.';
       }
@@ -643,11 +645,24 @@ function playStream(rawUrl, ch, useProxy) {
       if (playPromise !== undefined) { playPromise.catch(() => {}); }
     });
     
+    let networkRetryCount = 0;
     hlsInst.on(Hls.Events.ERROR, (e, data) => {
       if (data.fatal) {
         switch (data.type) {
           case Hls.ErrorTypes.NETWORK_ERROR:
-            hlsInst.startLoad();
+            const code = (data.response && data.response.code) ? data.response.code : 0;
+            if (code === 403) {
+              onErr('Access Denied (403) 🔒 Geo-blocked or Token Expired.');
+            } else if (code === 404) {
+              onErr('Not Found (404) 🚫 Stream link is dead.');
+            } else if (data.details === 'manifestLoadError' && code === 0) {
+              onErr('CORS Error ❌ Provider blocked access from web browsers.');
+            } else if (networkRetryCount < 1) {
+              networkRetryCount++;
+              hlsInst.startLoad();
+            } else {
+              onErr(`Network Error (${code || 'Unknown'}) 📡 Stream offline.`);
+            }
             break;
           case Hls.ErrorTypes.MEDIA_ERROR:
             hlsInst.recoverMediaError();
