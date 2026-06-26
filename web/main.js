@@ -82,7 +82,6 @@ const breset   = document.getElementById('breset');
 
 const pWrap    = document.getElementById('player-wrap');
 const vidEl    = document.getElementById('vid');
-const vidSpin  = document.getElementById('vid-spin');
 const pClose   = document.getElementById('p-close');
 const pErr     = document.getElementById('p-err');
 const errTxt   = document.getElementById('err-txt');
@@ -91,7 +90,6 @@ const piLogo   = document.getElementById('pi-logo');
 const piTitle  = document.getElementById('pi-title');
 const piCountry= document.getElementById('pi-country');
 const piCat    = document.getElementById('pi-cat');
-const piQlabel = document.getElementById('pi-qlabel');
 const qList    = document.getElementById('q-list');
 const qCnt     = document.getElementById('q-cnt');
 
@@ -558,7 +556,6 @@ function openPlayer(ch, forceProxy = false) {
   piTitle.textContent   = ch.name;
   piCountry.textContent = ch.country;
   piCat.textContent     = ch.subcat || ch.group;
-  piQlabel.style.display = 'none';
 
   renderQueue(ch);
   history.pushState({n:ch.name}, ch.name, `?p=${encodeURIComponent(ch.name)}`);
@@ -571,14 +568,6 @@ let playerInst = null;
 
 function playStream(rawUrl, ch, useProxy) {
   pErr.classList.remove('show');
-
-  // Reset badges
-  const qualBadge = document.getElementById('quality-badge');
-  const bufFill   = document.getElementById('buf-fill');
-  if (qualBadge) { qualBadge.style.display='none'; qualBadge.textContent=''; }
-  if (bufFill)   bufFill.style.width = '0%';
-  if (piQlabel)  piQlabel.style.display = 'none';
-  if (vidSpin)   vidSpin.classList.add('show');
 
   const isPrivate = isPrivateIp(rawUrl);
   const isHttp    = rawUrl.startsWith('http:');
@@ -595,7 +584,6 @@ function playStream(rawUrl, ch, useProxy) {
     if (!useProxy && !isPrivate) {
       playStream(rawUrl, ch, true); // try with proxy on error
     } else {
-      if (vidSpin) vidSpin.classList.remove('show');
       pErr.classList.add('show');
       if (isPrivate) {
         errTxt.innerHTML = 'BDIX stream — open browser settings → Allow insecure content.';
@@ -608,16 +596,17 @@ function playStream(rawUrl, ch, useProxy) {
   if (!playerInst) {
     playerInst = videojs(vidEl, {
       fluid: true,
+      controls: true,
+      autoplay: true,
+      preload: 'auto',
+      liveui: true,
       html5: {
         vhs: {
-          overrideNative: true // Use Video.js HTTP Streaming (VHS) over native where possible
+          overrideNative: true
         }
       }
     });
-
     playerInst.on('error', onErr);
-    playerInst.on('playing', () => { if (vidSpin) vidSpin.classList.remove('show'); });
-    playerInst.on('waiting', () => { if (vidSpin) vidSpin.classList.add('show'); });
   }
 
   // Set source and play
@@ -637,7 +626,6 @@ function closePlayer() {
     playerInst.pause(); 
     playerInst.src(''); 
   }
-  if (vidSpin) vidSpin.classList.remove('show');
   pWrap.classList.remove('show');
   history.pushState(null,'',location.pathname);
 }
