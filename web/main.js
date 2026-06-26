@@ -603,12 +603,20 @@ function playStream(rawUrl, ch, useProxy) {
       playStream(rawUrl, ch, true); // try with proxy on error
     } else {
       pErr.classList.add('show');
+      let newStatus = 'down';
       if (isPrivate) {
         errTxt.innerHTML = 'BDIX stream — open browser settings → Allow insecure content.';
       } else if (typeof customMsg === 'string') {
         errTxt.innerHTML = customMsg;
+        if (customMsg.includes('403') || customMsg.includes('Geo-blocked')) newStatus = 'blocked';
       } else {
         errTxt.textContent = 'Stream offline or geo-blocked. Try another channel.';
+      }
+      
+      // Dynamically update status and re-sort grid so dead/geo-blocked streams move to the bottom
+      if (statusMap[ch._u] !== newStatus) {
+        statusMap[ch._u] = newStatus;
+        applyFilters(); 
       }
     }
   }
