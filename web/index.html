@@ -7,208 +7,315 @@
   <meta name="theme-color" content="#09090b" />
   <title>Bug TV — Live IPTV</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <style>
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
     :root{
       --bg:#09090b;--bg2:#111113;--bg3:#18181b;
-      --border:rgba(255,255,255,0.08);
-      --red:#ff0055;--text:#f3f4f6;--muted:#71717a;
+      --border:rgba(255,255,255,0.07);
+      --red:#ff0055;--text:#f1f1f1;--muted:#6b7280;
       --font:'Inter',system-ui,sans-serif;
     }
     html{scroll-behavior:smooth}
     body{font-family:var(--font);background:var(--bg);color:var(--text);overflow-x:hidden;-webkit-tap-highlight-color:transparent}
     img{display:block}
-    button{font-family:var(--font);cursor:pointer;border:none;background:none}
-    ::-webkit-scrollbar{width:3px}
-    ::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:99px}
+    button{font-family:var(--font);cursor:pointer;border:none;background:none;color:inherit}
+    a{color:inherit;text-decoration:none}
+    ::-webkit-scrollbar{width:4px;height:4px}
+    ::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.12);border-radius:99px}
 
-    /* ─── Navbar ─── */
+    /* ── Navbar ── */
     #nav{
-      position:fixed;top:0;left:0;right:0;z-index:200;
-      display:flex;align-items:center;justify-content:space-between;
-      padding:10px 16px;
-      background:rgba(9,9,11,0.95);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+      position:fixed;top:0;left:0;right:0;z-index:300;
+      display:flex;align-items:center;gap:12px;
+      padding:0 16px;height:52px;
+      background:rgba(9,9,11,0.97);
+      backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
       border-bottom:1px solid var(--border);
     }
-    .logo-badge{background:var(--red);color:#fff;font-size:12px;font-weight:700;padding:3px 9px;border-radius:5px;letter-spacing:2px;cursor:pointer}
-    .nav-mid{display:flex;align-items:center;gap:8px}
-    .live-badge{font-size:10px;font-weight:700;color:var(--red);letter-spacing:1px;animation:pulse 2s infinite}
-    @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
-    .nav-stat{font-size:11px;font-weight:600;color:var(--muted);padding:3px 10px;border:1px solid var(--border);border-radius:99px}
+    .logo{
+      display:flex;align-items:center;gap:7px;cursor:pointer;flex-shrink:0;
+    }
+    .logo-badge{
+      background:var(--red);color:#fff;font-size:11px;font-weight:700;
+      padding:3px 8px;border-radius:5px;letter-spacing:2px;
+    }
+    .live-dot{
+      display:flex;align-items:center;gap:4px;font-size:10px;font-weight:700;
+      color:var(--red);letter-spacing:1px;
+    }
+    .live-dot::before{
+      content:'';width:6px;height:6px;border-radius:50%;
+      background:var(--red);animation:blink 1.5s ease infinite;
+    }
+    @keyframes blink{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.8)}}
+    .nav-stat{
+      margin-left:auto;font-size:11px;font-weight:600;color:var(--muted);
+      padding:3px 10px;border:1px solid var(--border);border-radius:99px;
+      white-space:nowrap;
+    }
     #stat-c{color:var(--red)}
 
-    /* ─── Layout ─── */
-    #app{padding-top:56px}
-    .wrap{max-width:1400px;margin:0 auto;padding:10px 10px}
+    /* ── Main layout ── */
+    #app{padding-top:52px}
+    .wrap{max-width:1500px;margin:0 auto;padding:8px 10px}
 
-    /* ─── Inline Player ─── */
-    #player-section{
-      display:none;
-      gap:0;
-      margin-bottom:12px;
-      background:var(--bg2);
-      border:1px solid var(--border);
-      border-radius:12px;
-      overflow:hidden;
+    /* ═══════════════════════════════════════════
+       PLAYER — YouTube style
+    ═══════════════════════════════════════════ */
+    #player-wrap{display:none;margin-bottom:10px}
+    #player-wrap.show{display:block}
+
+    /* YouTube-like 2 column on desktop */
+    #player-layout{
+      display:flex;flex-direction:column;gap:0;
     }
-    #player-section.show{display:flex;flex-direction:column}
-    @media(min-width:860px){
-      #player-section.show{flex-direction:row;align-items:stretch}
+    @media(min-width:1024px){
+      #player-layout{flex-direction:row;align-items:flex-start;gap:16px}
     }
 
-    /* Video box */
+    /* ── Left column: video + info ── */
+    #player-left{flex:1;min-width:0}
+
+    /* Video container — full width, 16:9 */
     #vbox{
-      position:relative;
-      width:100%;
-      background:#000;
-      flex-shrink:0;
+      position:relative;width:100%;
+      background:#000;border-radius:10px;overflow:hidden;
     }
-    @media(min-width:860px){#vbox{width:65%}}
     #vbox::before{content:'';display:block;padding-top:56.25%}
-    #vid{position:absolute;inset:0;width:100%;height:100%;background:#000;display:block}
+    #vid{
+      position:absolute;inset:0;width:100%;height:100%;
+      background:#000;display:block;
+    }
 
-    /* Quality + buffer badge */
+    /* Loading spinner over video */
+    #vid-spin{
+      position:absolute;inset:0;z-index:4;display:none;
+      align-items:center;justify-content:center;
+      background:rgba(0,0,0,0.5);
+    }
+    #vid-spin.show{display:flex}
+    .vspin{
+      width:44px;height:44px;border:3px solid rgba(255,255,255,0.15);
+      border-top-color:var(--red);border-radius:50%;
+      animation:spin .7s linear infinite;
+    }
+    @keyframes spin{to{transform:rotate(360deg)}}
+
+    /* Quality badge */
     #quality-badge{
-      position:absolute;bottom:48px;right:8px;z-index:8;
-      background:rgba(0,0,0,0.75);color:#fff;
-      font-size:10px;font-weight:700;padding:3px 7px;
-      border-radius:4px;letter-spacing:0.5px;
+      position:absolute;bottom:52px;right:10px;z-index:8;
+      background:rgba(0,0,0,0.85);color:#fff;border:1px solid rgba(255,255,255,0.15);
+      font-size:11px;font-weight:700;padding:4px 8px;
+      border-radius:5px;letter-spacing:0.5px;
       pointer-events:none;display:none;
     }
-    #buf-bar{
-      position:absolute;bottom:0;left:0;right:0;height:3px;
-      background:rgba(255,255,255,0.1);z-index:9;
-    }
-    #buf-progress{
-      height:100%;background:var(--red);
-      width:0%;transition:width 0.3s ease;
-    }
 
+    /* Red buffer progress bar at bottom of video */
+    #buf-bar{
+      position:absolute;bottom:0;left:0;right:0;height:3px;z-index:9;
+      background:rgba(255,255,255,0.08);
+    }
+    #buf-fill{height:100%;background:var(--red);width:0%;transition:width .25s ease}
+
+    /* Error overlay */
     #p-err{
-      display:none;position:absolute;inset:0;z-index:5;
-      background:rgba(0,0,0,0.93);flex-direction:column;
-      align-items:center;justify-content:center;gap:6px;padding:16px;text-align:center;
+      display:none;position:absolute;inset:0;z-index:6;
+      background:rgba(0,0,0,0.92);
+      flex-direction:column;align-items:center;justify-content:center;
+      gap:8px;padding:20px;text-align:center;
     }
     #p-err.show{display:flex}
-    #p-err h3{font-size:13px;color:var(--red);font-weight:700}
-    #p-err p{font-size:11px;color:var(--muted);max-width:260px;line-height:1.5}
-    .proxy-btn{background:var(--red);color:#fff;font-size:11px;font-weight:700;padding:5px 12px;border-radius:6px;margin-top:4px;border:none;cursor:pointer}
+    #p-err .err-icon{font-size:36px;opacity:.6}
+    #p-err h3{font-size:14px;color:var(--red);font-weight:700}
+    #p-err p{font-size:11px;color:var(--muted);max-width:280px;line-height:1.6}
+    #btn-proxy{
+      background:var(--red);color:#fff;font-size:12px;font-weight:700;
+      padding:7px 16px;border-radius:7px;margin-top:4px;
+      transition:opacity .15s;border:none;
+    }
+    #btn-proxy:hover{opacity:.85}
 
+    /* Close button */
     #p-close{
-      position:absolute;top:9px;right:9px;z-index:10;
-      background:rgba(0,0,0,0.7);color:#fff;width:30px;height:30px;
-      border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:15px;
-      transition:background .15s;border:1px solid rgba(255,255,255,0.15);
+      position:absolute;top:10px;right:10px;z-index:10;
+      background:rgba(0,0,0,0.75);color:#fff;
+      width:32px;height:32px;border-radius:50%;
+      display:flex;align-items:center;justify-content:center;
+      font-size:14px;transition:background .15s;
+      border:1px solid rgba(255,255,255,0.2);
     }
     #p-close:hover{background:var(--red)}
 
-    /* Player right panel */
-    #player-right{
-      flex:1;min-width:0;display:flex;flex-direction:column;
-      border-top:1px solid var(--border);
+    /* ── Info bar below video ── */
+    #p-info-bar{
+      padding:12px 4px 8px;display:flex;align-items:flex-start;gap:12px;
     }
-    @media(min-width:860px){
-      #player-right{border-top:none;border-left:1px solid var(--border)}
+    #pi-logo{
+      width:52px;height:34px;object-fit:contain;
+      border-radius:5px;background:#000;border:1px solid var(--border);
+      flex-shrink:0;
+    }
+    #pi-text{flex:1;min-width:0}
+    #pi-title{
+      font-size:16px;font-weight:700;line-height:1.3;
+      overflow:hidden;white-space:nowrap;text-overflow:ellipsis;
+    }
+    #pi-sub{
+      display:flex;align-items:center;gap:6px;margin-top:5px;flex-wrap:wrap;
+    }
+    .pi-tag{
+      font-size:10px;font-weight:600;color:var(--muted);
+      padding:2px 6px;border:1px solid var(--border);border-radius:4px;
+    }
+    #pi-qlabel{
+      font-size:10px;font-weight:700;color:#fff;background:var(--red);
+      padding:2px 6px;border-radius:4px;display:none;
     }
 
-    #p-info{
-      padding:12px;display:flex;align-items:center;gap:10px;flex-shrink:0;
-      border-bottom:1px solid var(--border);
+    /* ── Right column: queue ── */
+    #queue-col{
+      width:100%;
+      background:var(--bg2);border:1px solid var(--border);
+      border-radius:10px;overflow:hidden;
     }
-    #pi-logo{width:50px;height:32px;object-fit:contain;border-radius:4px;background:#000;border:1px solid var(--border)}
-    #pi-title{font-size:13px;font-weight:700;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
-    #pi-meta{font-size:10px;color:var(--muted);margin-top:2px}
-    #pi-quality{display:inline-block;background:var(--red);color:#fff;font-size:9px;font-weight:700;padding:1px 5px;border-radius:3px;margin-top:3px;letter-spacing:0.5px}
-
-    #queue-box{
-      flex:1;overflow-y:auto;min-height:0;
+    @media(min-width:1024px){
+      #queue-col{width:330px;flex-shrink:0;max-height:600px;overflow:hidden;display:flex;flex-direction:column}
     }
-    @media(min-width:860px){#queue-box{max-height:none}}
-    .q-hdr{padding:8px 12px;font-size:10px;font-weight:700;color:var(--muted);letter-spacing:1px;border-bottom:1px solid var(--border);background:var(--bg2);position:sticky;top:0;z-index:2}
-    .qi{display:flex;align-items:center;gap:8px;padding:7px 12px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .1s}
+    .q-head{
+      padding:10px 14px;font-size:11px;font-weight:700;color:var(--muted);
+      letter-spacing:1px;border-bottom:1px solid var(--border);
+      background:var(--bg2);display:flex;align-items:center;justify-content:space-between;
+      flex-shrink:0;
+    }
+    #q-list{overflow-y:auto;flex:1}
+    .qi{
+      display:flex;align-items:center;gap:10px;
+      padding:9px 14px;border-bottom:1px solid var(--border);
+      cursor:pointer;transition:background .1s;
+    }
+    .qi:last-child{border-bottom:none}
     .qi:hover{background:rgba(255,255,255,0.04)}
-    .qi.on{border-left:3px solid var(--red);background:rgba(255,0,85,0.07)}
-    .qi img{width:36px;height:22px;object-fit:contain;border-radius:2px;background:#000;flex-shrink:0;border:1px solid var(--border)}
-    .qi-n{font-size:11px;font-weight:600;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
-    .qi-s{font-size:9px;color:var(--muted);margin-top:1px}
+    .qi.on{border-left:3px solid var(--red);background:rgba(255,0,85,0.06);padding-left:11px}
+    .qi-thumb{
+      width:48px;height:30px;object-fit:contain;flex-shrink:0;
+      border-radius:4px;background:#000;border:1px solid var(--border);
+    }
+    .qi-info{flex:1;min-width:0}
+    .qi-n{font-size:12px;font-weight:600;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+    .qi-s{font-size:10px;color:var(--muted);margin-top:2px}
 
-    /* ─── Filters ─── */
+    /* ═══════════════════════════════════════════
+       FILTERS
+    ═══════════════════════════════════════════ */
     #filters{
       background:var(--bg2);border:1px solid var(--border);
       border-radius:10px;padding:10px;margin-bottom:10px;
     }
-    .f-row{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:6px}
+    .f-row{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:7px}
     .f-row:last-child{margin-bottom:0}
 
     .srch-w{position:relative;flex:1;min-width:160px}
-    .srch-w svg{position:absolute;left:9px;top:50%;transform:translateY(-50%);width:13px;height:13px;fill:var(--muted);pointer-events:none}
+    .srch-w svg{
+      position:absolute;left:10px;top:50%;transform:translateY(-50%);
+      width:13px;height:13px;fill:var(--muted);pointer-events:none;
+    }
     #srch{
-      width:100%;background:var(--bg3);border:1px solid var(--border);
-      color:var(--text);padding:7px 10px 7px 29px;
-      border-radius:7px;font-size:12px;font-family:var(--font);
+      width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);
+      padding:7px 10px 7px 30px;border-radius:7px;font-size:12px;font-family:var(--font);
       outline:none;transition:border-color .15s;
     }
-    #srch:focus{border-color:var(--red)}
+    #srch:focus{border-color:rgba(255,0,85,.5)}
 
     .fsel{
       background:var(--bg3);border:1px solid var(--border);color:var(--text);
       padding:7px 10px;border-radius:7px;font-size:11px;font-family:var(--font);
-      outline:none;cursor:pointer;transition:border-color .15s;max-width:160px;
+      outline:none;cursor:pointer;transition:border-color .15s;
     }
-    .fsel:focus{border-color:var(--red)}
-
-    .pill{
-      background:var(--bg3);border:1px solid var(--border);color:var(--muted);
-      font-size:10px;font-weight:700;padding:4px 9px;border-radius:99px;
-      transition:all .15s;white-space:nowrap;letter-spacing:0.3px;
-    }
-    .pill:hover{border-color:var(--red);color:var(--text)}
-    .pill.on{background:var(--red);border-color:var(--red);color:#fff}
+    .fsel:focus{border-color:rgba(255,0,85,.5)}
 
     #breset{
-      background:none;border:1px solid var(--border);color:var(--muted);
-      font-size:10px;font-weight:700;padding:4px 9px;border-radius:6px;
-      transition:all .15s;letter-spacing:0.5px;
+      border:1px solid var(--border);color:var(--muted);
+      font-size:10px;font-weight:700;padding:5px 10px;border-radius:6px;
+      transition:all .15s;
     }
     #breset:hover{border-color:var(--red);color:var(--red)}
 
-    /* ─── Grid ─── */
+    /* Scrollable pill rows */
+    .f-row.scroll{flex-wrap:nowrap;overflow-x:auto;padding-bottom:2px;scrollbar-width:none}
+    .f-row.scroll::-webkit-scrollbar{display:none}
+
+    .pill{
+      background:var(--bg3);border:1px solid var(--border);color:var(--muted);
+      font-size:10px;font-weight:600;padding:4px 10px;border-radius:99px;
+      transition:all .15s;white-space:nowrap;cursor:pointer;flex-shrink:0;
+    }
+    .pill:hover{border-color:rgba(255,0,85,.4);color:var(--text)}
+    .pill.on{background:var(--red);border-color:var(--red);color:#fff}
+
+    /* ═══════════════════════════════════════════
+       CHANNEL GRID
+    ═══════════════════════════════════════════ */
     #grid{
       display:grid;
-      grid-template-columns:repeat(auto-fill,minmax(130px,1fr));
+      grid-template-columns:repeat(auto-fill,minmax(120px,1fr));
       gap:7px;
     }
-    @media(max-width:420px){#grid{grid-template-columns:repeat(3,1fr);gap:5px}}
+    @media(max-width:400px){#grid{grid-template-columns:repeat(3,1fr);gap:5px}}
+    @media(min-width:800px){#grid{grid-template-columns:repeat(auto-fill,minmax(140px,1fr))}}
 
     .card{
       position:relative;background:var(--bg2);border:1px solid var(--border);
       border-radius:9px;overflow:hidden;cursor:pointer;
-      transition:transform .15s,border-color .15s;
+      transition:transform .15s ease,border-color .15s ease,box-shadow .15s ease;
       display:flex;flex-direction:column;aspect-ratio:16/11;
     }
-    .card:hover{transform:translateY(-2px);border-color:rgba(255,0,85,0.4)}
+    .card:hover{
+      transform:translateY(-2px);
+      border-color:rgba(255,0,85,0.35);
+      box-shadow:0 8px 24px rgba(0,0,0,.4);
+    }
     .card:active{transform:scale(0.97)}
 
-    .c-img{flex:1;display:flex;align-items:center;justify-content:center;padding:6px;overflow:hidden}
-    .c-img img{max-width:100%;max-height:44px;object-fit:contain}
-    .c-info{padding:4px 5px 5px;border-top:1px solid var(--border)}
-    .c-name{font-size:9px;font-weight:700;color:var(--text);overflow:hidden;white-space:nowrap;text-overflow:ellipsis;text-transform:uppercase;letter-spacing:0.3px}
+    .c-img{
+      flex:1;display:flex;align-items:center;justify-content:center;
+      padding:8px;overflow:hidden;background:var(--bg2);
+    }
+    .c-img img{max-width:100%;max-height:46px;object-fit:contain}
+    .c-info{padding:4px 6px 5px;border-top:1px solid var(--border)}
+    .c-name{
+      font-size:9px;font-weight:700;overflow:hidden;white-space:nowrap;
+      text-overflow:ellipsis;text-transform:uppercase;letter-spacing:.3px;
+    }
     .c-sub{font-size:8px;color:var(--muted);margin-top:1px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
 
-    .badge{position:absolute;top:4px;left:4px;font-size:8px;font-weight:700;padding:2px 4px;border-radius:3px;text-transform:uppercase;letter-spacing:0.3px}
+    .badge{
+      position:absolute;top:4px;left:4px;font-size:8px;font-weight:700;
+      padding:2px 5px;border-radius:3px;text-transform:uppercase;letter-spacing:.3px;
+      pointer-events:none;
+    }
     .b-live{background:var(--red);color:#fff}
-    .b-bdix{background:#3b82f6;color:#fff}
-    .b-geo{background:#ca8a04;color:#fff}
+    .b-bdix{background:#2563eb;color:#fff}
+    .b-geo{background:#b45309;color:#fff}
 
-    /* ─── Loading/Empty ─── */
-    #loading{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:180px;gap:10px;color:var(--muted);font-size:12px;font-weight:600;grid-column:1/-1}
-    .spin{width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--red);border-radius:50%;animation:spin .7s linear infinite}
-    @keyframes spin{to{transform:rotate(360deg)}}
+    /* Loading / empty */
+    .g-msg{
+      grid-column:1/-1;display:flex;flex-direction:column;
+      align-items:center;justify-content:center;min-height:200px;gap:10px;
+      color:var(--muted);font-size:12px;font-weight:600;
+    }
+    .spin{
+      width:34px;height:34px;border:3px solid var(--border);
+      border-top-color:var(--red);border-radius:50%;
+      animation:spin .7s linear infinite;
+    }
 
-    /* ─── Pagination ─── */
-    #pages{display:flex;align-items:center;justify-content:center;gap:7px;padding:14px 0}
-    .pgb{background:var(--bg2);border:1px solid var(--border);color:var(--muted);font-size:11px;font-weight:700;padding:6px 12px;border-radius:7px;transition:all .15s}
+    /* Pagination */
+    #pages{display:flex;align-items:center;justify-content:center;gap:8px;padding:14px 0}
+    .pgb{
+      background:var(--bg2);border:1px solid var(--border);color:var(--muted);
+      font-size:11px;font-weight:700;padding:6px 14px;border-radius:7px;transition:all .15s;
+    }
     .pgb:hover:not(:disabled){border-color:var(--red);color:var(--red)}
     .pgb:disabled{opacity:.3;cursor:default}
     .pgi{font-size:11px;font-weight:700;color:var(--muted)}
@@ -216,10 +323,11 @@
 </head>
 <body>
 
+<!-- Navbar -->
 <nav id="nav">
-  <div class="nav-mid">
-    <span class="logo-badge" onclick="location.reload()">BUG TV</span>
-    <span class="live-badge">● LIVE</span>
+  <div class="logo" onclick="location.reload()">
+    <span class="logo-badge">BUG TV</span>
+    <span class="live-dot">LIVE</span>
   </div>
   <div class="nav-stat"><span id="stat-c">0</span> / <span id="stat-t">0</span> Channels</div>
 </nav>
@@ -227,32 +335,49 @@
 <div id="app">
 <div class="wrap">
 
-  <!-- Player -->
-  <div id="player-section">
-    <div id="vbox">
-      <video id="vid" playsinline controls></video>
-      <div id="quality-badge">HD</div>
-      <div id="buf-bar"><div id="buf-progress"></div></div>
-      <div id="p-err">
-        <h3>Stream Unavailable</h3>
-        <p id="err-txt">This stream is offline or geo-blocked.</p>
-        <button class="proxy-btn" id="btn-proxy">Retry with Proxy</button>
-      </div>
-      <button id="p-close" title="Close">✕</button>
-    </div>
-    <div id="player-right">
-      <div id="p-info">
-        <img id="pi-logo" src="" alt="" />
-        <div style="flex:1;min-width:0">
-          <div id="pi-title">-</div>
-          <div id="pi-meta">-</div>
-          <span id="pi-quality" style="display:none">Live</span>
+  <!-- ── PLAYER (YouTube style) ── -->
+  <div id="player-wrap">
+    <div id="player-layout">
+
+      <!-- Left: video + info -->
+      <div id="player-left">
+        <div id="vbox">
+          <video id="vid" playsinline controls></video>
+          <div id="vid-spin"><div class="vspin"></div></div>
+          <div id="quality-badge"></div>
+          <div id="buf-bar"><div id="buf-fill"></div></div>
+          <div id="p-err">
+            <div class="err-icon">📡</div>
+            <h3>Stream Unavailable</h3>
+            <p id="err-txt">This channel is offline or geo-restricted.</p>
+            <button id="btn-proxy">↻ Retry with Proxy</button>
+          </div>
+          <button id="p-close" title="Close Player">✕</button>
+        </div>
+
+        <!-- Info below video -->
+        <div id="p-info-bar">
+          <img id="pi-logo" src="" alt="" />
+          <div id="pi-text">
+            <div id="pi-title">—</div>
+            <div id="pi-sub">
+              <span class="pi-tag" id="pi-country">—</span>
+              <span class="pi-tag" id="pi-cat">—</span>
+              <span id="pi-qlabel">—</span>
+            </div>
+          </div>
         </div>
       </div>
-      <div id="queue-box">
-        <div class="q-hdr">RELATED — <span id="q-cnt">0</span></div>
+
+      <!-- Right: related queue -->
+      <div id="queue-col">
+        <div class="q-head">
+          <span>RELATED</span>
+          <span id="q-cnt" style="color:var(--red)">0</span>
+        </div>
         <div id="q-list"></div>
       </div>
+
     </div>
   </div>
 
@@ -266,17 +391,17 @@
       <select class="fsel" id="sel-db">
         <option value="active">⚡ Active Only</option>
         <option value="geo">🌍 Geo-Blocked</option>
-        <option value="complete" selected>📚 All TV Channels</option>
+        <option value="complete" selected>📺 All TV Channels</option>
       </select>
       <select class="fsel" id="sel-cat"><option value="all">All Categories</option></select>
       <button id="breset">✕ Reset</button>
     </div>
-    <div class="f-row" id="cpills"></div>
-    <div class="f-row" id="qpills"></div>
+    <div class="f-row scroll" id="cpills"></div>
+    <div class="f-row scroll" id="qpills"></div>
   </div>
 
   <!-- Grid -->
-  <div id="grid"><div id="loading"><div class="spin"></div><span>Loading channels...</span></div></div>
+  <div id="grid"><div class="g-msg"><div class="spin"></div><span>Loading channels...</span></div></div>
   <div id="pages"></div>
 
 </div>

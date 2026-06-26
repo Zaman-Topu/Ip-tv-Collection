@@ -80,15 +80,18 @@ const cpills   = document.getElementById('cpills');
 const qpills   = document.getElementById('qpills');
 const breset   = document.getElementById('breset');
 
-const pSection = document.getElementById('player-section');
+const pWrap    = document.getElementById('player-wrap');
 const vidEl    = document.getElementById('vid');
+const vidSpin  = document.getElementById('vid-spin');
 const pClose   = document.getElementById('p-close');
 const pErr     = document.getElementById('p-err');
 const errTxt   = document.getElementById('err-txt');
 const btnProxy = document.getElementById('btn-proxy');
 const piLogo   = document.getElementById('pi-logo');
 const piTitle  = document.getElementById('pi-title');
-const piMeta   = document.getElementById('pi-meta');
+const piCountry= document.getElementById('pi-country');
+const piCat    = document.getElementById('pi-cat');
+const piQlabel = document.getElementById('pi-qlabel');
 const qList    = document.getElementById('q-list');
 const qCnt     = document.getElementById('q-cnt');
 
@@ -536,19 +539,23 @@ function scrollUp() {
 // ══════════════════════════════════════════
 function openPlayer(ch, forceProxy = false) {
   activeCh = ch;
-  pSection.classList.add('show');
+  pWrap.classList.add('show');
   pErr.classList.remove('show');
-  pSection.scrollIntoView({behavior:'smooth',block:'start'});
+  pWrap.scrollIntoView({behavior:'smooth',block:'start'});
 
+  // Logo
   piLogo.src = logoSrc(ch.logo);
   piLogo.onerror = () => { piLogo.src = FALLBACK; };
-  piTitle.textContent = ch.name;
-  piMeta.textContent  = `${ch.country} · ${ch.group} · ${ch.server}`;
+
+  // Info
+  piTitle.textContent   = ch.name;
+  piCountry.textContent = ch.country;
+  piCat.textContent     = ch.subcat || ch.group;
+  piQlabel.style.display = 'none';
 
   renderQueue(ch);
   history.pushState({n:ch.name}, ch.name, `?p=${encodeURIComponent(ch.name)}`);
 
-  // Decode URL at the last possible moment
   const rawUrl = _dec(ch._u);
   playStream(rawUrl, ch, forceProxy);
 }
@@ -558,56 +565,64 @@ function playStream(rawUrl, ch, useProxy) {
   vidEl.pause(); vidEl.removeAttribute('src'); vidEl.load();
   pErr.classList.remove('show');
 
-  // Reset quality badge
-  const qualBadge  = document.getElementById('quality-badge');
-  const bufBar     = document.getElementById('buf-progress');
-  const piQuality  = document.getElementById('pi-quality');
+  // Reset badges
+  const qualBadge = document.getElementById('quality-badge');
+  const bufFill   = document.getElementById('buf-fill');
   if (qualBadge) { qualBadge.style.display='none'; qualBadge.textContent=''; }
-  if (bufBar)    bufBar.style.width = '0%';
-  if (piQuality) piQuality.style.display = 'none';
+  if (bufFill)   bufFill.style.width = '0%';
+  if (piQlabel)  piQlabel.style.display = 'none';
+  if (vidSpin)   vidSpin.classList.add('show');
 
   const isPrivate = isPrivateIp(rawUrl);
-  const isHttp    = rawUrl.startsWith('http:');
-  const isHttps   = location.protocol==='https:';
 
+  // ⚡ ALWAYS route through proxy for non-private streams
+  // → hides real URL from m3u8 sniffers (sniffer only sees corsproxy.io URL)
   let url = rawUrl;
-  if ((useProxy || (isHttp && isHttps)) && !isPrivate) {
+  if (!isPrivate) {
     url = `https://corsproxy.io/?url=${encodeURIComponent(rawUrl)}`;
   }
-
   const _tmp = url;
 
   function onErr() {
-    if (!useProxy && !isPrivate) {
-      playStream(rawUrl, ch, true);
+    if (vidSpin) vidSpin.classList.remove('show');
+    pErr.classList.add('show');
+    if (isPrivate) {
+      errTxt.innerHTML = 'BDIX stream — open browser settings → Allow insecure content.';
     } else {
-      pErr.classList.add('show');
-      if (isPrivate) errTxt.innerHTML = 'BDIX stream — must be on the host ISP.<br>Browser lock icon → Site Settings → Allow insecure content.';
-      else if (isHttp && isHttps) errTxt.innerHTML = 'HTTP stream blocked on HTTPS.<br>Try the proxy or use another stream.';
-      else errTxt.textContent = 'Stream offline, geo-blocked, or unavailable.';
+      errTxt.textContent = 'Stream offline or geo-blocked. Try another channel.';
     }
   }
 
-  // Buffer progress animation (fake smooth fill while loading)
+  // Buffer progress animation
   let bufTimer = null;
   function startBufAnim() {
+    if (vidSpin) vidSpin.classList.add('show');
     let pct = 0;
     bufTimer = setInterval(() => {
-      pct = Math.min(pct + Math.random()*8, 85);
-      if (bufBar) bufBar.style.width = pct + '%';
+      pct = Math.min(pct + Math.random()*9, 88);
+      if (bufFill) bufFill.style.width = pct + '%';
     }, 200);
   }
   function finishBuf() {
     clearInterval(bufTimer);
-    if (bufBar) { bufBar.style.width='100%'; setTimeout(()=>{ if(bufBar) bufBar.style.width='0%'; }, 500); }
+    if (vidSpin) vidSpin.classList.remove('show');
+    if (bufFill) {
+      bufFill.style.width = '100%';
+      setTimeout(() => { if(bufFill) bufFill.style.width = '0%'; }, 600);
+    }
   }
 
   function showQuality(level) {
-    if (!level || level.height == null) return;
-    const h = level.height;
-    const label = h >= 1080 ? '1080p HD' : h >= 720 ? '720p HD' : h >= 480 ? '480p' : h >= 360 ? '360p' : `${h}p`;
+    let label = '● LIVE';
+    if (level && level.height) {
+      const h = level.height;
+      label = h>=1080 ? '1080p' : h>=720 ? '720p HD' : h>=480 ? '480p' : h>=360 ? '360p' : `${h}p`;
+    } else if (level && level.bitrate) {
+      const kb = Math.round(level.bitrate/1000);
+      label = kb>=4000?'1080p':kb>=2000?'720p HD':kb>=800?'480p':kb>=400?'360p':'Low';
+    }
     if (qualBadge) { qualBadge.textContent = label; qualBadge.style.display = 'block'; }
-    if (piQuality) { piQuality.textContent = label; piQuality.style.display = 'inline-block'; }
+    if (piQlabel)  { piQlabel.textContent  = label; piQlabel.style.display  = 'inline-block'; }
   }
 
   const isHLS = _tmp.includes('.m3u') || _tmp.includes('.m3u8');
@@ -692,21 +707,27 @@ function closePlayer() {
   activeCh = null;
   if (hlsInst) { hlsInst.destroy(); hlsInst = null; }
   vidEl.pause(); vidEl.removeAttribute('src'); vidEl.load();
-  pSection.classList.remove('show');
+  if (vidSpin) vidSpin.classList.remove('show');
+  pWrap.classList.remove('show');
   history.pushState(null,'',location.pathname);
 }
 
 function renderQueue(active) {
-  const related = allCh.filter(c=>c.group===active.group).slice(0,50);
-  const sorted  = [active, ...related.filter(c=>c._u!==active._u)];
+  const related = allCh.filter(c => c.group === active.group || c.country === active.country).slice(0, 60);
+  const sorted  = [active, ...related.filter(c => c._u !== active._u)];
   qCnt.textContent = sorted.length;
   qList.innerHTML  = '';
   const frag = document.createDocumentFragment();
   sorted.forEach(ch => {
     const d = document.createElement('div');
-    d.className = 'qi' + (ch._u===active._u?' on':'');
-    d.innerHTML = `<img src="${logoSrc(ch.logo)}" alt="" loading="lazy" onerror="this.src='${FALLBACK}'"><div class="qi-n">${ch.name}</div>`;
-    d.addEventListener('click', ()=>openPlayer(ch));
+    d.className = 'qi' + (ch._u === active._u ? ' on' : '');
+    d.innerHTML = `
+      <img class="qi-thumb" src="${logoSrc(ch.logo)}" alt="" loading="lazy" onerror="this.src='${FALLBACK}'">
+      <div class="qi-info">
+        <div class="qi-n">${ch.name}</div>
+        <div class="qi-s">${ch.country} · ${ch.subcat || ch.group}</div>
+      </div>`;
+    d.addEventListener('click', () => openPlayer(ch));
     frag.appendChild(d);
   });
   qList.appendChild(frag);
@@ -731,7 +752,7 @@ window.addEventListener('popstate', e => { if (e.state?.n) { const ch=allCh.find
 //  BOOT
 // ══════════════════════════════════════════
 async function loadDb() {
-  grid.innerHTML = '<div id="loading" style="grid-column:1/-1;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:180px;gap:10px;color:var(--muted);font-size:12px;font-weight:600;"><div class="spin"></div><span>Loading channels...</span></div>';
+  grid.innerHTML = '<div class="g-msg"><div class="spin"></div><span>Loading channels...</span></div>';
   pages.innerHTML = '';
   statC.textContent = '0'; statT.textContent = '0';
   allCh = await fetchPL(_DB[dbKey]);
@@ -745,9 +766,9 @@ async function loadDb() {
 }
 
 async function init() {
-  // Load status in background (non-blocking, re-renders grid when done)
   fetchStatus().then(()=>{ if (allCh.length>0) applyFilters(); });
   await loadDb();
 }
 
 init();
+
