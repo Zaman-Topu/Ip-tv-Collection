@@ -6,6 +6,9 @@
   <meta name="description" content="Bug TV - Free Live IPTV Player. Watch Bangladesh, India, Sports, News live." />
   <meta name="theme-color" content="#09090b" />
   <title>Bug TV — Live IPTV</title>
+  <link rel="stylesheet" href="./style.css" />
+  <link rel="stylesheet" href="./player.css" />
+  <script type="module" src="https://cdn.jsdelivr.net/npm/@videojs/html/cdn/video.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <style>
@@ -95,55 +98,6 @@
     #vid{
       position:absolute;inset:0;width:100%;height:100%;
       background:#000;display:block;
-    }
-    /* Video.js overrides to fit container perfectly */
-    .video-js{width:100% !important;height:100% !important;position:absolute !important;top:0;left:0;border-radius:10px;overflow:hidden;}
-    .vjs-tech{width:100%;height:100%;object-fit:contain}
-
-    /* Video.js Big Play Button (videojs.org style) */
-    .video-js .vjs-big-play-button {
-      background-color: rgba(0, 0, 0, 0.7);
-      border: 2px solid var(--red);
-      border-radius: 50%;
-      width: 2em !important;
-      height: 2em !important;
-      line-height: 1.9em !important;
-      margin-top: -1em !important;
-      margin-left: -1em !important;
-      font-size: 3em;
-      transition: all 0.3s ease;
-    }
-    .video-js:hover .vjs-big-play-button,
-    .video-js .vjs-big-play-button:focus,
-    .video-js .vjs-big-play-button:hover {
-      background-color: var(--red);
-      border-color: var(--red);
-    }
-    
-    /* Control Bar Theme */
-    .video-js .vjs-control-bar {
-      background: linear-gradient(to top, rgba(0,0,0,0.9), transparent) !important;
-    }
-    .video-js .vjs-play-progress {
-      background-color: var(--red) !important;
-    }
-    .video-js .vjs-slider-bar {
-      background-color: var(--red) !important;
-    }
-    .video-js .vjs-volume-level {
-      background-color: var(--red) !important;
-    }
-    
-    /* Custom forward button */
-    .vjs-custom-forward-btn {
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: color 0.3s;
-    }
-    .vjs-custom-forward-btn:hover {
-      color: var(--red);
     }
     /* Error overlay */
     #p-err{
@@ -369,7 +323,11 @@
       <!-- Left: video + info -->
       <div id="player-left">
         <div id="vbox">
-          <video id="vid" class="video-js vjs-default-skin vjs-big-play-centered" playsinline controls preload="auto" width="100%" height="100%"></video>
+          <video-player class="media-default-skin media-default-skin--video" id="vid-player">
+            <video-skin>
+              <video id="vid" playsinline preload="auto"></video>
+            </video-skin>
+          </video-player>
           <div id="p-err">
             <div class="err-icon">📡</div>
             <h3>Stream Unavailable</h3>

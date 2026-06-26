@@ -1,5 +1,3 @@
-import videojs from 'video.js';
-import 'video.js/dist/video-js.css';
 // ══════════════════════════════════════════
 //  URL OBFUSCATION — XOR cipher with session key
 //  URLs are NEVER stored as plain strings in memory
@@ -593,62 +591,21 @@ function playStream(rawUrl, ch, useProxy) {
     }
   }
 
-  if (!playerInst) {
-    playerInst = videojs(vidEl, {
-      fluid: true,
-      controls: true,
-      autoplay: true,
-      preload: 'auto',
-      liveui: true,
-      html5: {
-        vhs: {
-          overrideNative: true
-        }
-      }
-    });
-    playerInst.on('error', onErr);
-
-    // Custom 10s Forward Button
-    const Button = videojs.getComponent('Button');
-    const ForwardButton = videojs.extend(Button, {
-      constructor: function() {
-        Button.apply(this, arguments);
-        this.controlText('Forward 10s');
-      },
-      createEl: function() {
-        return videojs.dom.createEl('button', {
-          className: 'vjs-custom-forward-btn vjs-control vjs-button',
-          innerHTML: '<span class="vjs-icon-placeholder" style="font-size:1.5em;line-height:2em;">⏩</span>',
-          title: 'Forward 10 Seconds'
-        });
-      },
-      handleClick: function() {
-        if (playerInst) {
-          playerInst.currentTime(playerInst.currentTime() + 10);
-        }
-      }
-    });
-    videojs.registerComponent('ForwardButton', ForwardButton);
-    playerInst.getChild('controlBar').addChild('ForwardButton', {}, 1);
-  }
+  vidEl.onerror = onErr;
 
   // Set source and play
-  playerInst.src({
-    src: _tmp,
-    type: (_tmp.includes('.m3u') || _tmp.includes('.m3u8')) ? 'application/x-mpegURL' : 'video/mp4'
-  });
+  vidEl.src = _tmp;
   
-  playerInst.ready(() => {
-    playerInst.play().catch(() => {});
-  });
+  const playPromise = vidEl.play();
+  if (playPromise !== undefined) {
+    playPromise.catch(() => {});
+  }
 }
 
 function closePlayer() {
   activeCh = null;
-  if (playerInst) { 
-    playerInst.pause(); 
-    playerInst.src(''); 
-  }
+  vidEl.pause(); 
+  vidEl.src = ''; 
   pWrap.classList.remove('show');
   history.pushState(null,'',location.pathname);
 }

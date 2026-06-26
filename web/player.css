@@ -1,0 +1,1594 @@
+/* -------------------------------------------------------------------------- */
+/* Global styles for the host document, outside of the Shadow DOM             */
+/* -------------------------------------------------------------------------- */
+
+video-player,
+live-video-player {
+  display: contents;
+}
+
+/*
+Required to override any default video and image styles (such as
+Tailwind's CSS reset) and ensure they fill the container as expected.
+*/
+video-player video,
+video-player [slot="poster"],
+live-video-player video,
+live-video-player [slot="poster"] {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+video-player video::-webkit-media-text-track-container,
+live-video-player video::-webkit-media-text-track-container {
+  z-index: 1;
+  font-family: inherit;
+  scale: 0.98;
+  translate: 0 var(--media-caption-track-y, 0);
+  transition: translate var(--media-caption-track-duration, 0) ease-out;
+  transition-delay: var(--media-caption-track-delay, 0);
+}
+
+/* -------------------------------------------------------------------------- */
+/* Shared styles for all HTML skins                                           */
+/* -------------------------------------------------------------------------- */
+
+media-tooltip-group {
+  display: contents;
+}
+
+:host {
+  /* `display:grid` fixes a weird issue with Safari when setting aspect-ratio */
+  display: grid;
+  width: 100%;
+}
+
+/* Hide volume popover when volume control is unsupported (e.g., iOS Safari). */
+.media-popover--volume:has(media-volume-slider[data-availability="unsupported"]) {
+  display: none;
+}
+
+/* ==========================================================================
+   Reset
+   ========================================================================== */
+
+.media-default-skin *,
+.media-default-skin *::before,
+.media-default-skin *::after {
+  box-sizing: border-box;
+}
+.media-default-skin img,
+.media-default-skin video,
+.media-default-skin svg {
+  display: block;
+  max-width: 100%;
+}
+.media-default-skin button {
+  font: inherit;
+}
+.media-default-skin [hidden][hidden] {
+  /* Keep authored templates hidden even when component classes set display. */
+  display: none;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .media-default-skin {
+    interpolate-size: allow-keywords;
+  }
+}
+
+/* ==========================================================================
+   Root Container
+   ========================================================================== */
+
+.media-default-skin {
+  --media-current-shadow-color: oklch(from currentColor 0 0 0 / clamp(0, calc((l - 0.5) * 0.5), 0.15));
+  --media-current-shadow-color-subtle: oklch(from var(--media-current-shadow-color) l c h / calc(alpha * 0.4));
+  --media-icon-size: 18px;
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  container: media-root / inline-size;
+  font-family:
+    Inter Variable,
+    Inter,
+    ui-sans-serif,
+    system-ui,
+    sans-serif;
+  font-size: 0.8125rem; /* 13px at 100% font size */
+  -webkit-font-smoothing: auto;
+  -moz-osx-font-smoothing: auto;
+  line-height: 1.5;
+  letter-spacing: normal;
+  outline: 2px solid transparent;
+  outline-offset: -4px;
+  border-radius: var(--media-border-radius, 2rem);
+  isolation: isolate;
+  transition-timing-function: ease-out;
+  transition-duration: 100ms;
+  transition-property: outline-offset, outline-color;
+
+  &:focus-visible {
+    outline-color: currentColor;
+    outline-offset: 2px;
+  }
+}
+
+/* ==========================================================================
+   Surface (shared glass effect for tooltips, popovers, controls)
+   ========================================================================== */
+
+.media-default-skin .media-surface {
+  background-color: var(--media-surface-background-color);
+  box-shadow:
+    0 0 0 1px var(--media-surface-outer-border-color),
+    0 1px 3px 0 var(--media-surface-shadow-color),
+    0 1px 2px -1px var(--media-surface-shadow-color);
+  backdrop-filter: var(--media-surface-backdrop-filter);
+
+  /* Inner border ring */
+  &::after {
+    position: absolute;
+    inset: 0;
+    z-index: 10;
+    pointer-events: none;
+    content: "";
+    border-radius: inherit;
+    box-shadow: inset 0 0 0 1px var(--media-surface-inner-border-color);
+  }
+}
+
+/* ==========================================================================
+   Media Element
+   ========================================================================== */
+
+.media-default-skin ::slotted(video),
+.media-default-skin video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: var(--media-object-fit, contain);
+  object-position: var(--media-object-position, center);
+}
+.media-default-skin ::slotted(video) {
+  border-radius: var(--media-video-border-radius);
+}
+.media-default-skin video {
+  border-radius: inherit;
+}
+
+.media-default-skin:fullscreen ::slotted(video),
+.media-default-skin:fullscreen video {
+  object-fit: contain;
+}
+
+/* ==========================================================================
+   Overlay / Scrim
+   ========================================================================== */
+
+.media-default-skin .media-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: linear-gradient(to top, oklch(0 0 0 / 0.5), oklch(0 0 0 / 0.3), oklch(0 0 0 / 0));
+  border-radius: inherit;
+  opacity: 0;
+  backdrop-filter: blur(0) saturate(1);
+  transition-timing-function: ease-out;
+  transition-duration: var(--media-controls-transition-duration);
+  transition-property: opacity, backdrop-filter;
+}
+
+.media-default-skin .media-error ~ .media-overlay {
+  transition-delay: var(--media-error-dialog-transition-delay);
+  transition-duration: var(--media-error-dialog-transition-duration);
+}
+
+.media-default-skin .media-controls[data-visible] ~ .media-overlay,
+.media-default-skin .media-error[data-open] ~ .media-overlay {
+  opacity: 1;
+}
+
+.media-default-skin .media-error[data-open] ~ .media-overlay {
+  backdrop-filter: blur(16px) saturate(1.5);
+}
+
+/* ==========================================================================
+   Buffering Indicator
+   ========================================================================== */
+
+.media-default-skin .media-buffering-indicator {
+  position: absolute;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  color: oklch(1 0 0);
+  pointer-events: none;
+
+  &:not([data-visible]) {
+    --media-spinner-animation: none;
+  }
+
+  &[data-visible] {
+    display: flex;
+  }
+
+  .media-surface {
+    padding: 0.25rem;
+    border-radius: 100%;
+  }
+}
+
+/* ==========================================================================
+   Error Dialog
+   ========================================================================== */
+
+.media-default-skin .media-error {
+  outline: none;
+}
+
+.media-default-skin .media-error:not([data-open]) {
+  display: none;
+}
+
+.media-default-skin .media-error__title {
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.media-default-skin .media-error__description {
+  overflow-wrap: anywhere;
+  opacity: 0.7;
+}
+
+.media-default-skin .media-error__actions {
+  display: flex;
+  gap: 0.5rem;
+
+  & > * {
+    flex: 1;
+  }
+}
+
+.media-default-skin .media-error[data-open] ~ .media-controls * {
+  visibility: hidden;
+}
+
+/* ==========================================================================
+   Controls
+   ========================================================================== */
+
+.media-default-skin .media-controls {
+  display: flex;
+  column-gap: 0.075rem;
+  align-items: center;
+  padding: 0.375rem;
+  container: media-controls / inline-size;
+  text-shadow: 0 1px 0 var(--media-current-shadow-color);
+  border-radius: 1.5rem;
+}
+
+/* ==========================================================================
+   Time Display
+   ========================================================================== */
+
+.media-default-skin .media-time-controls {
+  display: flex;
+  flex: 1;
+  gap: 0.75rem;
+  align-items: center;
+  padding-inline: 0.5rem;
+  container: media-time-controls / inline-size;
+}
+
+.media-default-skin .media-time {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ==========================================================================
+   Buttons
+   ========================================================================== */
+
+/* Base button */
+.media-default-skin .media-button {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
+  padding: 0.5rem 1rem;
+  text-align: center;
+  touch-action: manipulation;
+  cursor: pointer;
+  user-select: none;
+  outline: 2px solid transparent;
+  outline-offset: -2px;
+  border: none;
+  border-radius: calc(infinity * 1px);
+  transition-timing-function: ease-out;
+  transition-duration: 150ms;
+  transition-property: background-color, outline-offset, scale;
+  /* Fix weird jumping when clicking on the buttons in Safari. */
+  will-change: scale;
+
+  &:focus-visible {
+    outline-color: currentColor;
+    outline-offset: 2px;
+  }
+
+  &:active {
+    scale: 0.98;
+  }
+
+  &[disabled] {
+    cursor: not-allowed;
+    opacity: 0.5;
+    filter: grayscale(1);
+  }
+
+  &[data-availability="unavailable"],
+  &[data-availability="unsupported"] {
+    display: none;
+  }
+}
+
+/* Primary button variant */
+.media-default-skin .media-button--primary {
+  font-weight: 500;
+  color: oklch(0 0 0);
+  text-shadow: none;
+  background: oklch(1 0 0);
+}
+
+/* Subtle button variant */
+.media-default-skin .media-button--subtle {
+  color: inherit;
+  text-shadow: inherit;
+  background: transparent;
+
+  &:hover,
+  &:focus-visible,
+  &[aria-expanded="true"] {
+    text-decoration: none;
+    background-color: oklch(from currentColor l c h / 0.1);
+  }
+}
+
+/* Icon button variant */
+.media-default-skin .media-button--icon {
+  display: grid;
+  width: 2.25rem;
+  aspect-ratio: 1;
+  padding: 0;
+
+  &:active {
+    scale: 0.9;
+  }
+
+  & .media-icon {
+    grid-area: 1 / 1;
+    transition-behavior: allow-discrete;
+    transition-property: display, opacity;
+    transition-duration: 150ms;
+    transition-timing-function: ease-out;
+    filter: drop-shadow(0 1px 0 var(--media-current-shadow-color));
+  }
+}
+
+/* Seek button */
+.media-default-skin .media-button--seek {
+  & .media-icon__label {
+    position: absolute;
+    right: -1px;
+    bottom: -3px;
+    font-size: 10px;
+    font-weight: 480;
+    font-variant-numeric: tabular-nums;
+  }
+
+  &:has(.media-icon--flipped) .media-icon__label {
+    right: unset;
+    left: -1px;
+  }
+}
+
+/* Playback rate button */
+.media-default-skin .media-button--playback-rate {
+  padding: 0;
+  font-variant-numeric: tabular-nums;
+
+  &::after {
+    width: 4ch;
+    content: attr(data-rate) "\00D7";
+  }
+
+  &[data-inline-rate-label]::after {
+    content: none;
+  }
+}
+
+/* Live button — wide pill button with a status dot (gray → red at the live
+   edge) rendered via ::before, and "LIVE" text rendered as the button's own
+   text content. */
+.media-default-skin .media-button--live {
+  display: inline-flex;
+  gap: 0.4rem;
+  align-items: center;
+  width: auto;
+  aspect-ratio: auto;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+
+  &::before {
+    display: inline-block;
+    flex-shrink: 0;
+    width: 0.5rem;
+    height: 0.5rem;
+    content: "";
+    background-color: oklch(from currentColor l c h / 0.4);
+    border-radius: 50%;
+    transition: background-color 150ms ease-out;
+  }
+
+  &[data-live-edge]::before {
+    background-color: oklch(0.65 0.22 27);
+  }
+}
+
+/* ==========================================================================
+   Button Groups
+   ========================================================================== */
+
+.media-default-skin .media-button-group {
+  display: flex;
+  gap: 0.075rem;
+  align-items: center;
+
+  @container media-root (width > 42rem) {
+    gap: 0.125rem;
+  }
+}
+
+/* ==========================================================================
+   Icons
+   ========================================================================== */
+
+.media-default-skin .media-icon__container {
+  position: relative;
+}
+.media-default-skin .media-icon {
+  flex-shrink: 0;
+  width: var(--media-icon-size);
+  height: var(--media-icon-size);
+}
+.media-default-skin .media-icon--flipped {
+  scale: -1 1;
+}
+
+/* ==========================================================================
+   Menus
+   Note: Menus use `.media-popover` styles for positioning and transitions.
+   ========================================================================== */
+
+.media-default-skin .media-popover.media-menu {
+  box-sizing: border-box;
+  min-width: min(6rem, var(--media-popover-available-width, 6rem));
+  max-width: var(--media-popover-available-width, none);
+  max-height: var(--media-popover-available-height, none);
+  padding: 0.375rem;
+  overflow: auto;
+  overscroll-behavior: none;
+  border-radius: 1.25rem;
+
+  &::before {
+    display: none;
+  }
+}
+
+.media-default-skin .media-popover.media-menu .media-menu__group {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+
+  &::before {
+    position: absolute;
+    position-anchor: --media-menu-item-highlight-anchor;
+    inset: anchor(inside);
+    pointer-events: none;
+    content: "";
+    background-color: oklch(from currentColor l c h / 0.1);
+    border-radius: calc(infinity * 1px);
+    transition: inset ease-in-out 100ms;
+  }
+
+  @supports not (top: anchor(top)) {
+    &::before {
+      display: none;
+    }
+  }
+}
+
+.media-default-skin .media-popover.media-menu .media-menu__item {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 2rem;
+  padding: 0 0.75rem;
+  font-variant-numeric: tabular-nums;
+  color: inherit;
+  cursor: pointer;
+  outline: 2px solid transparent;
+  outline-offset: -2px;
+  border-radius: calc(infinity * 1px);
+
+  &:hover,
+  &[data-highlighted] {
+    anchor-name: --media-menu-item-highlight-anchor;
+  }
+
+  @supports not (top: anchor(top)) {
+    &:hover,
+    &[data-highlighted] {
+      background-color: oklch(from currentColor l c h / 0.1);
+    }
+  }
+
+  &:focus-visible {
+    outline-color: currentColor;
+    outline-offset: 2px;
+  }
+
+  &[aria-checked="true"] .media-menu__indicator {
+    opacity: 1;
+  }
+
+  &[aria-disabled="true"] {
+    pointer-events: none;
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+}
+
+.media-default-skin .media-popover.media-menu .media-menu__indicator {
+  flex-shrink: 0;
+  margin-right: -0.25rem;
+  opacity: 0;
+}
+
+.media-default-skin .media-popover.media-menu .media-menu__indicator .media-icon {
+  filter: drop-shadow(0 1px 0 var(--media-current-shadow-color));
+}
+
+/* ==========================================================================
+   Poster Image
+   ========================================================================== */
+
+.media-default-skin media-poster,
+.media-default-skin > img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  transition: opacity 0.25s;
+}
+.media-default-skin media-poster:not([data-visible]),
+.media-default-skin > img:not([data-visible]) {
+  opacity: 0;
+}
+.media-default-skin media-poster ::slotted(img),
+.media-default-skin media-poster img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: var(--media-object-fit, contain);
+  object-position: var(--media-object-position, center);
+  border-radius: var(--media-video-border-radius);
+}
+.media-default-skin > img {
+  object-fit: var(--media-object-fit, contain);
+  object-position: var(--media-object-position, center);
+  border-radius: inherit;
+}
+
+.media-default-skin:fullscreen media-poster ::slotted(img),
+.media-default-skin:fullscreen media-poster img,
+.media-default-skin:fullscreen > img {
+  object-fit: contain;
+}
+
+/* ==========================================================================
+   Media preview
+   ========================================================================== */
+.media-default-skin .media-preview {
+  pointer-events: none;
+  background-color: oklch(0 0 0 / 0.9);
+  border-radius: 0.75rem;
+
+  & .media-preview__thumbnail {
+    position: relative;
+    display: block;
+    overflow: clip;
+    border-radius: inherit;
+
+    &::after {
+      position: absolute;
+      inset: 0;
+      content: "";
+      background-image: linear-gradient(to top, oklch(0 0 0 / 0.8), oklch(0 0 0 / 0.3), oklch(0 0 0 / 0));
+      border-radius: inherit;
+    }
+  }
+
+  & .media-preview__time {
+    position: absolute;
+    inset-inline: 0;
+    bottom: 0.5rem;
+    text-align: center;
+  }
+
+  & .media-overlay {
+    opacity: 1;
+  }
+
+  & .media-preview__spinner {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    opacity: 0;
+    translate: -50% -50%;
+  }
+
+  & .media-preview__thumbnail,
+  & .media-preview__spinner {
+    transition: opacity 150ms ease-out;
+  }
+
+  &:not(:has(.media-preview__thumbnail[data-loading])) {
+    & .media-preview__spinner {
+      --media-spinner-animation: none;
+    }
+  }
+
+  &:has(.media-preview__thumbnail[data-loading]) {
+    & .media-preview__thumbnail {
+      opacity: 0;
+    }
+    & .media-preview__spinner {
+      opacity: 1;
+    }
+  }
+}
+
+/* ==========================================================================
+   Slider
+   ========================================================================== */
+
+.media-default-skin .media-slider {
+  position: relative;
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  outline: none;
+  border-radius: calc(infinity * 1px);
+
+  &[data-orientation="horizontal"] {
+    width: 100%;
+    min-width: 5rem;
+    height: 2rem;
+  }
+
+  &[data-orientation="vertical"] {
+    width: 2rem;
+    height: 5rem;
+  }
+}
+
+/* Track */
+.media-default-skin .media-slider__track {
+  position: relative;
+  overflow: hidden;
+  user-select: none;
+  border-radius: inherit;
+  isolation: isolate;
+
+  &[data-orientation="horizontal"] {
+    width: 100%;
+    height: 0.25rem;
+  }
+
+  &[data-orientation="vertical"] {
+    width: 0.25rem;
+    height: 100%;
+  }
+}
+
+/* Thumb */
+.media-default-skin .media-slider__thumb {
+  position: absolute;
+  z-index: 10;
+  width: 0.625rem;
+  height: 0.625rem;
+  user-select: none;
+  outline: 4px solid transparent;
+  outline-offset: -4px;
+  background-color: currentColor;
+  border-radius: calc(infinity * 1px);
+  box-shadow:
+    0 0 0 1px var(--media-current-shadow-color-subtle, oklch(0 0 0 / 0.1)),
+    0 1px 3px 0 oklch(0 0 0 / 0.15),
+    0 1px 2px -1px oklch(0 0 0 / 0.15);
+  opacity: 0;
+  translate: -50% -50%;
+  transition-timing-function: ease-out;
+  transition-duration: 150ms;
+  transition-property: opacity, height, width, outline-offset;
+
+  &[data-orientation="horizontal"] {
+    top: 50%;
+    left: var(--media-slider-fill);
+  }
+
+  &[data-orientation="vertical"] {
+    top: calc(100% - var(--media-slider-fill));
+    left: 50%;
+  }
+
+  &:hover,
+  &:focus {
+    outline-color: oklch(from currentColor l c h / 0.25);
+    outline-offset: 0;
+  }
+
+  &::after {
+    position: absolute;
+    inset: -4px;
+    content: "";
+    border-radius: inherit;
+    box-shadow: 0 0 0 2px oklch(1 0 0);
+    transition-timing-function: ease-out;
+    transition-duration: 150ms;
+    transition-property: opacity, scale;
+  }
+
+  &:not(:focus-visible)::after {
+    opacity: 0;
+    scale: 0.5;
+  }
+}
+
+.media-default-skin .media-slider:active .media-slider__thumb,
+.media-default-skin .media-slider__thumb--persistent {
+  width: 0.75rem;
+  height: 0.75rem;
+}
+
+.media-default-skin .media-slider:hover .media-slider__thumb,
+.media-default-skin .media-slider__thumb:focus-visible,
+.media-default-skin .media-slider__thumb--persistent {
+  opacity: 1;
+}
+
+/* Shared track fills */
+.media-default-skin .media-slider__buffer,
+.media-default-skin .media-slider__fill {
+  position: absolute;
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+.media-default-skin .media-slider__buffer[data-orientation="horizontal"],
+.media-default-skin .media-slider__fill[data-orientation="horizontal"] {
+  inset-block: 0;
+  left: 0;
+}
+
+.media-default-skin .media-slider__buffer[data-orientation="vertical"],
+.media-default-skin .media-slider__fill[data-orientation="vertical"] {
+  inset-inline: 0;
+  bottom: 0;
+}
+
+/* Buffer */
+.media-default-skin .media-slider__buffer {
+  background-color: oklch(from currentColor l c h / 0.2);
+  transition-timing-function: ease-out;
+  transition-duration: 0.25s;
+
+  &[data-orientation="horizontal"] {
+    width: var(--media-slider-buffer);
+    transition-property: width;
+  }
+
+  &[data-orientation="vertical"] {
+    height: var(--media-slider-buffer);
+    transition-property: height;
+  }
+}
+
+/* Fill */
+.media-default-skin .media-slider__fill {
+  background-color: currentColor;
+
+  &[data-orientation="horizontal"] {
+    width: var(--media-slider-fill);
+  }
+
+  &[data-orientation="vertical"] {
+    height: var(--media-slider-fill);
+  }
+}
+
+/* Dragging — thumb and fill follow the pointer position */
+.media-default-skin .media-slider[data-dragging] .media-slider__thumb[data-orientation="horizontal"] {
+  left: var(--media-slider-pointer);
+}
+
+.media-default-skin .media-slider[data-dragging] .media-slider__thumb[data-orientation="vertical"] {
+  top: calc(100% - var(--media-slider-pointer));
+}
+
+.media-default-skin .media-slider[data-dragging] .media-slider__fill[data-orientation="horizontal"] {
+  width: var(--media-slider-pointer);
+}
+
+.media-default-skin .media-slider[data-dragging] .media-slider__fill[data-orientation="vertical"] {
+  height: var(--media-slider-pointer);
+}
+
+/* ==========================================================================
+   Popups & Tooltips
+   ========================================================================== */
+
+.media-default-skin .media-popover,
+.media-default-skin .media-tooltip {
+  margin: 0;
+  overflow: visible;
+  color: inherit;
+  border: 0;
+  filter: blur(0px);
+  transition-timing-function: var(--media-popup-transition-timing-function);
+  transition-duration: var(--media-popup-transition-duration);
+  transition-property: scale, opacity, filter;
+
+  &[data-starting-style],
+  &[data-ending-style] {
+    opacity: 0;
+    filter: blur(8px);
+    scale: 0.85;
+  }
+
+  &[data-instant] {
+    transition-duration: 0ms;
+  }
+
+  &[data-side="top"] {
+    transform-origin: bottom;
+  }
+  &[data-side="bottom"] {
+    transform-origin: top;
+  }
+  &[data-side="left"] {
+    transform-origin: right;
+  }
+  &[data-side="right"] {
+    transform-origin: left;
+  }
+
+  /* Safe area between trigger and popup */
+  &::before {
+    position: absolute;
+    pointer-events: inherit;
+    content: "";
+  }
+
+  &[data-side="top"]::before,
+  &[data-side="bottom"]::before {
+    inset-inline: 0;
+    width: 100%;
+  }
+  &[data-side="top"]::before {
+    top: 100%;
+  }
+  &[data-side="bottom"]::before {
+    bottom: 100%;
+  }
+
+  &[data-side="left"]::before,
+  &[data-side="right"]::before {
+    inset-block: 0;
+    height: 100%;
+  }
+  &[data-side="left"]::before {
+    left: 100%;
+  }
+  &[data-side="right"]::before {
+    right: 100%;
+  }
+}
+
+.media-default-skin .media-popover {
+  &[data-side="top"]::before,
+  &[data-side="bottom"]::before {
+    height: var(--media-popover-side-offset);
+  }
+  &[data-side="left"]::before,
+  &[data-side="right"]::before {
+    width: var(--media-popover-side-offset);
+  }
+}
+.media-default-skin .media-popover--volume {
+  padding: 0.75rem 0;
+  border-radius: calc(infinity * 1px);
+
+  &:has(media-volume-slider[data-availability="unsupported"]) {
+    display: none;
+  }
+}
+
+.media-default-skin .media-tooltip {
+  padding: 0.25rem 0.625rem;
+  font-size: 0.75rem;
+  white-space: nowrap;
+  border-radius: calc(infinity * 1px);
+
+  &[data-side="top"]::before,
+  &[data-side="bottom"]::before {
+    height: var(--media-tooltip-side-offset);
+  }
+  &[data-side="left"]::before,
+  &[data-side="right"]::before {
+    width: var(--media-tooltip-side-offset);
+  }
+}
+
+/* ==========================================================================
+   Native Caption Track
+   ========================================================================== */
+
+.media-default-skin {
+  --media-caption-track-duration: var(--media-controls-transition-duration);
+  --media-caption-track-delay: 25ms;
+  --media-caption-track-y: -0.5rem;
+
+  &:has(.media-controls[data-visible]) {
+    --media-caption-track-y: -5.5rem;
+  }
+
+  @container media-root (width > 42rem) {
+    &:has(.media-controls[data-visible]) > * {
+      --media-caption-track-y: -3.5rem;
+    }
+  }
+}
+
+.media-default-skin video::-webkit-media-text-track-container {
+  z-index: 1;
+  font-family: inherit;
+  scale: 0.98;
+  translate: 0 var(--media-caption-track-y);
+  transition: translate var(--media-caption-track-duration) ease-out;
+  transition-delay: var(--media-caption-track-delay);
+}
+
+/* ==========================================================================
+   Input Feedback
+   ========================================================================== */
+
+.media-default-skin .media-input-feedback {
+  position: absolute;
+  inset-inline: 0;
+  top: 0;
+  bottom: 3.5rem; /* Shift up a little in smaller containers */
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  align-items: center;
+  justify-items: center;
+  color: var(--media-color-primary, oklch(1 0 0));
+  pointer-events: none;
+
+  @container media-root (width > 24rem) {
+    bottom: 0;
+  }
+}
+
+/* --- Feedback islands ------------------------------------------------------- */
+
+.media-default-skin .media-input-feedback-island {
+  --media-surface-background-color: oklch(0 0 0 / 0.25);
+  position: absolute;
+  top: 0.75rem;
+  font-weight: 500;
+  color: inherit;
+  pointer-events: none;
+  border-radius: calc(Infinity * 1px);
+  transform-origin: top center;
+  transition-timing-function: ease-out;
+  transition-duration: 100ms;
+
+  .media-input-feedback-island__content {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 0.25rem 0.625rem;
+
+    /* Increase contrast of the content */
+    * {
+      mix-blend-mode: difference;
+    }
+  }
+
+  .media-icon {
+    display: none;
+    flex-shrink: 0;
+  }
+
+  .media-input-feedback-island__value {
+    margin-left: auto;
+  }
+
+  @media (pointer: coarse) {
+    transition-property: scale, translate, opacity;
+    will-change: scale, translate, opacity;
+  }
+
+  @media (pointer: fine) and (prefers-reduced-motion: no-preference) {
+    transition-property: scale, translate, filter, opacity;
+    will-change: scale, translate, filter, opacity;
+  }
+
+  @media (prefers-reduced-transparency: reduce) or (prefers-contrast: more) {
+    --media-surface-background-color: oklch(0 0 0);
+  }
+
+  /* Default hidden state */
+  &[data-starting-style],
+  &[data-ending-style] {
+    opacity: 0;
+    transition-timing-function: ease-in;
+    transition-duration: 250ms;
+
+    @media (pointer: fine) and (prefers-reduced-motion: no-preference) {
+      filter: blur(8px);
+      scale: 0.9;
+    }
+
+    @media (prefers-reduced-motion: no-preference) {
+      &[data-ending-style] {
+        translate: 0 -25%;
+      }
+    }
+  }
+}
+
+.media-default-skin .media-input-feedback-island--volume {
+  width: min(80%, 12rem);
+
+  .media-input-feedback-island__content {
+    --media-progress-fill: var(--media-volume-fill);
+    background-image: linear-gradient(
+      to right,
+      currentColor 0%,
+      currentColor var(--media-progress-fill),
+      transparent var(--media-progress-fill),
+      transparent 100%
+    );
+    border-radius: inherit;
+    transition: --media-progress-fill 200ms linear;
+  }
+}
+
+.media-default-skin .media-input-feedback-island--volume[data-level="high"] .media-icon--volume-high,
+.media-default-skin .media-input-feedback-island--volume[data-level="low"] .media-icon--volume-low,
+.media-default-skin .media-input-feedback-island--volume[data-level="off"] .media-icon--volume-off {
+  display: block;
+}
+
+.media-default-skin .media-input-feedback-island--status[data-status="captions-on"] .media-icon--captions-on,
+.media-default-skin .media-input-feedback-island--status[data-status="captions-off"] .media-icon--captions-off,
+.media-default-skin .media-input-feedback-island--status[data-status="fullscreen"] .media-icon--fullscreen-enter,
+.media-default-skin .media-input-feedback-island--status[data-status="exit-fullscreen"] .media-icon--fullscreen-exit,
+.media-default-skin .media-input-feedback-island--status[data-status="pip"] .media-icon--pip-enter,
+.media-default-skin .media-input-feedback-island--status[data-status="exit-pip"] .media-icon--pip-exit {
+  display: block;
+}
+
+/* --- Boundary shake ------------------------------------------------------- */
+
+@media (prefers-reduced-motion: no-preference) {
+  .media-default-skin .media-input-feedback-island--volume[data-min],
+  .media-default-skin .media-input-feedback-island--volume[data-max] {
+    animation: media-shake 300ms ease-in-out;
+  }
+}
+
+/* --- Bubble ---------------------------------------------------------------- */
+
+.media-default-skin .media-input-feedback-bubble {
+  display: flex;
+  flex-direction: column;
+  grid-row: 1;
+  grid-column: 2; /* default to center for status bubbles and undirected seeks */
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  transition: opacity 250ms ease-out;
+
+  @container media-root (width > 24rem) {
+    padding: 2rem;
+  }
+
+  &[data-starting-style],
+  &[data-ending-style] {
+    opacity: 0;
+    transition-timing-function: ease-in;
+    transition-duration: 200ms;
+  }
+}
+
+/* Direction placement — seek bubbles move to the side implied by their direction. */
+.media-default-skin .media-input-feedback-bubble[data-direction="backward"] {
+  grid-column: 1;
+  justify-self: left;
+}
+
+.media-default-skin .media-input-feedback-bubble:not([data-direction]) {
+  grid-column: 2;
+  transition-timing-function:
+    ease-out, linear(0, 0.12 1.5%, 1.35 9.7%, 2.2 13.9%, 3 19.9%, 2.7 21.8%, 0.62 37.5%, 0.96 50.9%, 1);
+  transition-duration: 600ms;
+  transition-property: opacity, scale;
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: opacity 100ms ease-out;
+  }
+
+  &[data-starting-style],
+  &[data-ending-style] {
+    opacity: 0;
+    scale: 0.8;
+    transition-timing-function: ease-in;
+    transition-duration: 200ms;
+  }
+}
+
+.media-default-skin .media-input-feedback-bubble[data-direction="forward"] {
+  grid-column: 3;
+  justify-self: right;
+}
+
+/* --- Bubble icons ---------------------------------------------------------- */
+
+.media-default-skin .media-input-feedback-bubble .media-icon {
+  display: none;
+  width: 36px;
+  height: 36px;
+}
+
+/* seek: seek icon, flipped for backward */
+.media-default-skin .media-input-feedback-bubble[data-direction] .media-icon--seek {
+  display: block;
+}
+
+.media-default-skin .media-input-feedback-bubble[data-direction="backward"] .media-icon--seek {
+  transform: scaleX(-1);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .media-default-skin
+    .media-input-feedback-bubble[data-direction="forward"]:not([data-starting-style])
+    .media-icon--seek {
+    animation: media-slide-in-forward 300ms ease-in-out;
+  }
+
+  .media-default-skin
+    .media-input-feedback-bubble[data-direction="backward"]:not([data-starting-style])
+    .media-icon--seek {
+    animation: media-slide-in-backward 300ms ease-in-out;
+  }
+
+  .media-default-skin .media-input-feedback-island--status[data-status]:not([data-starting-style]) .media-icon,
+  .media-default-skin .media-input-feedback-bubble[data-status]:not([data-starting-style]) .media-icon {
+    animation: media-pop-in 250ms ease-out;
+  }
+}
+
+.media-default-skin .media-input-feedback-bubble[data-status="pause"] .media-icon--pause,
+.media-default-skin .media-input-feedback-bubble[data-status="play"] .media-icon--play {
+  display: block;
+}
+
+/* ==========================================================================
+   Icon State Visibility for Video Skins
+
+   Data-attribute-driven visibility rules for multi-state icon buttons.
+   Uses :is() with both element selectors (for HTML custom element wrappers)
+   and class selectors (for React rendered SVG elements).
+   ========================================================================== */
+
+/* --- All icons hidden by default --- */
+
+.media-button--play .media-icon--restart,
+.media-button--play .media-icon--play,
+.media-button--play .media-icon--pause,
+.media-button--mute .media-icon--volume-off,
+.media-button--mute .media-icon--volume-low,
+.media-button--mute .media-icon--volume-high,
+.media-button--fullscreen .media-icon--fullscreen-enter,
+.media-button--fullscreen .media-icon--fullscreen-exit,
+.media-button--pip .media-icon--pip-enter,
+.media-button--pip .media-icon--pip-exit,
+.media-button--cast .media-icon--cast-enter,
+.media-button--cast .media-icon--cast-exit,
+.media-button--captions .media-icon--captions-off,
+.media-button--captions .media-icon--captions-on {
+  display: none;
+  opacity: 0;
+}
+
+/* --- Active icon per state --- */
+
+/* Play: ended → restart */
+.media-button--play[data-ended] .media-icon--restart,
+/* Play: paused (not ended) → play */
+.media-button--play:not([data-ended])[data-paused] .media-icon--play,
+/* Play: playing (not paused, not ended) → pause */
+.media-button--play:not([data-paused]):not([data-ended]) .media-icon--pause,
+/* Mute: muted → volume off */
+.media-button--mute[data-muted] .media-icon--volume-off,
+/* Mute: volume low (not muted) → volume low */
+.media-button--mute:not([data-muted])[data-volume-level="low"] .media-icon--volume-low,
+/* Mute: volume high (not muted, not low) → volume high */
+.media-button--mute:not([data-muted]):not([data-volume-level="low"]) .media-icon--volume-high,
+/* Fullscreen: not fullscreen → enter */
+.media-button--fullscreen:not([data-fullscreen]) .media-icon--fullscreen-enter,
+/* Fullscreen: fullscreen → exit */
+.media-button--fullscreen[data-fullscreen] .media-icon--fullscreen-exit,
+/* Picture-in-Picture: not active → enter */
+.media-button--pip:not([data-pip]) .media-icon--pip-enter,
+/* Picture-in-Picture: active → exit */
+.media-button--pip[data-pip] .media-icon--pip-exit,
+/* Cast: not connected → enter */
+.media-button--cast:not([data-cast-state="connected"]) .media-icon--cast-enter,
+/* Cast: connected → exit */
+.media-button--cast[data-cast-state="connected"] .media-icon--cast-exit,
+/* Captions: not active → captions off */
+.media-button--captions:not([data-active]) .media-icon--captions-off,
+/* Captions: active → captions on */
+.media-button--captions[data-active] .media-icon--captions-on {
+  display: block;
+  opacity: 1;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Global @keyframes for all video skins (CSS & Tailwind)                     */
+/* -------------------------------------------------------------------------- */
+
+@keyframes media-shake {
+  0%,
+  100% {
+    translate: 0 0;
+  }
+  20% {
+    translate: -6px 0;
+  }
+  40% {
+    translate: 4px 0;
+  }
+  60% {
+    translate: -2px 0;
+  }
+  80% {
+    translate: 1px 0;
+  }
+}
+
+@keyframes media-slide-in-forward {
+  from {
+    translate: -60% 0;
+    opacity: 0;
+  }
+}
+
+@keyframes media-slide-in-backward {
+  from {
+    translate: 60% 0;
+    opacity: 0;
+  }
+}
+
+@keyframes media-pop-in {
+  from {
+    scale: 0.8;
+    opacity: 0;
+  }
+}
+
+/* -------------------------------------------------------------------------- */
+/* Global @properties for all video skins (CSS & Tailwind)                    */
+/* -------------------------------------------------------------------------- */
+
+@property --media-progress-fill {
+  syntax: "<percentage>";
+  inherits: true;
+  initial-value: 0%;
+}
+
+
+/* ==========================================================================
+   Root
+   ========================================================================== */
+
+.media-default-skin--video {
+  --media-spring-timing-function: linear(
+    0,
+    0.034 1.5%,
+    0.763 9.7%,
+    1.066 13.9%,
+    1.198 19.9%,
+    1.184 21.8%,
+    0.963 37.5%,
+    0.997 50.9%,
+    1
+  );
+  --media-border-color: oklch(0 0 0 / 0.1);
+  --media-surface-background-color: oklch(1 0 0 / 0.1);
+  --media-surface-inner-border-color: oklch(1 0 0 / 0.05);
+  --media-surface-outer-border-color: oklch(0 0 0 / 0.1);
+  --media-surface-shadow-color: oklch(0 0 0 / 0.15);
+  --media-surface-backdrop-filter: blur(16px) saturate(1.5);
+  --media-video-border-radius: var(--media-border-radius, 2rem);
+  --media-controls-transition-duration: 100ms;
+  --media-controls-transition-timing-function: ease-out;
+  --media-error-dialog-transition-duration: 350ms;
+  --media-error-dialog-transition-delay: 100ms;
+  --media-error-dialog-transition-timing-function: var(--media-spring-timing-function);
+  --media-popup-transition-duration: 100ms;
+  --media-popup-transition-timing-function: ease-out;
+  --media-tooltip-side-offset: 0.75rem;
+  --media-tooltip-boundary-offset: 0.5rem;
+  --media-popover-side-offset: 0.5rem;
+  --media-popover-boundary-offset: 0.5rem;
+  background: oklch(0 0 0);
+
+  @media (prefers-reduced-motion: reduce) {
+    --media-error-dialog-transition-duration: 50ms;
+    --media-error-dialog-transition-delay: 0ms;
+    --media-error-dialog-transition-timing-function: ease-out;
+    --media-popup-transition-duration: 0ms;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    --media-border-color: oklch(1 0 0 / 0.15);
+  }
+
+  @media (prefers-reduced-transparency: reduce) or (prefers-contrast: more) {
+    --media-surface-background-color: oklch(0 0 0);
+    --media-surface-inner-border-color: oklch(1 0 0 / 0.25);
+    --media-surface-outer-border-color: transparent;
+  }
+
+  &:has(.media-controls:not([data-visible])) {
+    /* Slight delay to hide controls on non-touch devices after interaction */
+    @media (pointer: fine) {
+      --media-controls-transition-duration: 300ms;
+    }
+    @media (pointer: coarse) {
+      --media-controls-transition-duration: 150ms;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      --media-controls-transition-duration: 50ms;
+    }
+  }
+
+  /* Inner border ring */
+  &::after {
+    position: absolute;
+    inset: 0;
+    z-index: 10;
+    pointer-events: none;
+    content: "";
+    border-radius: inherit;
+    box-shadow: inset 0 0 0 1px var(--media-border-color);
+  }
+
+  &:fullscreen {
+    --media-border-radius: 0;
+  }
+}
+
+/* ==========================================================================
+   Error Dialog
+   ========================================================================== */
+
+.media-default-skin--video .media-error {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.media-default-skin--video .media-error__dialog {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  max-width: 18rem;
+  padding: 0.75rem;
+  color: oklch(1 0 0);
+  text-shadow: 0 1px 0 oklch(0 0 0 / 0.25);
+  border-radius: 1.75rem;
+  transition-delay: var(--media-error-dialog-transition-delay);
+  transition-timing-function: var(--media-error-dialog-transition-timing-function);
+  transition-duration: var(--media-error-dialog-transition-duration);
+  transition-property: opacity, scale;
+}
+
+.media-default-skin--video .media-error[data-starting-style] .media-error__dialog,
+.media-default-skin--video .media-error[data-ending-style] .media-error__dialog {
+  opacity: 0;
+  scale: 0.5;
+}
+.media-default-skin--video .media-error[data-ending-style] .media-error__dialog {
+  transition-delay: 0ms;
+}
+
+.media-default-skin--video .media-error__content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.5rem 0.5rem 0.375rem;
+  text-shadow: inherit;
+}
+
+.media-default-skin--video .media-error__title {
+  font-size: 1rem;
+}
+
+/* ==========================================================================
+   Controls (hide/show behavior)
+   ========================================================================== */
+
+.media-default-skin--video .media-controls {
+  position: absolute;
+  inset-inline: 0.5rem;
+  bottom: 0.5rem;
+  z-index: 10;
+  flex-wrap: wrap;
+  max-width: 56rem;
+  margin-inline: auto;
+  color: var(--media-color-primary, oklch(1 0 0));
+  transform-origin: bottom;
+  transition-timing-function: var(--media-controls-transition-timing-function);
+  transition-duration: var(--media-controls-transition-duration);
+
+  @media (pointer: fine) {
+    transition-property: scale, filter, opacity;
+    will-change: scale, filter, opacity;
+  }
+
+  @media (pointer: coarse) {
+    transition-property: scale, opacity;
+    will-change: scale, opacity;
+  }
+
+  &:not([data-visible]) {
+    pointer-events: none;
+    opacity: 0;
+    scale: 0.95;
+
+    @media (pointer: fine) and (prefers-reduced-motion: no-preference) {
+      filter: blur(8px);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      scale: 1;
+    }
+  }
+
+  & .media-time-controls {
+    flex: 0 0 100%;
+    order: -1;
+    padding-inline: 0.625rem;
+  }
+
+  & .media-button-group:first-child {
+    flex: 1;
+    text-align: left;
+  }
+
+  & .media-button-group:last-child {
+    flex: 1;
+    justify-content: end;
+  }
+
+  @container media-root (width > 42rem) {
+    inset-inline: 0.75rem;
+    bottom: 0.75rem;
+    flex-wrap: nowrap;
+    column-gap: 0.125rem;
+    padding: 0.25rem;
+
+    & .media-time-controls {
+      flex: 1;
+      order: unset;
+    }
+
+    & .media-button-group:first-child,
+    & .media-button-group:last-child {
+      flex: 0 0 auto;
+    }
+  }
+}
+
+.media-default-skin--video .media-error[data-open] ~ .media-controls {
+  display: none;
+}
+
+/* Hide cursor when controls are hidden */
+.media-default-skin--video:has(.media-controls:not([data-visible])) {
+  cursor: none;
+}
+
+/* ==========================================================================
+   Sliders
+   ========================================================================== */
+
+.media-default-skin--video .media-slider__track {
+  background-color: oklch(1 0 0 / 0.2);
+  box-shadow: 0 0 0 1px oklch(0 0 0 / 0.05);
+}
+
+.media-default-skin--video .media-slider__preview {
+  --media-preview-max-width: 11rem;
+  --media-preview-padding: -1.125rem;
+  /**
+    Inset is the difference between the container width and the slider (100%) width.
+    Divided by 2 as we render the time on both sides.
+  */
+  --media-preview-inset: calc((100cqi - 100%) / 2);
+
+  position: absolute;
+  bottom: calc(100% + 1.2rem);
+  left: clamp(
+    calc(var(--media-preview-max-width) / 2 + var(--media-preview-padding) - var(--media-preview-inset)),
+    var(--media-slider-pointer),
+    calc(100% - var(--media-preview-max-width) / 2 - var(--media-preview-padding) + var(--media-preview-inset))
+  );
+  pointer-events: none;
+  opacity: 0;
+  filter: blur(8px);
+  transform-origin: bottom;
+  scale: 0.8;
+  translate: -50%;
+  transition-timing-function: ease-out;
+  transition-duration: 150ms;
+  transition-property: scale, opacity, filter;
+
+  & .media-preview__thumbnail {
+    max-width: var(--media-preview-max-width);
+  }
+
+  &:has(.media-preview__thumbnail[data-loading]) {
+    max-height: 6rem;
+  }
+}
+.media-default-skin--video .media-slider[data-pointing] .media-slider__preview:has([role="img"]:not([data-hidden])) {
+  opacity: 1;
+  filter: blur(0);
+  scale: 1;
+}
