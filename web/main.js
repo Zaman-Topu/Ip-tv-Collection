@@ -419,18 +419,21 @@ const FLAGS = {Bangladesh:'🇧🇩',India:'🇮🇳',Pakistan:'🇵🇰',UK:'�
 const QCATS = ['Sports','News','Natok/Drama','Kids','Religious','Music','Documentary','Education'];
 
 function buildFilters() {
-  // Build category select from actual data
-  const cats = [...new Set(allCh.map(c=>c.group))].sort();
-  selCat.innerHTML = '<option value="all">All Categories</option>';
-  cats.forEach(c => { const o=document.createElement('option'); o.value=o.textContent=c; selCat.appendChild(o); });
+  const q = (fSearch || '').toLowerCase();
+  const baseSrc = allCh.filter(ch => !q || ch.name.toLowerCase().includes(q));
 
-  // Country pills — only show countries that have channels
+  // Build category select from actual data
+  const cats = [...new Set(allCh.map(c=>c.subcat))].filter(Boolean).sort();
+  selCat.innerHTML = '<option value="all">All Categories</option>';
+  cats.forEach(c => { const o=document.createElement('option'); o.value=o.textContent=c; if(fCat===c) o.selected=true; selCat.appendChild(o); });
+
+  // Country pills — only show countries that have channels matching search + selected category
   const activeCounts = {};
-  allCh.forEach(c => { activeCounts[c.country] = (activeCounts[c.country]||0)+1; });
+  const cSrc = baseSrc.filter(c => fCat === 'all' || c.subcat === fCat);
+  cSrc.forEach(c => { activeCounts[c.country] = (activeCounts[c.country]||0)+1; });
 
   cpills.innerHTML = '';
-  const allCount = allCh.length;
-  mkPill(cpills, `🌐 All (${allCount})`, fCountry==='all', ()=>{ fCountry='all'; buildFilters(); applyFilters(); });
+  mkPill(cpills, `🌐 All (${cSrc.length})`, fCountry==='all', ()=>{ fCountry='all'; buildFilters(); applyFilters(); });
   COUNTRIES.forEach(c => {
     const cnt = activeCounts[c] || 0;
     if (cnt > 0) mkPill(cpills, `${FLAGS[c]||'🌐'} ${c} (${cnt})`, fCountry===c, ()=>{ fCountry=c; buildFilters(); applyFilters(); });
@@ -442,15 +445,14 @@ function buildFilters() {
     }
   });
 
-  // Subcategory pills — context-aware based on selected country
+  // Subcategory pills — context-aware based on search + selected country
   qpills.innerHTML = '';
-  // Get subcategories available in current country filter
-  const src = fCountry === 'all' ? allCh : allCh.filter(c=>c.country===fCountry);
-  const subcats = [...new Set(src.map(c=>c.subcat))].filter(Boolean).sort();
-  mkPill(qpills, 'All Types', fCat==='all', ()=>{ fCat='all'; buildFilters(); applyFilters(); });
+  const qSrc = baseSrc.filter(c => fCountry === 'all' || c.country === fCountry);
+  const subcats = [...new Set(qSrc.map(c=>c.subcat))].filter(Boolean).sort();
+  mkPill(qpills, `All Types (${qSrc.length})`, fCat==='all', ()=>{ fCat='all'; buildFilters(); applyFilters(); });
   subcats.forEach(sc => {
-    const cnt = src.filter(c=>c.subcat===sc).length;
-    mkPill(qpills, `${sc} (${cnt})`, fCat===sc, ()=>{ fCat=sc; buildFilters(); applyFilters(); });
+    const cnt = qSrc.filter(c=>c.subcat===sc).length;
+    if (cnt > 0) mkPill(qpills, `${sc} (${cnt})`, fCat===sc, ()=>{ fCat=sc; buildFilters(); applyFilters(); });
   });
 }
 
@@ -720,7 +722,7 @@ btnProxy.addEventListener('click', () => { if (activeCh) openPlayer(activeCh, tr
 
 srchEl.addEventListener('input', e => {
   clearTimeout(srchTimer);
-  srchTimer = setTimeout(()=>{ fSearch=e.target.value; applyFilters(); }, 280);
+  srchTimer = setTimeout(()=>{ fSearch=e.target.value; buildFilters(); applyFilters(); }, 280);
 });
 selCat.addEventListener('change', e => { fCat=e.target.value; buildFilters(); applyFilters(); });
 selDb.addEventListener('change', e => { dbKey=e.target.value; loadDb(); });
