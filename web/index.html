@@ -465,45 +465,83 @@
     .pgi{font-size:11px;font-weight:700;color:var(--muted)}
 
     /* ═══════════════════════════════════════════
-       FOOTER
+       FOOTER & SOCIALS
     ═══════════════════════════════════════════ */
     #footer {
-      margin-top: 40px;
-      padding: 30px 20px 20px;
-      background: rgba(15, 15, 20, 0.6);
+      margin-top: 60px;
+      padding: 40px 20px 30px;
+      background: rgba(10, 10, 15, 0.8);
       border-top: 1px solid rgba(255, 255, 255, 0.05);
       text-align: center;
     }
     .f-inner {
-      max-width: 800px;
+      max-width: 900px;
       margin: 0 auto;
       display: flex;
       flex-direction: column;
-      gap: 16px;
+      gap: 24px;
     }
     .f-logo {
-      font-size: 18px;
+      font-size: 24px;
       font-weight: 900;
-      letter-spacing: 1px;
-      color: #fff;
+      letter-spacing: 2px;
+      background: linear-gradient(135deg, #fff, #a0a5ba);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
     }
-    .f-dev {
-      font-size: 12px;
-      color: var(--muted);
-      margin-top: 4px;
+    .f-socials {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      flex-wrap: wrap;
     }
-    .f-dev strong {
+    .soc-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      border-radius: 99px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.08);
       color: #e2e8f0;
-      font-weight: 800;
+      font-size: 13px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.3s ease;
     }
+    .soc-btn svg { width: 16px; height: 16px; transition: transform 0.3s ease; }
+    .soc-btn:hover { background: rgba(255,255,255,0.1); transform: translateY(-2px); border-color: rgba(255,255,255,0.2); color: #fff; }
+    .soc-btn:hover svg { transform: scale(1.1); }
+    
+    .soc-tg:hover { background: rgba(0, 136, 204, 0.15); border-color: #0088cc; color: #0088cc; }
+    .soc-fb:hover { background: rgba(24, 119, 242, 0.15); border-color: #1877f2; color: #1877f2; }
+    .soc-ig:hover { background: rgba(225, 48, 108, 0.15); border-color: #e1306c; color: #e1306c; }
+    .soc-web:hover { background: rgba(255, 42, 95, 0.15); border-color: #ff2a5f; color: #ff2a5f; }
+    
+    .f-dev {
+      font-size: 14px;
+      color: var(--muted);
+      margin-top: 10px;
+    }
+    .f-dev a {
+      color: #fff;
+      font-weight: 800;
+      text-decoration: none;
+      border-bottom: 2px solid #ff2a5f;
+      padding-bottom: 2px;
+      transition: color 0.2s;
+    }
+    .f-dev a:hover { color: #ff2a5f; }
+    
     .f-disclaimer {
       font-size: 11px;
       line-height: 1.6;
       color: rgba(255, 255, 255, 0.4);
-      background: rgba(0, 0, 0, 0.2);
-      padding: 12px 16px;
-      border-radius: 8px;
+      background: rgba(0, 0, 0, 0.3);
+      padding: 16px 20px;
+      border-radius: 12px;
       border: 1px solid rgba(255, 255, 255, 0.03);
+      margin-top: 10px;
     }
     .f-disclaimer strong {
       color: rgba(255, 255, 255, 0.6);
@@ -577,9 +615,13 @@
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"></path><path d="M2 12h20"></path></svg>
         Sports
       </a>
-      <a href="https://github.com/Zaman-Topu/Ip-tv-Collection" target="_blank" class="nav-link">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path></svg>
-        GitHub
+      <a href="#" class="nav-link" onclick="filterMenu(event, 'News')" id="nav-news">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>
+        News
+      </a>
+      <a href="#" class="nav-link" onclick="filterMenu(event, 'Kids')" id="nav-kids">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M8 14s1.5 2 4 2 4-2 4-2"></path><line x1="9" y1="9" x2="9.01" y2="9"></line><line x1="15" y1="9" x2="15.01" y2="9"></line></svg>
+        Kids
       </a>
     </div>
   </div>
@@ -674,15 +716,39 @@
 <!-- Footer -->
 <footer id="footer">
   <div class="f-inner">
-    <div class="f-credits">
-      <div class="f-logo">BUG TV</div>
-      <div class="f-dev">Developed by <strong>Zaman Topu</strong></div>
+    <div class="f-logo">BUG MOHOL</div>
+    
+    <div class="f-socials">
+      <a href="https://t.me/AnonymousOrigin" target="_blank" class="soc-btn soc-tg">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+        Telegram
+      </a>
+      <a href="https://www.facebook.com/bugmohol" target="_blank" class="soc-btn soc-fb">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path></svg>
+        Facebook
+      </a>
+      <a href="https://instagram.com/bugmohol" target="_blank" class="soc-btn soc-ig">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
+        Instagram
+      </a>
+      <a href="https://bugmohol.com" target="_blank" class="soc-btn soc-web">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+        Website
+      </a>
+      <a href="https://github.com/bug-mohol-official" target="_blank" class="soc-btn">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path></svg>
+        GitHub
+      </a>
     </div>
+
+    <div class="f-dev">
+      Created by <a href="https://www.facebook.com/zamantopu.official/" target="_blank">Zaman Topu</a>
+    </div>
+    
     <div class="f-disclaimer">
-      <strong>Disclaimer:</strong> We do not host, provide, or archive any of the media streams. All channels are curated from publicly available sources on the internet. We hold no responsibility for the content broadcasted by these channels.
+      <strong>Disclaimer:</strong> BUG TV does not host, stream, or control any of the channels provided. All streams are publicly available links collected from the internet. We do not endorse or take responsibility for the content. If you own the rights to any content and wish for it to be removed, please contact the original hosting provider.
     </div>
-    <div class="f-copy">
-      &copy; 2026 BUG TV. All Rights Reserved. <br>
+    <div class="f-copy">&copy; 2026 BUG MOHOL. All rights reserved. <br>
       <span style="font-weight:400; font-size:10px; opacity:0.6; display:block; margin-top:4px;">Open Source IPTV Web Player</span>
     </div>
   </div>
