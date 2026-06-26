@@ -401,7 +401,7 @@ async function fetchPL(encUrl) {
 
 async function fetchStatus() {
   try {
-    const r = await fetch(_dec(_STURL));
+    const r = await fetch(_dec(_STURL) + '?t=' + Date.now());
     if (r.ok) {
       const raw = await r.json();
       // Store status map with encoded keys for obfuscation
@@ -525,7 +525,14 @@ function makeCard(ch) {
       <div class="c-name">${ch.name}</div>
       <div class="c-sub">${ch.country} · ${ch.group}</div>
     </div>`;
+  card.tabIndex = 0;
   card.addEventListener('click', () => openPlayer(ch));
+  card.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      openPlayer(ch);
+    }
+  });
   return card;
 }
 
