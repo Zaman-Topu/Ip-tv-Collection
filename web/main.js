@@ -558,22 +558,28 @@ function playStream(rawUrl, ch, useProxy) {
   vidEl.pause(); vidEl.removeAttribute('src'); vidEl.load();
   pErr.classList.remove('show');
 
+  // Reset quality badge
+  const qualBadge  = document.getElementById('quality-badge');
+  const bufBar     = document.getElementById('buf-progress');
+  const piQuality  = document.getElementById('pi-quality');
+  if (qualBadge) { qualBadge.style.display='none'; qualBadge.textContent=''; }
+  if (bufBar)    bufBar.style.width = '0%';
+  if (piQuality) piQuality.style.display = 'none';
+
   const isPrivate = isPrivateIp(rawUrl);
   const isHttp    = rawUrl.startsWith('http:');
   const isHttps   = location.protocol==='https:';
 
-  // Always proxy on HTTPS for HTTP streams; or if forceProxy
   let url = rawUrl;
   if ((useProxy || (isHttp && isHttps)) && !isPrivate) {
     url = `https://corsproxy.io/?url=${encodeURIComponent(rawUrl)}`;
   }
 
-  // Clear rawUrl from local scope ASAP (can't fully clear from JS but limits exposure)
   const _tmp = url;
 
   function onErr() {
     if (!useProxy && !isPrivate) {
-      playStream(rawUrl, ch, true); // retry once with proxy
+      playStream(rawUrl, ch, true);
     } else {
       pErr.classList.add('show');
       if (isPrivate) errTxt.innerHTML = 'BDIX stream — must be on the host ISP.<br>Browser lock icon → Site Settings → Allow insecure content.';
@@ -582,22 +588,95 @@ function playStream(rawUrl, ch, useProxy) {
     }
   }
 
+  // Buffer progress animation (fake smooth fill while loading)
+  let bufTimer = null;
+  function startBufAnim() {
+    let pct = 0;
+    bufTimer = setInterval(() => {
+      pct = Math.min(pct + Math.random()*8, 85);
+      if (bufBar) bufBar.style.width = pct + '%';
+    }, 200);
+  }
+  function finishBuf() {
+    clearInterval(bufTimer);
+    if (bufBar) { bufBar.style.width='100%'; setTimeout(()=>{ if(bufBar) bufBar.style.width='0%'; }, 500); }
+  }
+
+  function showQuality(level) {
+    if (!level || level.height == null) return;
+    const h = level.height;
+    const label = h >= 1080 ? '1080p HD' : h >= 720 ? '720p HD' : h >= 480 ? '480p' : h >= 360 ? '360p' : `${h}p`;
+    if (qualBadge) { qualBadge.textContent = label; qualBadge.style.display = 'block'; }
+    if (piQuality) { piQuality.textContent = label; piQuality.style.display = 'inline-block'; }
+  }
+
   const isHLS = _tmp.includes('.m3u') || _tmp.includes('.m3u8');
 
   if (isHLS && Hls.isSupported()) {
+    startBufAnim();
     hlsInst = new Hls({
-      maxBufferLength: 12,
-      maxMaxBufferLength: 24,
-      startLevel: -1,
+      // Buffer settings — smooth & robust
+      maxBufferLength: 30,           // 30s buffer target
+      maxMaxBufferLength: 60,        // up to 60s max
+      maxBufferSize: 60*1000*1000,   // 60MB max buffer
+      maxBufferHole: 0.5,
+      highBufferWatchdogPeriod: 2,
+      nudgeOffset: 0.1,
+      nudgeMaxRetry: 5,
+      // ABR (Adaptive Bitrate)
+      startLevel: -1,                // auto-select quality
+      abrEwmaDefaultEstimate: 1000000, // start at 1Mbps estimate
+      abrBandWidthFactor: 0.9,
+      abrBandWidthUpFactor: 0.7,
+      // Recovery
+      fragLoadingMaxRetry: 6,
+      manifestLoadingMaxRetry: 4,
+      levelLoadingMaxRetry: 4,
+      fragLoadingRetryDelay: 1000,
+      // Performance
       enableWorker: true,
-      lowLatencyMode: true,
+      lowLatencyMode: false,         // false = better buffering (not low-latency)
+      progressive: false,
+      testBandwidth: true,
       debug: false,
     });
+
     hlsInst.loadSource(_tmp);
     hlsInst.attachMedia(vidEl);
-    hlsInst.on(Hls.Events.MANIFEST_PARSED, () => vidEl.play().catch(()=>{}));
-    hlsInst.on(Hls.Events.ERROR, (_, d) => { if (d.fatal) onErr(); });
+
+    hlsInst.on(Hls.Events.MANIFEST_PARSED, (_, data) => {
+      finishBuf();
+      // Show quality of chosen level
+      if (data.levels && data.levels.length > 0) {
+        const lvl = hlsInst.currentLevel >= 0
+          ? data.levels[hlsInst.currentLevel]
+          : data.levels[data.levels.length - 1];
+        showQuality(lvl);
+      }
+      vidEl.play().catch(()=>{});
+    });
+
+    hlsInst.on(Hls.Events.LEVEL_SWITCHED, (_, data) => {
+      if (hlsInst && hlsInst.levels && hlsInst.levels[data.level]) {
+        showQuality(hlsInst.levels[data.level]);
+      }
+    });
+
+    hlsInst.on(Hls.Events.ERROR, (_, d) => {
+      if (d.fatal) {
+        if (d.type === Hls.ErrorTypes.NETWORK_ERROR) {
+          // Network error — try to recover
+          hlsInst.startLoad();
+        } else if (d.type === Hls.ErrorTypes.MEDIA_ERROR) {
+          hlsInst.recoverMediaError();
+        } else {
+          onErr();
+        }
+      }
+    });
+
   } else if (isHLS && vidEl.canPlayType('application/vnd.apple.mpegurl')) {
+
     // Safari native
     vidEl.src = _tmp;
     vidEl.play().catch(()=>{});
