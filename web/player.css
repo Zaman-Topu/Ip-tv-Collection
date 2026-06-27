@@ -1591,8 +1591,29 @@ media-tooltip-group {
     max-height: 6rem;
   }
 }
-.media-default-skin--video .media-slider[data-pointing] .media-slider__preview:has([role="img"]:not([data-hidden])) {
+.media-default-skin--video.media-default-skin--video .media-slider[data-pointing] .media-slider__preview {
   opacity: 1;
   filter: blur(0);
   scale: 1;
+}
+
+/* Collapse the thumbnail container if there's no preview image (e.g. live TV) */
+.media-default-skin--video .media-slider__preview:not(:has([role="img"]:not([data-hidden]))) .media-preview__thumbnail {
+  display: none !important;
+}
+.media-default-skin--video .media-slider__preview:not(:has([role="img"]:not([data-hidden]))) {
+  min-width: unset !important;
+  max-width: unset !important;
+  background-color: rgba(10, 10, 12, 0.95) !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  border-radius: 6px !important;
+  padding: 4px 8px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5) !important;
+}
+.media-default-skin--video .media-slider__preview:not(:has([role="img"]:not([data-hidden]))) .media-preview__time {
+  position: static !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  color: #fff !important;
+  line-height: 1 !important;
 }

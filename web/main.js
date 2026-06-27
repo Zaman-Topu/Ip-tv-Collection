@@ -640,7 +640,7 @@ function scrollUp() {
 // ══════════════════════════════════════════
 //  PLAYER — URL decoded ONLY at play time
 // ══════════════════════════════════════════
-function openPlayer(ch, forceProxy = false) {
+function openPlayer(ch) {
   activeCh = ch;
   pWrap.classList.add('show');
   pErr.classList.remove('show');
@@ -659,49 +659,31 @@ function openPlayer(ch, forceProxy = false) {
   history.pushState({n:ch.name}, ch.name, `?p=${encodeURIComponent(ch.name)}`);
 
   const rawUrl = _dec(ch._u);
-  playStream(rawUrl, ch, forceProxy);
+  playStream(rawUrl, ch);
 }
 
-let currentStreamUsedProxy = false;
-
-function playStream(rawUrl, ch, useProxy) {
+function playStream(rawUrl, ch) {
   pErr.classList.remove('show');
-  currentStreamUsedProxy = useProxy;
 
   const isPrivate = isPrivateIp(rawUrl);
-  const isHttp    = rawUrl.startsWith('http:');
-  const isHttps   = location.protocol==='https:';
-
-  // Only proxy if explicitly requested OR HTTP stream on HTTPS (to avoid mixed content block)
-  let url = rawUrl;
-  if ((useProxy || (isHttp && isHttps)) && !isPrivate) {
-    url = `https://corsproxy.io/?url=${encodeURIComponent(rawUrl)}`;
-    btnProxy.textContent = "↻ Retry without Proxy";
-  } else {
-    btnProxy.textContent = "↻ Retry with Proxy";
-  }
-  const _tmp = url;
+  const _tmp = rawUrl;
 
   function onErr(customMsg) {
-    if (!useProxy && !isPrivate) {
-      playStream(rawUrl, ch, true); // try with proxy on error
+    pErr.classList.add('show');
+    let newStatus = 'down';
+    if (isPrivate) {
+      errTxt.innerHTML = 'BDIX stream — open browser settings → Allow insecure content.';
+    } else if (typeof customMsg === 'string') {
+      errTxt.innerHTML = customMsg;
+      if (customMsg.includes('403') || customMsg.includes('Geo-blocked')) newStatus = 'blocked';
     } else {
-      pErr.classList.add('show');
-      let newStatus = 'down';
-      if (isPrivate) {
-        errTxt.innerHTML = 'BDIX stream — open browser settings → Allow insecure content.';
-      } else if (typeof customMsg === 'string') {
-        errTxt.innerHTML = customMsg;
-        if (customMsg.includes('403') || customMsg.includes('Geo-blocked')) newStatus = 'blocked';
-      } else {
-        errTxt.textContent = 'Stream offline or geo-blocked. Try another channel.';
-      }
-      
-      // Dynamically update status and re-sort grid so dead/geo-blocked streams move to the bottom
-      if (statusMap[ch._u] !== newStatus) {
-        statusMap[ch._u] = newStatus;
-        applyFilters(); 
-      }
+      errTxt.textContent = 'Stream offline or geo-blocked. Try another channel.';
+    }
+    
+    // Dynamically update status and re-sort grid so dead/geo-blocked streams move to the bottom
+    if (statusMap[ch._u] !== newStatus) {
+      statusMap[ch._u] = newStatus;
+      applyFilters(); 
     }
   }
 
@@ -880,8 +862,7 @@ window.filterMenu = function(e, category) {
 pClose.addEventListener('click', closePlayer);
 btnProxy.addEventListener('click', () => {
   if (activeCh) {
-    // Toggle proxy usage on retry click
-    openPlayer(activeCh, !currentStreamUsedProxy);
+    openPlayer(activeCh);
   }
 });
 
