@@ -698,6 +698,17 @@
       .f-disclaimer { font-size: 11px; padding: 16px; border-radius: 12px; }
     }
 
+    /* Custom styles to prevent controls flickering/immediate hiding */
+    #vbox.user-active .media-controls,
+    #vbox:hover .media-controls,
+    .media-default-skin:hover .media-controls,
+    .media-default-skin:focus-within .media-controls {
+      opacity: 1 !important;
+      pointer-events: auto !important;
+      scale: 1 !important;
+      filter: none !important;
+    }
+
   </style>
 </head>
 <body>
@@ -745,7 +756,7 @@
       <!-- Left: video + info -->
       <div id="player-left">
         <div id="vbox">
-          <video-player class="media-default-skin media-default-skin--video" id="vid-player">
+          <video-player class="media-default-skin media-default-skin--video" id="vid-player" inactivity-delay="3500">
             <video-skin>
               <video id="vid" playsinline preload="auto"></video>
             </video-skin>

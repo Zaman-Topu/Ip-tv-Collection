@@ -54,11 +54,14 @@ let allCh     = [];   // channels with encoded URLs
 let filtered  = [];
 let statusMap = {};
 let page      = 1;
-const PER     = 96;
+const PER     = 60; // Optimized page size for lower DOM weight on low-end devices
 let activeCh  = null;
 let hlsInst   = null;
 let srchTimer = null;
 let dbKey     = 'complete';
+const countryCache = {}; // Cache country detections
+let uniqueCats = [];
+let uniqueCountries = [];
 
 let fSearch  = '';
 let fCat     = 'all';
@@ -256,52 +259,72 @@ const PK_NAMES = [
   'pakistan tv','pak tv',
 ];
 
+const GROUP_COUNTRY_KEYS = Object.keys(GROUP_COUNTRY);
+
 function detectCountry(group, name, url) {
+  const cacheKey = `${group || ''}|${name || ''}`;
+  if (countryCache[cacheKey]) return countryCache[cacheKey];
+
   const g = (group || '').toLowerCase().trim();
   const n = (name  || '').toLowerCase().trim();
   const u = (url   || '').toLowerCase();
 
+  let country = 'Global';
+  
   // 1. Explicit group match first
-  for (const [key, country] of Object.entries(GROUP_COUNTRY)) {
+  for (let i = 0; i < GROUP_COUNTRY_KEYS.length; i++) {
+    const key = GROUP_COUNTRY_KEYS[i];
     if (g === key || g.startsWith(key + ' ') || g.includes(key)) {
-      return country;
+      country = GROUP_COUNTRY[key];
+      break;
     }
   }
 
-  // 2. Bangladesh channel name check
-  for (const kw of BD_NAMES) {
-    if (n.includes(kw) || n === kw) return 'Bangladesh';
+  if (country === 'Global') {
+    // 2. Bangladesh channel name check
+    for (let i = 0; i < BD_NAMES.length; i++) {
+      if (n.includes(BD_NAMES[i])) { country = 'Bangladesh'; break; }
+    }
   }
 
-  // 3. India channel name check
-  for (const kw of IN_NAMES) {
-    if (n.includes(kw)) return 'India';
+  if (country === 'Global') {
+    // 3. India channel name check
+    for (let i = 0; i < IN_NAMES.length; i++) {
+      if (n.includes(IN_NAMES[i])) { country = 'India'; break; }
+    }
   }
 
-  // 4. Pakistan channel name check
-  for (const kw of PK_NAMES) {
-    if (n.includes(kw)) return 'Pakistan';
+  if (country === 'Global') {
+    // 4. Pakistan channel name check
+    for (let i = 0; i < PK_NAMES.length; i++) {
+      if (n.includes(PK_NAMES[i])) { country = 'Pakistan'; break; }
+    }
   }
 
-  // 5. URL-based detection
-  if (u.includes('sonarbanglatv') || u.includes('aynaott') || u.includes('jagobd') ||
-      u.includes('toffeelive') || u.includes('bioscopelive') || u.includes('bozztv') ||
-      u.includes('gpcdn') || u.includes('ncare.live') || u.includes('boishakhi') ||
-      u.includes('.com.bd') || u.includes('.net.bd') || u.includes('.org.bd')) {
-    return 'Bangladesh';
+  if (country === 'Global') {
+    // 5. URL-based detection
+    if (u.includes('sonarbanglatv') || u.includes('aynaott') || u.includes('jagobd') ||
+        u.includes('toffeelive') || u.includes('bioscopelive') || u.includes('boishakhi') ||
+        u.includes('gpcdn') || u.includes('ncare.live') ||
+        u.includes('.com.bd') || u.includes('.net.bd') || u.includes('.org.bd')) {
+      country = 'Bangladesh';
+    }
   }
 
-  // 6. Keyword checks in name for other countries
-  if (n.includes('uk') || n.includes('bbc') || n.includes('itv') || n.includes('sky') || n.includes('channel 4') || n.includes('channel 5')) return 'UK';
-  if (n.includes('espn') || n.includes('nbc') || n.includes('cbs') || n.includes('abc news') || n.includes('cnn') || n.includes('fox news') || n.includes('hbo') || n.includes(' usa') || n.includes('american')) return 'USA';
-  if (n.includes('france') || n.includes('tf1') || n.includes('m6 ') || n.includes('bfm')) return 'France';
-  if (n.includes('ard ') || n.includes('zdf') || n.includes('rtl') || n.includes('deutsch') || n.includes('german')) return 'Germany';
-  if (n.includes('rai ') || n.includes('mediaset') || n.includes('italia') || n.includes('canale 5')) return 'Italy';
-  if (n.includes('trt') || n.includes('turkey') || n.includes('turk') || n.includes('show tv')) return 'Turkey';
-  if (n.includes('arabic') || n.includes('aljazeera') || n.includes('al jazeera') || n.includes('al arabiya') || n.includes('mbc') || n.includes('al hayat')) return 'Arabic';
-  if (n.includes('russia') || n.includes('russian') || n.includes('rt ') || n.includes('ntv ')) return 'Russia';
+  if (country === 'Global') {
+    // 6. Keyword checks in name for other countries
+    if (n.includes('uk') || n.includes('bbc') || n.includes('itv') || n.includes('sky') || n.includes('channel 4') || n.includes('channel 5')) country = 'UK';
+    else if (n.includes('espn') || n.includes('nbc') || n.includes('cbs') || n.includes('abc news') || n.includes('cnn') || n.includes('fox news') || n.includes('hbo') || n.includes(' usa') || n.includes('american')) country = 'USA';
+    else if (n.includes('france') || n.includes('tf1') || n.includes('m6 ') || n.includes('bfm')) country = 'France';
+    else if (n.includes('ard ') || n.includes('zdf') || n.includes('rtl') || n.includes('deutsch') || n.includes('german')) country = 'Germany';
+    else if (n.includes('rai ') || n.includes('mediaset') || n.includes('italia') || n.includes('canale 5')) country = 'Italy';
+    else if (n.includes('trt') || n.includes('turkey') || n.includes('turk') || n.includes('show tv')) country = 'Turkey';
+    else if (n.includes('arabic') || n.includes('aljazeera') || n.includes('al jazeera') || n.includes('al arabiya') || n.includes('mbc') || n.includes('al hayat')) country = 'Arabic';
+    else if (n.includes('russia') || n.includes('russian') || n.includes('rt ') || n.includes('ntv ')) country = 'Russia';
+  }
 
-  return 'Global';
+  countryCache[cacheKey] = country;
+  return country;
 }
 
 // Subcategory detection from group name
@@ -342,45 +365,75 @@ function isPrivateIp(url) {
 }
 
 // ══════════════════════════════════════════
-//  M3U PARSER — stores URLs XOR-encoded
+//  M3U PARSER — stores URLs XOR-encoded asynchronously
 // ══════════════════════════════════════════
-function parseM3U(text) {
+async function parseM3UAsync(text, onProgress) {
   const out = [];
   const lines = text.split('\n');
   let cur = null;
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i].trim();
-    if (!line) continue;
-    if (line.startsWith('#EXTINF:')) {
-      let logo = '';
-      const logoM = line.match(/tvg-logo=(?:"([^"]+)"|'([^']+)'|([^,\s]+))/);
-      if (logoM) {
-        logo = logoM[1] || logoM[2] || logoM[3] || '';
-      }
-      if (logo && logo.startsWith('http://')) {
-        logo = 'https://wsrv.nl/?url=' + encodeURIComponent(logo);
-      }
+  const total = lines.length;
+  
+  // Parse in chunks to keep UI responsive
+  const chunkSize = 2000;
+  for (let i = 0; i < total; i += chunkSize) {
+    const end = Math.min(i + chunkSize, total);
+    for (let j = i; j < end; j++) {
+      const line = lines[j].trim();
+      if (!line) continue;
+      
+      if (line.startsWith('#EXTINF:')) {
+        let logo = '';
+        const logoIdx = line.indexOf('tvg-logo=');
+        if (logoIdx !== -1) {
+          const start = logoIdx + 9;
+          const quote = line.charAt(start);
+          if (quote === '"' || quote === "'") {
+            const closing = line.indexOf(quote, start + 1);
+            if (closing !== -1) logo = line.substring(start + 1, closing);
+          } else {
+            let spaceIdx = line.indexOf(' ', start);
+            let commaIdx = line.indexOf(',', start);
+            let endIdx = spaceIdx === -1 ? commaIdx : (commaIdx === -1 ? spaceIdx : Math.min(spaceIdx, commaIdx));
+            logo = endIdx === -1 ? line.substring(start) : line.substring(start, endIdx);
+          }
+        }
+        if (logo && logo.startsWith('http://')) {
+          logo = 'https://wsrv.nl/?url=' + encodeURIComponent(logo);
+        }
 
-      const groupM = line.match(/group-title="([^"]+)"/);
-      const ci     = line.lastIndexOf(',');
-      const group  = groupM ? groupM[1].trim() : 'Others';
-      if (isMovieGroup(group)) { cur = null; continue; } // skip movies
-      const chanName = ci >= 0 ? line.substring(ci+1).trim() : 'Unknown';
-      if (chanName.toLowerCase().includes('playz tv')) { cur = null; continue; }
-      cur = {
-        logo:  logo,
-        group,
-        name:  chanName || 'Unknown',
-      };
-    } else if (cur && (line.startsWith('http')||line.startsWith('rtmp')||line.startsWith('rtsp'))) {
-      if (line.includes('/enc/')||line.includes('cenc')) { cur=null; continue; }
-      cur._u = _enc(line);          // ← URL stored ENCRYPTED only
-      cur.country = detectCountry(cur.group, cur.name, line);
-      cur.subcat  = detectSubCategory(cur.group);
-      cur.server  = detectServer(line);
-      out.push(cur);
-      cur = null;
+        let group = 'Others';
+        const groupIdx = line.indexOf('group-title=');
+        if (groupIdx !== -1) {
+          const start = groupIdx + 12;
+          const quote = line.charAt(start);
+          if (quote === '"' || quote === "'") {
+            const closing = line.indexOf(quote, start + 1);
+            if (closing !== -1) group = line.substring(start + 1, closing).trim();
+          }
+        }
+        
+        if (isMovieGroup(group)) { cur = null; continue; }
+        
+        const ci = line.lastIndexOf(',');
+        const chanName = ci >= 0 ? line.substring(ci + 1).trim() : 'Unknown';
+        if (chanName.toLowerCase().includes('playz tv')) { cur = null; continue; }
+        
+        cur = { logo, group, name: chanName || 'Unknown' };
+      } else if (cur && (line.startsWith('http') || line.startsWith('rtmp') || line.startsWith('rtsp'))) {
+        if (line.includes('/enc/') || line.includes('cenc')) { cur = null; continue; }
+        cur._u = _enc(line);
+        cur.country = detectCountry(cur.group, cur.name, line);
+        cur.subcat = detectSubCategory(cur.group);
+        cur.server = detectServer(line);
+        out.push(cur);
+        cur = null;
+      }
     }
+    
+    if (onProgress) {
+      onProgress(Math.min(100, Math.round((end / total) * 100)));
+    }
+    await new Promise(r => setTimeout(r, 0)); // Yield to main thread
   }
   return out;
 }
@@ -395,7 +448,11 @@ async function fetchPL(encUrl) {
     const t = setTimeout(() => ctrl.abort(), 12000);
     const r = await fetch(url, { signal: ctrl.signal });
     clearTimeout(t);
-    return parseM3U(await r.text());
+    const rawText = await r.text();
+    const progEl = document.getElementById('load-prog-msg');
+    return await parseM3UAsync(rawText, (pct) => {
+      if (progEl) progEl.textContent = `Parsing channels... ${pct}%`;
+    });
   } catch { return []; }
 }
 
@@ -423,47 +480,67 @@ const COUNTRIES = ['Bangladesh','India','Pakistan','UK','USA','France','Germany'
 const FLAGS = {Bangladesh:'🇧🇩',India:'🇮🇳',Pakistan:'🇵🇰',UK:'🇬🇧',USA:'🇺🇸',France:'🇫🇷',Germany:'🇩🇪',Italy:'🇮🇹',Turkey:'🇹🇷',Arabic:'🌍',Russia:'🇷🇺',Global:'🌐'};
 const QCATS = ['Sports','News','Natok/Drama','Kids','Religious','Music','Documentary','Education'];
 
+// Pre-calculate filter parameters once database is loaded
+function precalculateFilterData() {
+  uniqueCats = [...new Set(allCh.map(c => c.subcat))].filter(Boolean).sort();
+  uniqueCountries = [...new Set(allCh.map(c => c.country))].filter(Boolean).sort();
+}
+
 function buildFilters() {
   const q = (fSearch || '').toLowerCase();
   const baseSrc = allCh.filter(ch => !q || ch.name.toLowerCase().includes(q));
 
-  // Build category select from actual data
-  const cats = [...new Set(allCh.map(c=>c.subcat))].filter(Boolean).sort();
+  // Build category select from pre-calculated data
   selCat.innerHTML = '<option value="all">All Categories</option>';
-  cats.forEach(c => { const o=document.createElement('option'); o.value=o.textContent=c; if(fCat===c) o.selected=true; selCat.appendChild(o); });
+  uniqueCats.forEach(c => {
+    const o = document.createElement('option');
+    o.value = o.textContent = c;
+    if (fCat === c) o.selected = true;
+    selCat.appendChild(o);
+  });
 
   // Country pills — only show countries that have channels matching search + selected category
   const activeCounts = {};
   const cSrc = baseSrc.filter(c => fCat === 'all' || c.subcat === fCat);
-  cSrc.forEach(c => { activeCounts[c.country] = (activeCounts[c.country]||0)+1; });
+  for (let i = 0; i < cSrc.length; i++) {
+    const country = cSrc[i].country;
+    activeCounts[country] = (activeCounts[country] || 0) + 1;
+  }
 
   cpills.innerHTML = '';
-  mkPill(cpills, `🌐 All (${cSrc.length})`, fCountry==='all', ()=>{ fCountry='all'; buildFilters(); applyFilters(); });
+  mkPill(cpills, `🌐 All (${cSrc.length})`, fCountry === 'all', () => { fCountry = 'all'; buildFilters(); applyFilters(); });
+  
   COUNTRIES.forEach(c => {
     const cnt = activeCounts[c] || 0;
-    if (cnt > 0) mkPill(cpills, `${FLAGS[c]||'🌐'} ${c} (${cnt})`, fCountry===c, ()=>{ fCountry=c; buildFilters(); applyFilters(); });
+    if (cnt > 0) mkPill(cpills, `${FLAGS[c] || '🌐'} ${c} (${cnt})`, fCountry === c, () => { fCountry = c; buildFilters(); applyFilters(); });
   });
-  // Show remaining countries with channels
+
   Object.entries(activeCounts).forEach(([c, cnt]) => {
     if (!COUNTRIES.includes(c) && cnt > 0 && c !== 'Global') {
-      mkPill(cpills, `🌐 ${c} (${cnt})`, fCountry===c, ()=>{ fCountry=c; buildFilters(); applyFilters(); });
+      mkPill(cpills, `🌐 ${c} (${cnt})`, fCountry === c, () => { fCountry = c; buildFilters(); applyFilters(); });
     }
   });
 
-  // Subcategory pills — context-aware based on search + selected country
+  // Subcategory pills
   qpills.innerHTML = '';
   const qSrc = baseSrc.filter(c => fCountry === 'all' || c.country === fCountry);
-  const subcats = [...new Set(qSrc.map(c=>c.subcat))].filter(Boolean).sort();
-  mkPill(qpills, `All Types (${qSrc.length})`, fCat==='all', ()=>{ fCat='all'; buildFilters(); applyFilters(); });
-  subcats.forEach(sc => {
-    const cnt = qSrc.filter(c=>c.subcat===sc).length;
-    if (cnt > 0) mkPill(qpills, `${sc} (${cnt})`, fCat===sc, ()=>{ fCat=sc; buildFilters(); applyFilters(); });
+  const subcatCounts = {};
+  for (let i = 0; i < qSrc.length; i++) {
+    const subcat = qSrc[i].subcat;
+    if (subcat) subcatCounts[subcat] = (subcatCounts[subcat] || 0) + 1;
+  }
+
+  mkPill(qpills, `All Types (${qSrc.length})`, fCat === 'all', () => { fCat = 'all'; buildFilters(); applyFilters(); });
+  
+  Object.keys(subcatCounts).sort().forEach(sc => {
+    const cnt = subcatCounts[sc];
+    if (cnt > 0) mkPill(qpills, `${sc} (${cnt})`, fCat === sc, () => { fCat = sc; buildFilters(); applyFilters(); });
   });
 }
 
 function mkPill(parent, label, active, onClick) {
   const b = document.createElement('button');
-  b.className = 'pill' + (active?' on':'');
+  b.className = 'pill' + (active ? ' on' : '');
   b.textContent = label;
   b.addEventListener('click', onClick);
   parent.appendChild(b);
@@ -478,9 +555,12 @@ function applyFilters() {
     return true;
   });
 
-  // Sort: active > bdix > blocked > unknown > down
-  const sc = s => s==='active'?4:s==='isp_bdix'?3:s==='blocked'?2:s==='unknown'?1:0;
-  filtered.sort((a,b) => sc(getStatus(b)) - sc(getStatus(a)));
+  // Pre-calculate status scores for fast sorting
+  filtered.forEach(ch => {
+    const st = statusMap[ch._u] || 'unknown';
+    ch._score = st === 'active' ? 4 : st === 'isp_bdix' ? 3 : st === 'blocked' ? 2 : st === 'unknown' ? 1 : 0;
+  });
+  filtered.sort((a, b) => b._score - a._score);
 
   page = 1;
   statC.textContent = filtered.length;
@@ -582,10 +662,11 @@ function openPlayer(ch, forceProxy = false) {
   playStream(rawUrl, ch, forceProxy);
 }
 
-let playerInst = null;
+let currentStreamUsedProxy = false;
 
 function playStream(rawUrl, ch, useProxy) {
   pErr.classList.remove('show');
+  currentStreamUsedProxy = useProxy;
 
   const isPrivate = isPrivateIp(rawUrl);
   const isHttp    = rawUrl.startsWith('http:');
@@ -595,6 +676,9 @@ function playStream(rawUrl, ch, useProxy) {
   let url = rawUrl;
   if ((useProxy || (isHttp && isHttps)) && !isPrivate) {
     url = `https://corsproxy.io/?url=${encodeURIComponent(rawUrl)}`;
+    btnProxy.textContent = "↻ Retry without Proxy";
+  } else {
+    btnProxy.textContent = "↻ Retry with Proxy";
   }
   const _tmp = url;
 
@@ -636,13 +720,14 @@ function playStream(rawUrl, ch, useProxy) {
 
   if (isHls && window.Hls && Hls.isSupported()) {
     hlsInst = new Hls({
-      maxBufferLength: 600, // Buffer up to 10 minutes ahead
-      maxMaxBufferLength: 1200, // Max cap at 20 minutes
-      maxBufferSize: 60 * 1000 * 1000, // Max 60MB RAM to prevent low-end device crashes
+      maxBufferLength: 20, // Buffer up to 20 seconds only (plenty for live streams, saves RAM)
+      maxMaxBufferLength: 40,
+      maxBufferSize: 15 * 1000 * 1000, // Limit buffer size to 15MB RAM to prevent low-end crashes
       liveSyncDurationCount: 3,
-      liveMaxLatencyDurationCount: 15,
+      liveMaxLatencyDurationCount: 10,
       enableWorker: true, // Offload processing to Web Worker for low-end CPUs
-      lowLatencyMode: false
+      lowLatencyMode: false,
+      backBufferLength: 10 // Automatically discard watched segments to free memory
     });
     hlsInst.loadSource(_tmp);
     hlsInst.attachMedia(vidEl);
@@ -793,7 +878,12 @@ window.filterMenu = function(e, category) {
 //  EVENTS
 // ══════════════════════════════════════════
 pClose.addEventListener('click', closePlayer);
-btnProxy.addEventListener('click', () => { if (activeCh) openPlayer(activeCh, true); });
+btnProxy.addEventListener('click', () => {
+  if (activeCh) {
+    // Toggle proxy usage on retry click
+    openPlayer(activeCh, !currentStreamUsedProxy);
+  }
+});
 
 btnReport.addEventListener('click', () => {
   if (!activeCh) return;
@@ -906,10 +996,11 @@ window.addEventListener('keydown', e => {
 //  BOOT
 // ══════════════════════════════════════════
 async function loadDb() {
-  grid.innerHTML = '<div class="g-msg"><div class="spin"></div><span>Loading channels...</span></div>';
+  grid.innerHTML = '<div class="g-msg"><div class="spin"></div><span id="load-prog-msg">Loading channels...</span></div>';
   pages.innerHTML = '';
   statC.textContent = '0'; statT.textContent = '0';
   allCh = await fetchPL(_DB[dbKey]);
+  precalculateFilterData(); // pre-calculate unique cats and countries!
   buildFilters();
   applyFilters();
   const p = new URLSearchParams(location.search).get('p');
@@ -925,4 +1016,70 @@ async function init() {
 }
 
 init();
+
+// Optimize player interactivity (prevent controls flickering/immediate hiding)
+let controlsTimeout;
+
+function showPlayerControls() {
+  try {
+    const shadow = vidPlayer?.shadowRoot || document.getElementById('vid-player')?.shadowRoot;
+    const controls = shadow ? shadow.querySelector('.media-controls') : document.querySelector('.media-controls');
+    const overlay = shadow ? shadow.querySelector('.media-overlay') : document.querySelector('.media-overlay');
+    
+    if (controls) {
+      controls.setAttribute('data-visible', 'true');
+      controls.style.opacity = '1';
+      controls.style.pointerEvents = 'auto';
+      controls.style.transform = 'scale(1)';
+    }
+    if (overlay) {
+      overlay.style.opacity = '1';
+    }
+  } catch (e) {}
+
+  clearTimeout(controlsTimeout);
+  controlsTimeout = setTimeout(() => {
+    try {
+      const shadow = vidPlayer?.shadowRoot || document.getElementById('vid-player')?.shadowRoot;
+      const controls = shadow ? shadow.querySelector('.media-controls') : document.querySelector('.media-controls');
+      const overlay = shadow ? shadow.querySelector('.media-overlay') : document.querySelector('.media-overlay');
+      
+      // Only hide if the video is playing (if paused, keep controls visible)
+      if (controls && !vidEl.paused) {
+        controls.removeAttribute('data-visible');
+        controls.style.opacity = '';
+        controls.style.pointerEvents = '';
+        controls.style.transform = '';
+      }
+      if (overlay && !vidEl.paused) {
+        overlay.style.opacity = '';
+      }
+    } catch (e) {}
+  }, 3500); // Hide controls after 3.5 seconds of inactivity
+}
+
+if (vidEl) {
+  // Listen for mouse/pointer/touch interaction on the player area
+  const vboxContainer = document.getElementById('vbox');
+  if (vboxContainer) {
+    vboxContainer.addEventListener('pointermove', showPlayerControls);
+    vboxContainer.addEventListener('pointerdown', showPlayerControls);
+    vboxContainer.addEventListener('click', (e) => {
+      // If clicked on buttons or selector, don't toggle play/pause
+      if (e.target.closest('button, select, #p-close, #btn-proxy, #btn-report')) return;
+      
+      // Toggle play/pause on player body click
+      if (vidEl.paused) {
+        vidEl.play().catch(() => {});
+      } else {
+        vidEl.pause();
+      }
+      showPlayerControls();
+    });
+  }
+  
+  // Keep controls visible if video is paused
+  vidEl.addEventListener('pause', showPlayerControls);
+  vidEl.addEventListener('play', showPlayerControls);
+}
 
