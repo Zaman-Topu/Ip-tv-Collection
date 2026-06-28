@@ -650,7 +650,13 @@ function applyFilters() {
   const q = fSearch.toLowerCase();
   filtered = allCh.filter(ch => {
     if (q && !ch.name.toLowerCase().includes(q)) return false;
-    if (fCat !== 'all' && ch.subcat !== fCat) return false;
+    
+    if (fCat === '⭐ Favorites') {
+      if (!favorites.includes(ch._u)) return false;
+    } else if (fCat !== 'all' && ch.subcat !== fCat) {
+      return false;
+    }
+    
     if (fCountry !== 'all' && ch.country !== fCountry) return false;
     return true;
   });
@@ -693,9 +699,12 @@ function makeCard(ch) {
   if      (st==='active')   badge = '<span class="badge b-live">Live</span>';
   else if (st==='isp_bdix') badge = '<span class="badge b-bdix">BDIX</span>';
   else if (st==='blocked')  badge = '<span class="badge b-geo">Geo</span>';
+  
+  const isFav = favorites.includes(ch._u);
 
   card.innerHTML = `
     ${badge}
+    <button class="fav-btn ${isFav ? 'active' : ''}" onclick="toggleFavorite(event, '${ch._u}', this)" aria-label="Favorite" title="Add to Favorites">${isFav ? '★' : '☆'}</button>
     <div class="c-img"><img src="${logoSrc(ch.logo, ch.name)}" alt="${ch.name}" loading="lazy" onerror="this.onerror=null; if(window.failedLogos) window.failedLogos.add('${ch.logo.replace(/'/g, "\\'")}'); this.src=getFallback('${ch.name.replace(/'/g, "\\'")}')"></div>
     <div class="c-info">
       <div class="c-name">${ch.name}</div>

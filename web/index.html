@@ -506,6 +506,22 @@
     }
     .card:active { transform: scale(0.96); }
 
+    .fav-btn {
+      position: absolute;
+      top: 8px; right: 8px;
+      width: 30px; height: 30px;
+      background: rgba(0,0,0,0.4);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      color: rgba(255,255,255,0.4);
+      font-size: 16px;
+      z-index: 10;
+      transition: all 0.2s;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+    .fav-btn:hover, .fav-btn:focus { background: rgba(0,0,0,0.8); color: white; transform: scale(1.1); outline: none; }
+    .fav-btn.active { color: #ffeb3b; text-shadow: 0 0 10px rgba(255,235,59,0.5); border-color: rgba(255,235,59,0.3); }
+
     .c-img{
       flex:1;display:flex;align-items:center;justify-content:center;
       padding:12px;overflow:hidden;background:rgba(0,0,0,0.3);
