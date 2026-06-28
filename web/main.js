@@ -54,7 +54,7 @@ let allCh     = [];   // channels with encoded URLs
 let filtered  = [];
 let statusMap = {};
 let page      = 1;
-const PER     = 30; // Optimized page size for lower DOM weight on 1GB RAM devices
+const PER     = 24; // Optimized page size for lower DOM weight on 1GB RAM devices
 let activeCh  = null;
 let hlsInst   = null;
 let srchTimer = null;
@@ -62,6 +62,24 @@ let dbKey     = 'active';
 const countryCache = {}; // Cache country detections
 let uniqueCats = [];
 let uniqueCountries = [];
+let favorites = JSON.parse(localStorage.getItem('iptv_favs') || '[]');
+
+function toggleFavorite(e, chId, btn) {
+  e.stopPropagation();
+  const idx = favorites.indexOf(chId);
+  if (idx > -1) {
+    favorites.splice(idx, 1);
+    btn.classList.remove('active');
+    btn.textContent = '☆';
+  } else {
+    favorites.push(chId);
+    btn.classList.add('active');
+    btn.textContent = '★';
+  }
+  localStorage.setItem('iptv_favs', JSON.stringify(favorites));
+  if (fCat === '⭐ Favorites') applyFilters();
+}
+window.toggleFavorite = toggleFavorite;
 
 let fSearch  = '';
 let fCat     = 'all';
@@ -1218,3 +1236,73 @@ if (vidEl) {
   vidEl.addEventListener('play', showPlayerControls);
 }
 
+// ══════════════════════════════════════════
+//  TV REMOTE D-PAD NAVIGATION
+//  Allows navigating with arrow keys on Android TV / Smart TV remotes
+// ══════════════════════════════════════════
+document.addEventListener('keydown', (e) => {
+  const cards = Array.from(document.querySelectorAll('#grid .card'));
+  if (!cards.length) return;
+  
+  const focused = document.activeElement;
+  const idx = cards.indexOf(focused);
+
+  // If user is typing in search, don't intercept arrows
+  if (focused && focused.id === 'srch') return;
+  
+  // Get number of columns in the grid
+  const gridEl = document.getElementById('grid');
+  const cols = (gridEl && cards.length > 0)
+    ? Math.round(gridEl.offsetWidth / (cards[0].offsetWidth || 1))
+    : 4;
+  
+  let next = -1;
+  
+  if (e.key === 'ArrowRight') {
+    next = idx === -1 ? 0 : idx + 1;
+  } else if (e.key === 'ArrowLeft') {
+    next = idx - 1;
+  } else if (e.key === 'ArrowDown') {
+    if (idx === -1) { next = 0; }
+    else {
+      next = idx + cols;
+      // If past last card, go to next page
+      if (next >= cards.length) {
+        const nextBtn = document.querySelector('#pages .pgb:last-child:not(:disabled)');
+        if (nextBtn) {
+          e.preventDefault();
+          nextBtn.click();
+          setTimeout(() => {
+            const c = document.querySelectorAll('#grid .card');
+            if (c[0]) c[0].focus();
+          }, 80);
+        }
+        return;
+      }
+    }
+  } else if (e.key === 'ArrowUp') {
+    if (idx === -1) { next = 0; }
+    else if (idx - cols < 0) {
+      // Go back up to search bar
+      e.preventDefault();
+      document.getElementById('srch')?.focus();
+      return;
+    } else {
+      next = idx - cols;
+    }
+  } else if (e.key === 'Backspace' || e.key === 'GoBack') {
+    // TV back button — close player
+    const playerWrap = document.getElementById('player-wrap');
+    if (playerWrap && playerWrap.classList.contains('show')) {
+      e.preventDefault();
+      document.getElementById('p-close')?.click();
+    }
+    return;
+  }
+  
+  if (next >= 0 && next < cards.length) {
+    e.preventDefault();
+    cards[next].focus();
+    cards[next].scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  }
+});
