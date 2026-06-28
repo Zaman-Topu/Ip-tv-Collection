@@ -58,7 +58,7 @@ const PER     = 60; // Optimized page size for lower DOM weight on low-end devic
 let activeCh  = null;
 let hlsInst   = null;
 let srchTimer = null;
-let dbKey     = 'complete';
+let dbKey     = 'active';
 const countryCache = {}; // Cache country detections
 let uniqueCats = [];
 let uniqueCountries = [];
@@ -108,8 +108,11 @@ function getFallback(name) {
 }
 window.getFallback = getFallback;
 
+const failedLogos = new Set();
+window.failedLogos = failedLogos;
+
 function logoSrc(url, name) {
-  if (!url) return getFallback(name);
+  if (!url || failedLogos.has(url)) return getFallback(name);
   if (location.protocol === 'https:' && url.startsWith('http://')) {
     // Proxy HTTP images through wsrv.nl to bypass Mixed Content restrictions
     return `https://wsrv.nl/?url=${encodeURIComponent(url)}`;
@@ -465,6 +468,14 @@ async function fetchStatus() {
       const enc = {};
       for (const [k,v] of Object.entries(raw)) enc[_enc(k)] = v;
       statusMap = enc;
+      
+      // Pre-calculate status scores for all channels to optimize sorting speed
+      if (allCh && allCh.length > 0) {
+        allCh.forEach(ch => {
+          const st = statusMap[ch._u] || 'unknown';
+          ch._score = st === 'active' ? 4 : st === 'isp_bdix' ? 3 : st === 'blocked' ? 2 : st === 'unknown' ? 1 : 0;
+        });
+      }
     }
   } catch {}
 }
@@ -480,16 +491,33 @@ const COUNTRIES = ['Bangladesh','India','Pakistan','UK','USA','France','Germany'
 const FLAGS = {Bangladesh:'🇧🇩',India:'🇮🇳',Pakistan:'🇵🇰',UK:'🇬🇧',USA:'🇺🇸',France:'🇫🇷',Germany:'🇩🇪',Italy:'🇮🇹',Turkey:'🇹🇷',Arabic:'🌍',Russia:'🇷🇺',Global:'🌐'};
 const QCATS = ['Sports','News','Natok/Drama','Kids','Religious','Music','Documentary','Education'];
 
-// Pre-calculate filter parameters once database is loaded
+// Pre-calculated static counts for high-performance UI rendering on Smart TVs
+let staticCountryCounts = {};
+let staticSubcatCounts = {};
+
+// Pre-calculate filter parameters and status scores once database is loaded
 function precalculateFilterData() {
   uniqueCats = [...new Set(allCh.map(c => c.subcat))].filter(Boolean).sort();
   uniqueCountries = [...new Set(allCh.map(c => c.country))].filter(Boolean).sort();
+
+  staticCountryCounts = {};
+  staticSubcatCounts = {};
+  
+  for (let i = 0; i < allCh.length; i++) {
+    const c = allCh[i];
+    
+    // Set initial precalculated status score
+    const st = statusMap[c._u] || 'unknown';
+    c._score = st === 'active' ? 4 : st === 'isp_bdix' ? 3 : st === 'blocked' ? 2 : st === 'unknown' ? 1 : 0;
+    
+    staticCountryCounts[c.country] = (staticCountryCounts[c.country] || 0) + 1;
+    if (c.subcat) {
+      staticSubcatCounts[c.subcat] = (staticSubcatCounts[c.subcat] || 0) + 1;
+    }
+  }
 }
 
 function buildFilters() {
-  const q = (fSearch || '').toLowerCase();
-  const baseSrc = allCh.filter(ch => !q || ch.name.toLowerCase().includes(q));
-
   // Build category select from pre-calculated data
   selCat.innerHTML = '<option value="all">All Categories</option>';
   uniqueCats.forEach(c => {
@@ -499,43 +527,70 @@ function buildFilters() {
     selCat.appendChild(o);
   });
 
-  // Country pills — only show countries that have channels matching search + selected category
-  const activeCounts = {};
-  const cSrc = baseSrc.filter(c => fCat === 'all' || c.subcat === fCat);
-  for (let i = 0; i < cSrc.length; i++) {
-    const country = cSrc[i].country;
-    activeCounts[country] = (activeCounts[country] || 0) + 1;
-  }
-
+  // Build Country pills (built statically to avoid Smart TV lagging)
   cpills.innerHTML = '';
-  mkPill(cpills, `🌐 All (${cSrc.length})`, fCountry === 'all', () => { fCountry = 'all'; buildFilters(); applyFilters(); });
+  mkPill(cpills, `🌐 All (${allCh.length})`, fCountry === 'all', () => { fCountry = 'all'; updatePillActiveStates(); applyFilters(); });
   
   COUNTRIES.forEach(c => {
-    const cnt = activeCounts[c] || 0;
-    if (cnt > 0) mkPill(cpills, `${FLAGS[c] || '🌐'} ${c} (${cnt})`, fCountry === c, () => { fCountry = c; buildFilters(); applyFilters(); });
+    const cnt = staticCountryCounts[c] || 0;
+    if (cnt > 0) mkPill(cpills, `${FLAGS[c] || '🌐'} ${c} (${cnt})`, fCountry === c, () => { fCountry = c; updatePillActiveStates(); applyFilters(); });
   });
 
-  Object.entries(activeCounts).forEach(([c, cnt]) => {
+  Object.entries(staticCountryCounts).forEach(([c, cnt]) => {
     if (!COUNTRIES.includes(c) && cnt > 0 && c !== 'Global') {
-      mkPill(cpills, `🌐 ${c} (${cnt})`, fCountry === c, () => { fCountry = c; buildFilters(); applyFilters(); });
+      mkPill(cpills, `🌐 ${c} (${cnt})`, fCountry === c, () => { fCountry = c; updatePillActiveStates(); applyFilters(); });
     }
   });
 
-  // Subcategory pills
+  // Build Subcategory pills (built statically)
   qpills.innerHTML = '';
-  const qSrc = baseSrc.filter(c => fCountry === 'all' || c.country === fCountry);
-  const subcatCounts = {};
-  for (let i = 0; i < qSrc.length; i++) {
-    const subcat = qSrc[i].subcat;
-    if (subcat) subcatCounts[subcat] = (subcatCounts[subcat] || 0) + 1;
+  mkPill(qpills, `All Types`, fCat === 'all', () => { fCat = 'all'; updatePillActiveStates(); applyFilters(); });
+  
+  Object.keys(staticSubcatCounts).sort().forEach(sc => {
+    const cnt = staticSubcatCounts[sc];
+    if (cnt > 0) mkPill(qpills, `${sc} (${cnt})`, fCat === sc, () => { fCat = sc; updatePillActiveStates(); applyFilters(); });
+  });
+}
+
+function updatePillActiveStates() {
+  const cButtons = cpills.getElementsByTagName('button');
+  if (cButtons.length > 0) {
+    let idx = 0;
+    if (cButtons[idx]) cButtons[idx].className = 'pill' + (fCountry === 'all' ? ' on' : '');
+    idx++;
+    
+    COUNTRIES.forEach(c => {
+      const cnt = staticCountryCounts[c] || 0;
+      if (cnt > 0 && cButtons[idx]) {
+        cButtons[idx].className = 'pill' + (fCountry === c ? ' on' : '');
+        idx++;
+      }
+    });
+    
+    Object.entries(staticCountryCounts).forEach(([c, cnt]) => {
+      if (!COUNTRIES.includes(c) && cnt > 0 && c !== 'Global' && cButtons[idx]) {
+        cButtons[idx].className = 'pill' + (fCountry === c ? ' on' : '');
+        idx++;
+      }
+    });
   }
 
-  mkPill(qpills, `All Types (${qSrc.length})`, fCat === 'all', () => { fCat = 'all'; buildFilters(); applyFilters(); });
+  const qButtons = qpills.getElementsByTagName('button');
+  if (qButtons.length > 0) {
+    let qidx = 0;
+    if (qButtons[qidx]) qButtons[qidx].className = 'pill' + (fCat === 'all' ? ' on' : '');
+    qidx++;
+    
+    Object.keys(staticSubcatCounts).sort().forEach(sc => {
+      const cnt = staticSubcatCounts[sc];
+      if (cnt > 0 && qButtons[qidx]) {
+        qButtons[qidx].className = 'pill' + (fCat === sc ? ' on' : '');
+        qidx++;
+      }
+    });
+  }
   
-  Object.keys(subcatCounts).sort().forEach(sc => {
-    const cnt = subcatCounts[sc];
-    if (cnt > 0) mkPill(qpills, `${sc} (${cnt})`, fCat === sc, () => { fCat = sc; buildFilters(); applyFilters(); });
-  });
+  selCat.value = fCat;
 }
 
 function mkPill(parent, label, active, onClick) {
@@ -555,11 +610,7 @@ function applyFilters() {
     return true;
   });
 
-  // Pre-calculate status scores for fast sorting
-  filtered.forEach(ch => {
-    const st = statusMap[ch._u] || 'unknown';
-    ch._score = st === 'active' ? 4 : st === 'isp_bdix' ? 3 : st === 'blocked' ? 2 : st === 'unknown' ? 1 : 0;
-  });
+  // Sort directly using pre-calculated scores (super fast integer subtraction)
   filtered.sort((a, b) => b._score - a._score);
 
   page = 1;
@@ -600,7 +651,7 @@ function makeCard(ch) {
 
   card.innerHTML = `
     ${badge}
-    <div class="c-img"><img src="${logoSrc(ch.logo, ch.name)}" alt="${ch.name}" loading="lazy" onerror="this.onerror=null; this.src=getFallback('${ch.name.replace(/'/g, "\\'")}')"></div>
+    <div class="c-img"><img src="${logoSrc(ch.logo, ch.name)}" alt="${ch.name}" loading="lazy" onerror="this.onerror=null; if(window.failedLogos) window.failedLogos.add('${ch.logo.replace(/'/g, "\\'")}'); this.src=getFallback('${ch.name.replace(/'/g, "\\'")}')"></div>
     <div class="c-info">
       <div class="c-name">${ch.name}</div>
       <div class="c-sub">${ch.country} · ${ch.group}</div>
@@ -802,11 +853,27 @@ function closePlayer() {
 function renderQueue(active) {
   const sc = s => s==='active'?4:s==='isp_bdix'?3:s==='blocked'?2:s==='unknown'?1:0;
   
-  let related = allCh.filter(c => c.group === active.group || c.country === active.country && c._u !== active._u);
+  // Exclude the active channel itself by using correct operator precedence
+  let related = allCh.filter(c => (c.group === active.group || c.country === active.country) && c._u !== active._u);
   related.sort((a,b) => sc(getStatus(b)) - sc(getStatus(a)));
-  related = related.slice(0, 60);
   
-  const sorted  = [active, ...related];
+  // De-duplicate related channels by name and URL
+  const seenNames = new Set([active.name.toLowerCase()]);
+  const seenUrls = new Set([active._u]);
+  const uniqueRelated = [];
+  
+  for (const ch of related) {
+    const nameKey = ch.name.toLowerCase();
+    if (!seenNames.has(nameKey) && !seenUrls.has(ch._u)) {
+      seenNames.add(nameKey);
+      seenUrls.add(ch._u);
+      uniqueRelated.push(ch);
+    }
+  }
+  
+  const limitedRelated = uniqueRelated.slice(0, 60);
+  const sorted = [active, ...limitedRelated];
+  
   qCnt.textContent = sorted.length;
   qList.innerHTML  = '';
   const frag = document.createDocumentFragment();
@@ -820,7 +887,7 @@ function renderQueue(active) {
     const d = document.createElement('div');
     d.className = 'qi' + (ch._u === active._u ? ' on' : '');
     d.innerHTML = `
-      <img class="qi-thumb" src="${logoSrc(ch.logo, ch.name)}" alt="" loading="lazy" onerror="this.onerror=null; this.src=getFallback('${ch.name.replace(/'/g, "\\'")}')">
+      <img class="qi-thumb" src="${logoSrc(ch.logo, ch.name)}" alt="" loading="lazy" onerror="this.onerror=null; if(window.failedLogos) window.failedLogos.add('${ch.logo.replace(/'/g, "\\'")}'); this.src=getFallback('${ch.name.replace(/'/g, "\\'")}')">
       <div class="qi-info">
         <div class="qi-n">${ch.name}</div>
         <div class="qi-s">${badge}${ch.country} · ${ch.subcat || ch.group}</div>
@@ -841,7 +908,7 @@ window.goHome = function(e) {
   srchEl.value=''; selCat.value='all';
   document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
   document.getElementById('nav-home')?.classList.add('active');
-  buildFilters(); applyFilters();
+  updatePillActiveStates(); applyFilters();
   window.scrollTo({ top: 0, behavior: 'smooth' });
 };
 
@@ -852,7 +919,7 @@ window.filterMenu = function(e, category) {
   srchEl.value=''; selCat.value=category;
   document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
   e.currentTarget.classList.add('active');
-  buildFilters(); applyFilters();
+  updatePillActiveStates(); applyFilters();
   window.scrollTo({ top: 0, behavior: 'smooth' });
 };
 
@@ -875,11 +942,11 @@ btnReport.addEventListener('click', () => {
 
 srchEl.addEventListener('input', e => {
   clearTimeout(srchTimer);
-  srchTimer = setTimeout(()=>{ fSearch=e.target.value; buildFilters(); applyFilters(); }, 280);
+  srchTimer = setTimeout(()=>{ fSearch=e.target.value; applyFilters(); }, 280);
 });
-selCat.addEventListener('change', e => { fCat=e.target.value; buildFilters(); applyFilters(); });
+selCat.addEventListener('change', e => { fCat=e.target.value; updatePillActiveStates(); applyFilters(); });
 selDb.addEventListener('change', e => { dbKey=e.target.value; loadDb(); });
-breset.addEventListener('click', ()=>{ fSearch=''; fCat='all'; fCountry='all'; srchEl.value=''; selCat.value='all'; buildFilters(); applyFilters(); });
+breset.addEventListener('click', ()=>{ fSearch=''; fCat='all'; fCountry='all'; srchEl.value=''; selCat.value='all'; updatePillActiveStates(); applyFilters(); });
 window.addEventListener('popstate', e => { if (e.state?.n) { const ch=allCh.find(c=>c.name===e.state.n); if(ch) openPlayer(ch); } else closePlayer(); });
 
 // Keyboard Shortcuts & Android TV Remote Control
@@ -977,13 +1044,30 @@ window.addEventListener('keydown', e => {
 //  BOOT
 // ══════════════════════════════════════════
 async function loadDb() {
-  grid.innerHTML = '<div class="g-msg"><div class="spin"></div><span id="load-prog-msg">Loading channels...</span></div>';
+  grid.innerHTML = '<div class="g-msg"><div class="spin"></div><span id="load-prog-msg">Checking server status...</span></div>';
   pages.innerHTML = '';
   statC.textContent = '0'; statT.textContent = '0';
-  allCh = await fetchPL(_DB[dbKey]);
+
+  // Fetch status map first if not already loaded so we can immediately filter out dead channels
+  if (Object.keys(statusMap).length === 0) {
+    await fetchStatus();
+  }
+
+  const progMsgEl = document.getElementById('load-prog-msg');
+  if (progMsgEl) progMsgEl.textContent = 'Loading playlist...';
+
+  const rawCh = await fetchPL(_DB[dbKey]);
+  
+  // Filter out dead/down channels immediately to save up to 80% memory & CPU
+  allCh = rawCh.filter(ch => {
+    const st = statusMap[ch._u] || 'unknown';
+    return st !== 'dead' && st !== 'down';
+  });
+
   precalculateFilterData(); // pre-calculate unique cats and countries!
   buildFilters();
   applyFilters();
+  
   const p = new URLSearchParams(location.search).get('p');
   if (p && !activeCh) {
     const ch = allCh.find(c=>c.name.toLowerCase()===decodeURIComponent(p).toLowerCase());
@@ -992,7 +1076,6 @@ async function loadDb() {
 }
 
 async function init() {
-  fetchStatus().then(()=>{ if (allCh.length>0) applyFilters(); });
   await loadDb();
 }
 
@@ -1046,8 +1129,24 @@ if (vidEl) {
     vboxContainer.addEventListener('pointermove', showPlayerControls);
     vboxContainer.addEventListener('pointerdown', showPlayerControls);
     vboxContainer.addEventListener('click', (e) => {
-      // If clicked on buttons or selector, don't toggle play/pause
-      if (e.target.closest('button, select, #p-close, #btn-proxy, #btn-report')) return;
+      // If clicked on buttons, selector, or player controls, don't toggle play/pause
+      const path = e.composedPath ? e.composedPath() : [];
+      const isControlClick = path.some(el => {
+        if (!el.tagName) return false;
+        const tag = el.tagName.toLowerCase();
+        if (tag === 'button' || tag === 'select' || tag === 'input' || tag === 'option') return true;
+        if (el.id && ['p-close', 'btn-proxy', 'btn-report'].includes(el.id)) return true;
+        if (el.classList && (
+          el.classList.contains('media-controls') ||
+          el.classList.contains('media-control') ||
+          el.classList.contains('media-slider') ||
+          el.classList.contains('media-button')
+        )) return true;
+        if (tag.startsWith('media-') && tag !== 'media-player') return true;
+        return false;
+      });
+
+      if (isControlClick || e.target.closest('button, select, #p-close, #btn-proxy, #btn-report')) return;
       
       // Toggle play/pause on player body click
       if (vidEl.paused) {

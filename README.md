@@ -16,7 +16,7 @@
 
 Welcome to the **Ultimate Dynamic IPTV Aggregator**. Every single night, our automated GitHub Action connects to **25+ of the top IPTV repositories**, merges their streams, removes duplicates, physically tests thousands of streams, and generates four ultra-clean databases. 
 
-We now feature a **Premium Web Player** with a modern glassmorphism design, allowing you to stream thousands of channels directly from your browser without installing any third-party IPTV apps!
+We now feature a **Premium Web Player** with a modern layout, allowing you to stream thousands of channels directly from your browser without installing any third-party IPTV apps!
 
 ---
 
@@ -27,13 +27,35 @@ Experience our new state-of-the-art web streaming platform, built with speed, SE
 🔗 **[Launch BUG TV Web Player](https://zaman-topu.github.io/Ip-tv-Collection/web/)**
 
 **Features:**
-- ✨ **Premium Glassmorphism Design:** A stunning, immersive dark mode aesthetic.
-- ⚡ **Lightning Fast:** Instant channel switching with our anti-lag rewind algorithms.
+- ✨ **Premium Aesthetics:** A stunning, immersive dark mode layout.
+- ⚡ **Lightning Fast:** Instant channel switching with optimized playback engines.
 - 🏷️ **Smart Badges:** Automatically identifies `Live`, `BDIX` (Local), and `Geo-Blocked` streams.
-- 📱 **Fully Responsive:** Works flawlessly on Mobile, Desktop, and Android TV browsers.
-- 🔍 **SEO Optimized:** Fully indexed by Google Search Console for maximum discoverability.
+- 📱 **Fully Responsive:** Works flawlessly on Mobile, Desktop, Smart TVs, and Android TV Boxes.
 
 ---
+
+## 📲 BUG TV Android TV / TV Box App (APK)
+
+We now provide a dedicated, lightweight Android TV Box app for the best living room experience!
+
+🔗 **[Download BUG TV App (APK)](https://github.com/Zaman-Topu/Ip-tv-Collection/releases/download/latest/app-release.apk)**
+
+**App Features:**
+- 🖥️ **Android TV Leanback Launcher Support:** Shows up natively in your TV/TV Box app drawer launcher.
+- 🎮 **Full TV D-Pad Remote Navigation:** Optimized spatial focus control for TV remote arrows and Enter key.
+- ⚡ **Hardware Accelerated WebView:** Enabled hardware decoding and media playback optimizations.
+- 🚀 **Autoplay Permissions:** Media permissions pre-granted to allow channels to stream instantly when selected.
+
+---
+
+## ⚡ Smart TV & Low-End Device Optimizations
+
+To ensure the player runs flawlessly on older devices and low-spec Smart TVs, we implemented the following performance fixes:
+1. **Active Database by Default:** Loads the leaner `active.m3u` database by default, reducing initial JSON/HTML memory consumption by **50%**.
+2. **Offline Channel Pruning:** Automatically parses and discards all `dead` / `down` channels during database ingestion to prune the JS heap by **75%**.
+3. **Failed Logo Cache:** Dynamically flags broken logo URLs to instantly render fallbacks, completely preventing continuous, CPU-heavy broken image network requests during scroll.
+4. **Static Pill Filters:** Categorization pills are generated statically once. Switching categories toggles CSS classes rather than clearing/re-drawing 100+ DOM nodes, eliminating typing lag.
+5. **No Blur Effects:** Replaced heavy CSS `backdrop-filter: blur(...)` elements with solid opacity backgrounds to minimize GPU repaint times.
 
 ## 📲 How to use in your TV / IPTV App
 

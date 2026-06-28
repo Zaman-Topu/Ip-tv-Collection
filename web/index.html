@@ -60,7 +60,7 @@
       min-height:100vh;
     }
     
-    /* Dynamic Background Orbs */
+    /* Dynamic Background Orbs (Static on old devices to prevent lag/constant repaints) */
     body::before, body::after {
       content: '';
       position: fixed;
@@ -70,7 +70,6 @@
       filter: blur(120px);
       z-index: -1;
       opacity: 0.15;
-      animation: float 20s infinite alternate;
     }
     body::before {
       background: #ff0055;
@@ -81,11 +80,6 @@
       background: #4a00e0;
       bottom: -100px;
       right: -200px;
-      animation-delay: -10s;
-    }
-    @keyframes float {
-      0% { transform: translate(0, 0) scale(1); }
-      100% { transform: translate(100px, 50px) scale(1.2); }
     }
 
     img{display:block}
@@ -96,14 +90,12 @@
     ::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:99px}
     ::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,0.2)}
 
-    /* ── Navbar ── */
+    /* ── Navbar (High-performance solid/semi-transparent background for older hardware) ── */
     #nav {
       position: fixed; top: 0; left: 0; right: 0; z-index: 300;
       display: flex; align-items: center; justify-content: space-between;
       padding: 0 24px; height: 70px;
-      background: rgba(10, 10, 12, 0.65);
-      backdrop-filter: blur(20px) saturate(180%);
-      -webkit-backdrop-filter: blur(20px) saturate(180%);
+      background: rgba(10, 10, 12, 0.95);
       border-bottom: 1px solid var(--glass-border);
       box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
     }
@@ -220,14 +212,13 @@
 
     #player-layout{
       display:flex;flex-direction:column;gap:0;
-      background: rgba(10, 10, 12, 0.8);
+      background: rgba(10, 10, 12, 0.95);
       border: 1px solid rgba(255,255,255,0.08);
       border-radius: 20px; overflow:hidden;
       box-shadow: 0 20px 50px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.02) inset;
-      backdrop-filter:blur(30px);-webkit-backdrop-filter:blur(30px);
     }
     @media(min-width:1024px){
-      #player-layout{flex-direction:row;align-items:stretch;gap:0}
+      #player-layout{display:block;position:relative;padding-right:360px;}
     }
 
     /* ── Left column: video + info ── */
@@ -360,7 +351,13 @@
       flex-direction: column;
     }
     @media(min-width:1024px){
-      #queue-col{width:360px;flex-shrink:0;max-height:auto;}
+      #queue-col{
+        position: absolute;
+        top: 0; right: 0; bottom: 0;
+        width: 360px;
+        max-height: none;
+        border-left: 1px solid rgba(255,255,255,0.05);
+      }
     }
     .q-head{
       padding:20px 24px;font-size:13px;font-weight:800;color:#fff;
@@ -376,6 +373,8 @@
     }
     #q-list{
       overflow-y:auto;flex:1;padding:12px;
+      scroll-behavior: smooth;
+      -webkit-overflow-scrolling: touch;
     }
     #q-list::-webkit-scrollbar { width:6px; }
     #q-list::-webkit-scrollbar-thumb { background:rgba(255,255,255,0.08); border-radius:10px; }
@@ -387,12 +386,14 @@
       border-radius:12px;
       cursor:pointer;transition:all .3s cubic-bezier(0.4, 0, 0.2, 1);
       border:1px solid transparent;
+      border-left: 4px solid transparent; /* matches the active state border-left width */
       background: rgba(255,255,255,0.02);
     }
     .qi:hover{
       background:rgba(255,255,255,0.06);
       border-color:rgba(255,255,255,0.08);
-      transform:translateX(4px);
+      transform:translateY(-2px); /* translate upwards instead of translateX to avoid clipping */
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
     }
     .qi.on{
       background:linear-gradient(90deg, rgba(255,0,85,0.15), rgba(255,0,85,0.05));
@@ -415,9 +416,7 @@
        FILTERS (Glassmorphism)
     ═══════════════════════════════════════════ */
     #filters{
-      background:var(--glass);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
+      background: rgba(20, 20, 25, 0.85);
       border:1px solid var(--glass-border);
       border-radius:16px;padding:16px;margin-bottom:20px;
       box-shadow: 0 10px 30px rgba(0,0,0,0.2);
@@ -481,9 +480,7 @@
     @media(min-width:1024px){#grid{grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:16px}}
 
     .card {
-      background: var(--glass);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
+      background: rgba(20, 20, 25, 0.95);
       border: 1px solid var(--glass-border);
       border-radius: 16px; overflow: hidden; cursor: pointer; 
       transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -816,9 +813,9 @@
         <input type="search" id="srch" placeholder="Search channel..." autocomplete="off" />
       </div>
       <select class="fsel" id="sel-db">
-        <option value="active">⚡ Active Only</option>
+        <option value="active" selected>⚡ Active Only</option>
         <option value="geo">🌍 Geo-Blocked</option>
-        <option value="complete" selected>📺 All TV Channels</option>
+        <option value="complete">📺 All TV Channels</option>
       </select>
       <select class="fsel" id="sel-cat"><option value="all">All Categories</option></select>
       <button id="breset">✕ Reset</button>
