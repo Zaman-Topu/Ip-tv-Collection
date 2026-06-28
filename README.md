@@ -9,7 +9,7 @@
   [![Channels](https://img.shields.io/badge/Channels-50k+-blue?style=for-the-badge&logo=tv)](#)
   [![Updated](https://img.shields.io/badge/Auto_Updated-Every_Night-brightgreen?style=for-the-badge&logo=githubactions)](#)
   [![Format](https://img.shields.io/badge/Format-M3U8-orange?style=for-the-badge)](#)
-  [![Web Player](https://img.shields.io/badge/Web_Player-Live_Now-ff0055?style=for-the-badge&logo=googlechrome)](https://zaman-topu.github.io/Ip-tv-Collection/web/)
+  [![Web Player](https://img.shields.io/badge/Web_Player-Live_Now-ff0055?style=for-the-badge&logo=googlechrome)](https://zaman-topu.is-a.dev/Ip-tv-Collection/)
 </div>
 
 <br>
@@ -24,7 +24,7 @@ We now feature a **Premium Web Player** with a modern layout, allowing you to st
 
 Experience our new state-of-the-art web streaming platform, built with speed, SEO, and premium aesthetics in mind. 
 
-🔗 **[Launch BUG TV Web Player](https://zaman-topu.github.io/Ip-tv-Collection/web/)**
+🔗 **[Launch BUG TV Web Player](https://zaman-topu.is-a.dev/Ip-tv-Collection/)**
 
 **Features:**
 - ✨ **Premium Aesthetics:** A stunning, immersive dark mode layout.
