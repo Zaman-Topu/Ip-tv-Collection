@@ -54,7 +54,7 @@ let allCh     = [];   // channels with encoded URLs
 let filtered  = [];
 let statusMap = {};
 let page      = 1;
-const PER     = 60; // Optimized page size for lower DOM weight on low-end devices
+const PER     = 30; // Optimized page size for lower DOM weight on 1GB RAM devices
 let activeCh  = null;
 let hlsInst   = null;
 let srchTimer = null;
@@ -368,22 +368,24 @@ function isPrivateIp(url) {
 }
 
 // ══════════════════════════════════════════
-//  M3U PARSER — stores URLs XOR-encoded asynchronously
+//  M3U PARSER — optimized to avoid .split('\n') which crashes 1GB RAM TVs
 // ══════════════════════════════════════════
 async function parseM3UAsync(text, onProgress) {
   const out = [];
-  const lines = text.split('\n');
   let cur = null;
-  const total = lines.length;
-  
-  // Parse in chunks to keep UI responsive
-  const chunkSize = 2000;
-  for (let i = 0; i < total; i += chunkSize) {
-    const end = Math.min(i + chunkSize, total);
-    for (let j = i; j < end; j++) {
-      const line = lines[j].trim();
-      if (!line) continue;
-      
+  const totalLength = text.length;
+  let pos = 0;
+  let linesProcessed = 0;
+
+  while (pos < totalLength) {
+    let nextPos = text.indexOf('\n', pos);
+    if (nextPos === -1) nextPos = totalLength;
+    
+    const line = text.substring(pos, nextPos).trim();
+    pos = nextPos + 1;
+    linesProcessed++;
+    
+    if (line) {
       if (line.startsWith('#EXTINF:')) {
         let logo = '';
         const logoIdx = line.indexOf('tvg-logo=');
@@ -433,10 +435,12 @@ async function parseM3UAsync(text, onProgress) {
       }
     }
     
-    if (onProgress) {
-      onProgress(Math.min(100, Math.round((end / total) * 100)));
+    if (linesProcessed % 2000 === 0) {
+      if (onProgress) {
+        onProgress(Math.min(100, Math.round((pos / totalLength) * 100)));
+      }
+      await new Promise(r => setTimeout(r, 0)); // Yield to main thread
     }
-    await new Promise(r => setTimeout(r, 0)); // Yield to main thread
   }
   return out;
 }
