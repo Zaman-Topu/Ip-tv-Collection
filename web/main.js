@@ -446,20 +446,61 @@ async function parseM3UAsync(text, onProgress) {
 }
 
 // ══════════════════════════════════════════
-//  FETCH
+//  FETCH & CACHE
 // ══════════════════════════════════════════
 async function fetchPL(encUrl) {
   const url = _dec(encUrl);
+  const cacheKey = 'iptv_db_' + url;
+  
+  try {
+    const cached = localStorage.getItem(cacheKey);
+    if (cached) {
+      const parsed = JSON.parse(cached);
+      // Re-encode URLs with current session key
+      parsed.data.forEach(ch => {
+        ch._u = _enc(ch.raw_u);
+        delete ch.raw_u;
+      });
+      
+      // Kick off background update quietly
+      setTimeout(() => fetchPLBackground(url, cacheKey), 2000);
+      return parsed.data;
+    }
+  } catch(e) {}
+
+  return await fetchPLBackground(url, cacheKey, true);
+}
+
+async function fetchPLBackground(url, cacheKey, updateUI = false) {
   try {
     const ctrl = new AbortController();
     const t = setTimeout(() => ctrl.abort(), 12000);
-    const r = await fetch(url, { signal: ctrl.signal });
+    const r = await fetch(url + '?t=' + Date.now(), { signal: ctrl.signal });
     clearTimeout(t);
     const rawText = await r.text();
+    
     const progEl = document.getElementById('load-prog-msg');
-    return await parseM3UAsync(rawText, (pct) => {
-      if (progEl) progEl.textContent = `Parsing channels... ${pct}%`;
+    const parsedData = await parseM3UAsync(rawText, (pct) => {
+      if (updateUI && progEl) progEl.textContent = `Parsing channels... ${pct}%`;
     });
+    
+    // Save to cache (store decoded URLs so they can be re-encoded on next load)
+    try {
+      const toCache = parsedData.map(ch => ({
+        ...ch,
+        raw_u: _dec(ch._u)
+      }));
+      toCache.forEach(ch => delete ch._u); // Remove encoded URL before saving
+      localStorage.setItem(cacheKey, JSON.stringify({
+        ts: Date.now(),
+        data: toCache
+      }));
+    } catch(e) {
+      // localStorage quota exceeded, clear and retry
+      localStorage.clear();
+    }
+    
+    return parsedData;
   } catch { return []; }
 }
 
@@ -1052,16 +1093,17 @@ async function loadDb() {
   pages.innerHTML = '';
   statC.textContent = '0'; statT.textContent = '0';
 
-  // Fetch status map first if not already loaded so we can immediately filter out dead channels
+  const progMsgEl = document.getElementById('load-prog-msg');
+  if (progMsgEl) progMsgEl.textContent = 'Loading playlist...';
+
+  // Try to load cached playlist instantly
+  const rawCh = await fetchPL(_DB[dbKey]);
+  
+  // Fetch status map in background to not block initial render
   if (Object.keys(statusMap).length === 0) {
     await fetchStatus();
   }
 
-  const progMsgEl = document.getElementById('load-prog-msg');
-  if (progMsgEl) progMsgEl.textContent = 'Loading playlist...';
-
-  const rawCh = await fetchPL(_DB[dbKey]);
-  
   // Filter out dead/down channels immediately to save up to 80% memory & CPU
   allCh = rawCh.filter(ch => {
     const st = statusMap[ch._u] || 'unknown';
