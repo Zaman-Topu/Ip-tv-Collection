@@ -1,0 +1,66 @@
+name: Build and Release Android APK
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'bug_tv_app/**'
+      - '.github/workflows/build-apk.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build & Release APK
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: ☕ Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: 🦋 Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+      - name: 📦 Install Dependencies
+        working-directory: bug_tv_app
+        run: flutter pub get
+
+      - name: 🔨 Build APK
+        working-directory: bug_tv_app
+        run: flutter build apk --release
+
+      - name: 🏷️ Generate Release Tag
+        id: tag
+        run: echo "VERSION_TAG=v1.0.$(date +'%Y%m%d%H%M')" >> $GITHUB_ENV
+
+      - name: 🚀 Publish to GitHub Releases
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ env.VERSION_TAG }}
+          name: "📺 BUG TV Release ${{ env.VERSION_TAG }}"
+          body: |
+            ## BUG TV Professional Edition
+            Auto-generated production APK build.
+            
+            ### ✨ What's New:
+            - **Tivimate-style Caching:** Loads instantly with zero lag.
+            - **Extreme RAM Optimization:** Smooth scrolling and UI performance for low-end (1GB RAM) Smart TVs.
+            - **Fixed Icon:** Proper high-resolution app icon compiled.
+            
+            ### 📥 Installation:
+            Download the `app-release.apk` below and install it directly on your Android TV, FireStick, or Mobile device!
+          files: bug_tv_app/build/app/outputs/flutter-apk/app-release.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
