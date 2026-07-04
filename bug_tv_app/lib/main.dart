@@ -43,7 +43,7 @@ class _BugTvPlayerState extends State<BugTvPlayer> {
           },
         ),
       )
-      ..loadRequest(Uri.parse('https://zaman-topu.github.io/Ip-tv-Collection/web/'));
+      ..loadRequest(Uri.parse('https://zaman-topu.github.io/Ip-tv-Collection/'));
 
     // Android-specific WebView optimizations for media playback and TV hardware acceleration
     final platform = _controller.platform;
