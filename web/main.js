@@ -63,6 +63,7 @@ const countryCache = {}; // Cache country detections
 let uniqueCats = [];
 let uniqueCountries = [];
 let favorites = JSON.parse(localStorage.getItem('iptv_favs') || '[]');
+let currentStreamProxy = false; // tracks if current playback is using CORS proxy
 
 function toggleFavorite(e, chId, btn) {
   e.stopPropagation();
@@ -763,10 +764,14 @@ function scrollUp() {
 // ══════════════════════════════════════════
 //  PLAYER — URL decoded ONLY at play time
 // ══════════════════════════════════════════
-function openPlayer(ch) {
+function openPlayer(ch, viaProxy = false) {
+  currentStreamProxy = viaProxy;
   activeCh = ch;
   pWrap.classList.add('show');
   pErr.classList.remove('show');
+  // Hide audio-only warning on new channel
+  const aoWarn = document.getElementById('ao-warn');
+  if (aoWarn) aoWarn.style.display = 'none';
   pWrap.scrollIntoView({behavior:'smooth',block:'start'});
 
   // Logo
@@ -782,14 +787,22 @@ function openPlayer(ch) {
   history.pushState({n:ch.name}, ch.name, `?p=${encodeURIComponent(ch.name)}`);
 
   const rawUrl = _dec(ch._u);
-  playStream(rawUrl, ch);
+  playStream(rawUrl, ch, viaProxy);
 }
 
-function playStream(rawUrl, ch) {
+function playStream(rawUrl, ch, viaProxy = false) {
   pErr.classList.remove('show');
 
   const isPrivate = isPrivateIp(rawUrl);
-  const _tmp = rawUrl;
+
+  // Compute effective URL — route through CORS proxy if requested
+  let streamUrl = rawUrl;
+  if (viaProxy && !isPrivate) {
+    streamUrl = _dec(_PX) + encodeURIComponent(rawUrl);
+  }
+
+  // Cancel any pending audio-only detection timer
+  if (window._aoTimer) { clearTimeout(window._aoTimer); window._aoTimer = null; }
 
   function onErr(customMsg) {
     pErr.classList.add('show');
@@ -802,54 +815,86 @@ function playStream(rawUrl, ch) {
     } else {
       errTxt.textContent = 'Stream offline or geo-blocked. Try another channel.';
     }
-    
     // Dynamically update status and re-sort grid so dead/geo-blocked streams move to the bottom
     if (statusMap[ch._u] !== newStatus) {
       statusMap[ch._u] = newStatus;
-      applyFilters(); 
+      applyFilters();
     }
+  }
+
+  // Auto CORS fallback — silently retry via proxy on first CORS failure
+  function onCorsErr() {
+    if (!viaProxy && !isPrivate) {
+      // Silently retry with proxy — no error message shown to user yet
+      playStream(rawUrl, ch, true);
+    } else {
+      onErr('CORS Error ❌ Provider blocked direct browser access. Try a different channel.');
+    }
+  }
+
+  // Show audio-only warning banner
+  function showAudioOnlyWarn() {
+    const aoWarn = document.getElementById('ao-warn');
+    if (aoWarn) aoWarn.style.display = 'flex';
   }
 
   if (hlsInst) {
     hlsInst.destroy();
     hlsInst = null;
   }
-  
-  vidEl.onerror = onErr;
+
+  // Reset video element cleanly
+  vidEl.pause();
+  vidEl.removeAttribute('src');
+  vidEl.load();
+  vidEl.onerror = null;
 
   const qWrap = document.getElementById('quality-wrap');
   const qSel = document.getElementById('sel-quality');
   if (qWrap) qWrap.style.display = 'none';
 
-  const isHls = _tmp.includes('.m3u') || _tmp.includes('.m3u8');
+  // ── Stream type detection ──────────────────────────────────────────
+  // RTMP/RTSP cannot play in browsers at all
+  if (rawUrl.startsWith('rtmp') || rawUrl.startsWith('rtsp')) {
+    onErr('⚠️ RTMP/RTSP stream — not supported in browsers. Open this channel in VLC or similar.');
+    return;
+  }
 
-  if (isHls && window.Hls && Hls.isSupported()) {
+  // Known direct-play formats → use native <video> directly
+  // Everything else (including bare /live/user/pass/ URLs) → try HLS.js first
+  const urlPath = streamUrl.split('?')[0].toLowerCase();
+  const ext = urlPath.split('.').pop();
+  const nativeExts = new Set(['mp4', 'webm', 'ogg']);
+  const isNativeOnly = nativeExts.has(ext) && !urlPath.includes('.m3u');
+  const tryHls = !isNativeOnly && window.Hls && Hls.isSupported();
+
+  if (tryHls) {
+    // ── HLS.js path (handles .m3u8, .m3u, and bare IPTV URLs) ─────────
     hlsInst = new Hls({
-      maxBufferLength: 20, // Buffer up to 20 seconds only (plenty for live streams, saves RAM)
+      maxBufferLength: 20,        // 20s buffer (plenty for live, saves RAM)
       maxMaxBufferLength: 40,
-      maxBufferSize: 15 * 1000 * 1000, // Limit buffer size to 15MB RAM to prevent low-end crashes
+      maxBufferSize: 15 * 1000 * 1000, // 15MB cap prevents low-RAM crashes
       liveSyncDurationCount: 3,
       liveMaxLatencyDurationCount: 10,
-      enableWorker: true, // Offload processing to Web Worker for low-end CPUs
+      enableWorker: true,         // offload to Web Worker for low-end CPUs
       lowLatencyMode: false,
-      backBufferLength: 10 // Automatically discard watched segments to free memory
+      backBufferLength: 10,       // discard watched segments to free memory
     });
-    hlsInst.loadSource(_tmp);
+    hlsInst.loadSource(streamUrl);
     hlsInst.attachMedia(vidEl);
-    
+
     hlsInst.on(Hls.Events.MANIFEST_PARSED, (e, data) => {
+      // Populate quality selector
       if (qWrap && data.levels && data.levels.length > 0) {
         qWrap.style.display = 'flex';
         qSel.innerHTML = '<option value="-1">Auto Quality</option>';
         data.levels.forEach((lvl, i) => {
           const opt = document.createElement('option');
           opt.value = i;
-          opt.textContent = lvl.height ? `${lvl.height}p` : `Quality ${i+1}`;
+          opt.textContent = lvl.height ? `${lvl.height}p` : `Quality ${i + 1}`;
           qSel.appendChild(opt);
         });
-        qSel.onchange = () => {
-          hlsInst.currentLevel = parseInt(qSel.value, 10);
-        };
+        qSel.onchange = () => { hlsInst.currentLevel = parseInt(qSel.value, 10); };
       } else if (qWrap) {
         qWrap.style.display = 'flex';
         qSel.innerHTML = '<option value="-1">Default / Auto</option>';
@@ -857,19 +902,37 @@ function playStream(rawUrl, ch) {
       const playPromise = vidEl.play();
       if (playPromise !== undefined) { playPromise.catch(() => {}); }
     });
-    
+
+    // Audio-only detection: check after first segment arrives
+    hlsInst.on(Hls.Events.FRAG_LOADED, () => {
+      if (window._aoTimer) return; // already scheduled
+      window._aoTimer = setTimeout(() => {
+        if (vidEl.videoHeight === 0 && vidEl.readyState >= 2 && !vidEl.paused) {
+          showAudioOnlyWarn();
+        }
+      }, 2500);
+    });
+
     let networkRetryCount = 0;
     hlsInst.on(Hls.Events.ERROR, (e, data) => {
       if (data.fatal) {
         switch (data.type) {
-          case Hls.ErrorTypes.NETWORK_ERROR:
+          case Hls.ErrorTypes.NETWORK_ERROR: {
             const code = (data.response && data.response.code) ? data.response.code : 0;
             if (code === 403) {
               onErr('Access Denied (403) 🔒 Geo-blocked or Token Expired.');
             } else if (code === 404) {
               onErr('Not Found (404) 🚫 Stream link is dead.');
             } else if (data.details === 'manifestLoadError' && code === 0) {
-              onErr('CORS Error ❌ Provider blocked access from web browsers.');
+              // CORS error on manifest — auto-retry via proxy
+              onCorsErr();
+            } else if (data.details === 'manifestParsingError') {
+              // URL is not an HLS manifest — fall back to native <video>
+              if (hlsInst) { hlsInst.destroy(); hlsInst = null; }
+              vidEl.src = streamUrl;
+              vidEl.onerror = () => onCorsErr();
+              const p = vidEl.play();
+              if (p !== undefined) p.catch(() => {});
             } else if (networkRetryCount < 1) {
               networkRetryCount++;
               hlsInst.startLoad();
@@ -877,6 +940,7 @@ function playStream(rawUrl, ch) {
               onErr(`Network Error (${code || 'Unknown'}) 📡 Stream offline.`);
             }
             break;
+          }
           case Hls.ErrorTypes.MEDIA_ERROR:
             hlsInst.recoverMediaError();
             break;
@@ -886,10 +950,21 @@ function playStream(rawUrl, ch) {
         }
       }
     });
+
   } else {
-    vidEl.src = _tmp;
+    // ── Native <video> path (mp4, webm, etc.) ─────────────────────────
+    vidEl.src = streamUrl;
+    vidEl.onerror = () => onCorsErr();
     const playPromise = vidEl.play();
     if (playPromise !== undefined) { playPromise.catch(() => {}); }
+
+    // Audio-only detection for native streams
+    vidEl.addEventListener('canplay', function checkAO() {
+      vidEl.removeEventListener('canplay', checkAO);
+      window._aoTimer = setTimeout(() => {
+        if (vidEl.videoHeight === 0 && !vidEl.paused) showAudioOnlyWarn();
+      }, 2500);
+    });
   }
 
   // Anti-Lag Professional Rewind Feature
@@ -907,17 +982,27 @@ function playStream(rawUrl, ch) {
   };
   vidEl.onplaying = () => {
     clearTimeout(bufferTimer);
+    // If video height is now positive, hide the audio-only warning
+    if (vidEl.videoHeight > 0) {
+      const aoWarn = document.getElementById('ao-warn');
+      if (aoWarn) aoWarn.style.display = 'none';
+    }
   };
 }
 
 function closePlayer() {
   activeCh = null;
-  vidEl.pause(); 
-  vidEl.src = ''; 
+  vidEl.pause();
+  vidEl.removeAttribute('src');
+  vidEl.load();
   if (hlsInst) {
     hlsInst.destroy();
     hlsInst = null;
   }
+  // Clean up audio-only detection
+  if (window._aoTimer) { clearTimeout(window._aoTimer); window._aoTimer = null; }
+  const aoWarn = document.getElementById('ao-warn');
+  if (aoWarn) aoWarn.style.display = 'none';
   pWrap.classList.remove('show');
   history.pushState(null,'',location.pathname);
 }
@@ -1001,7 +1086,9 @@ window.filterMenu = function(e, category) {
 pClose.addEventListener('click', closePlayer);
 btnProxy.addEventListener('click', () => {
   if (activeCh) {
-    openPlayer(activeCh);
+    // Force retry via CORS proxy regardless of previous state
+    const rawUrl = _dec(activeCh._u);
+    playStream(rawUrl, activeCh, true);
   }
 });
 
