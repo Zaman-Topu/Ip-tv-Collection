@@ -1,50 +1,35 @@
+# 📺 BUG TV — Ultimate Dynamic IPTV Aggregator & Web Client
+
 <div align="center">
-  <img src="https://raw.githubusercontent.com/Zaman-Topu/Ip-tv-Collection/main/assets/banner.png" alt="Free IPTV Playlist 2026 - Ultimate M3U Links" width="100%">
+  <img src="https://raw.githubusercontent.com/Zaman-Topu/Ip-tv-Collection/main/assets/banner.png" alt="BUG TV banner" width="100%">
   
-  <br><br>
-  
-  <h1>📺 BUG TV - Ultimate Dynamic IPTV Aggregator</h1>
-  <p><b>The most advanced, auto-testing, deduplicating IPTV Aggregator engine & Web Player on GitHub.</b></p>
-  
-  [![Channels](https://img.shields.io/badge/Channels-50k+-blue?style=for-the-badge&logo=tv)](#)
-  [![Updated](https://img.shields.io/badge/Auto_Updated-Every_Night-brightgreen?style=for-the-badge&logo=githubactions)](#)
-  [![Format](https://img.shields.io/badge/Format-M3U8-orange?style=for-the-badge)](#)
-  [![Web Player](https://img.shields.io/badge/Web_Player-Live_Now-ff0055?style=for-the-badge&logo=googlechrome)](https://zaman-topu.is-a.dev/Ip-tv-Collection/)
+  <br>
+
+  [![Channels](https://img.shields.io/badge/Channels-50k+-e20914?style=for-the-badge&logo=tv)](#)
+  [![Auto Updated](https://img.shields.io/badge/Auto_Updated-Every_Night-10b981?style=for-the-badge&logo=githubactions)](#)
+  [![Web Player](https://img.shields.io/badge/Web_Player-Live_Now-ffffff?style=for-the-badge&logo=googlechrome)](https://zaman-topu.is-a.dev/Ip-tv-Collection/)
+  [![Android TV APK](https://img.shields.io/badge/Android_TV_App-Download-ff0055?style=for-the-badge&logo=android)](https://github.com/Zaman-Topu/Ip-tv-Collection/releases/download/latest/app-release.apk)
 </div>
 
-<br>
+Welcome to **BUG TV**, the ultimate dynamic IPTV aggregator and smart client player. Every single night, our automated GitHub Action connects to **25+ of the top IPTV repositories**, merges their streams, removes duplicates, physically tests thousands of streams, and generates four ultra-clean databases. 
 
-Welcome to the **Ultimate Dynamic IPTV Aggregator**. Every single night, our automated GitHub Action connects to **25+ of the top IPTV repositories**, merges their streams, removes duplicates, physically tests thousands of streams, and generates four ultra-clean databases. 
-
-We now feature a **Premium Web Player** with a modern layout, allowing you to stream thousands of channels directly from your browser without installing any third-party IPTV apps!
+We feature a **Premium Web Player** with a modern layout, allowing you to stream thousands of channels directly from your browser without installing any third-party IPTV apps!
 
 ---
 
-## 🚀 BUG TV Web Player (NEW)
-
-Experience our new state-of-the-art web streaming platform, built with speed, SEO, and premium aesthetics in mind. 
-
-🔗 **[Launch BUG TV Web Player](https://zaman-topu.is-a.dev/Ip-tv-Collection/)**
-
-**Features:**
-- ✨ **Premium Aesthetics:** A stunning, immersive dark mode layout.
-- ⚡ **Lightning Fast:** Instant channel switching with optimized playback engines.
-- 🏷️ **Smart Badges:** Automatically identifies `Live`, `BDIX` (Local), and `Geo-Blocked` streams.
-- 📱 **Fully Responsive:** Works flawlessly on Mobile, Desktop, Smart TVs, and Android TV Boxes.
+## 🔗 Live Application Links
+- **Web Player Client:** [https://zaman-topu.is-a.dev/Ip-tv-Collection/](https://zaman-topu.is-a.dev/Ip-tv-Collection/)
+- **TV/Android Box APK:** [Download app-release.apk](https://github.com/Zaman-Topu/Ip-tv-Collection/releases/download/latest/app-release.apk)
 
 ---
 
-## 📲 BUG TV Android TV / TV Box App (APK)
+## ✨ Features & Capabilities
 
-We now provide a dedicated, lightweight Android TV Box app for the best living room experience!
-
-🔗 **[Download BUG TV App (APK)](https://github.com/Zaman-Topu/Ip-tv-Collection/releases/download/latest/app-release.apk)**
-
-**App Features:**
-- 🖥️ **Android TV Leanback Launcher Support:** Shows up natively in your TV/TV Box app drawer launcher.
-- 🎮 **Full TV D-Pad Remote Navigation:** Optimized spatial focus control for TV remote arrows and Enter key.
-- ⚡ **Hardware Accelerated WebView:** Enabled hardware decoding and media playback optimizations.
-- 🚀 **Autoplay Permissions:** Media permissions pre-granted to allow channels to stream instantly when selected.
+- **🚀 Premium Netflix-Style UI:** Beautiful glassmorphic filters, widescreen spotlight banners, horizontal rows with custom cinematic right-edge fading masks, and dynamic channel logo treatments.
+- **🎮 Spatial TV Navigation:** Fully optimized for Smart TVs and Android TV Boxes. Easily navigate the entire interface using a TV Remote D-Pad (Arrow Keys + Enter).
+- **🏷️ Automated Ingest & Checking:** Daily bots crawl 25+ repos, check HTTP response codes, flag local BDIX links vs geo-restricted vs dead channels, and generate clean playlists.
+- **🛡️ Custom Channel Protection:** Skip automatic crawler overwrites. Any channels added to [custom_playlist.m3u](file:///G:/final%20iptv collection/Ip-tv-Collection/custom_playlist.m3u) are preserved and shielded from deduplication filters.
+- **📱 Responsive Layout:** Perfectly optimized for mobile phones (using floating capsule navigation bars), tablets, computers, and ultra-wide displays.
 
 ---
 
@@ -57,48 +42,40 @@ To ensure the player runs flawlessly on older devices and low-spec Smart TVs, we
 4. **Static Pill Filters:** Categorization pills are generated statically once. Switching categories toggles CSS classes rather than clearing/re-drawing 100+ DOM nodes, eliminating typing lag.
 5. **No Blur Effects:** Replaced heavy CSS `backdrop-filter: blur(...)` elements with solid opacity backgrounds to minimize GPU repaint times.
 
-## 📲 How to use in your TV / IPTV App
+---
 
-If you prefer using standalone apps like **TiviMate**, **IPTV Smarters Pro**, **Televizo**, or **VLC**, simply copy and paste one of our auto-updating playlist links below:
+## 📲 How to Use in Third-Party Apps
+If you prefer standalone media players (like **TiviMate**, **IPTV Smarters Pro**, **Televizo**, or **VLC**), use our auto-updating playlist URLs:
 
-### ⚡ 1. The Active Database (Recommended)
-This list ONLY contains 100% verified working streams and local BDIX links. It is lightweight and ultra-fast.
+### 🟢 1. Active Database (Recommended)
+Contains 100% verified working streams and local BDIX links. Lightweight and ultra-fast.
 ```http
 https://raw.githubusercontent.com/Zaman-Topu/Ip-tv-Collection/main/FINAL_IPTV_ACTIVE.m3u
 ```
 
-### 🌍 2. The Geo-Blocked Database
+### 🌍 2. Geo-Blocked Database
 Streams that are online but require a VPN to bypass regional restrictions.
 ```http
 https://raw.githubusercontent.com/Zaman-Topu/Ip-tv-Collection/main/FINAL_IPTV_GEO.m3u
 ```
 
-### 📚 3. The Complete Database
+### 📚 3. Complete Database
 The massive, deduplicated master list containing everything (including untested streams).
 ```http
 https://raw.githubusercontent.com/Zaman-Topu/Ip-tv-Collection/main/FINAL_IPTV_COMPLETE.m3u
 ```
 
 ### 📅 EPG (Electronic Program Guide)
-Our system automatically generates a customized, lightning-fast JSON EPG matched specifically to the Active Database!
+Automated JSON program guide matched specifically to our Active Database:
 ```http
 https://raw.githubusercontent.com/Zaman-Topu/Ip-tv-Collection/main/epg.json
 ```
 
 ---
 
-## 🛡️ Custom Channel Protection (NEW)
+## 📡 Live Ingestion Status
 
-Are you tired of bots overwriting your perfectly working local ISP/BDIX links?
-We've introduced the **`custom_playlist.m3u`** file. 
-
-If you add a working link to this file, our automated aggregator bot will **respect and protect** it. When the bot deduplicates the massive 50K+ list every night, it will skip over any channels you've explicitly added to `custom_playlist.m3u`, ensuring your favorite links NEVER die!
-
----
-
-## 📡 Live Auto-Aggregator Status
-
-*This repository uses a custom Python Aggregator Bot to pull from 25+ sources, merge, deduplicate, and ping the streams every single night!*
+*This repository runs automated Python status checkers to verify stream integrity every night.*
 
 <!-- STATS:START -->
 > **Last Checked:** 2026-07-17 02:32 PM (BST)
@@ -129,8 +106,6 @@ pie title IPTV Channel Status Breakdown
 
 ## 📊 M3U Category Breakdown
 
-We combined 25+ of the best IPTV sources on GitHub, ran a strict deduplication script, and intelligently categorized them into clean groups. No more messy lists!
-
 | Category | Channel Count | Description |
 | :--- | :---: | :--- |
 | 🇧🇩 **[BD] Bangladesh** | 1,694 | All local Bangladeshi channels (BTV, Somoy, Jamuna, NTV, BDIX Servers) |
@@ -147,7 +122,7 @@ We combined 25+ of the best IPTV sources on GitHub, ran a strict deduplication s
 
 ---
 
-<div align="center">
-  <p><b>Disclaimer:</b> We do not host, stream, or control any of the channels provided in this repository. All streams are publicly available links collected from the internet. We do not endorse or take responsibility for the content. If you own the rights to any content and wish for it to be removed, please contact the original hosting provider or open an issue for removal.</p>
-  <p>Developed with ❤️ by <a href="https://www.facebook.com/zamantopu.official/">Zaman Topu (BUG MOHOL)</a></p>
-</div>
+## 🛡️ Legal Disclaimer
+We do not host, stream, or control any of the channels provided in this repository. All streams are publicly available links collected from the internet. We do not endorse or take responsibility for the content. If you own the rights to any content and wish for it to be removed, please contact the original hosting provider or open an issue for removal.
+
+Developed with ❤️ by [Zaman Topu (BUG MOHOL)](https://www.facebook.com/zamantopu.official/)

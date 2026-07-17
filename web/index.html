@@ -613,43 +613,96 @@
     .pgb:disabled { opacity: .2; cursor: default; }
     .pgi { font-size: 13px; font-weight: 700; color: var(--muted); background: rgba(0, 0, 0, 0.3); border: 1px solid rgba(255, 255, 255, 0.03); padding: 10px 20px; border-radius: 99px; }
 
-    /* ── FOOTER & DISCLAIMER ── */
+    /* ── FOOTER & DISCLAIMER (Multi-Column Premium) ── */
     #footer {
-      margin-top: 100px; padding: 80px 20px 40px;
-      background: linear-gradient(to top, #000 0%, transparent 100%);
-      border-top: 1px solid rgba(255, 255, 255, 0.02); text-align: center;
+      margin-top: 100px;
+      padding: 80px 40px 60px;
+      background: linear-gradient(to top, #060608 0%, #0c0b10 100%);
+      border-top: 1px solid rgba(255, 255, 255, 0.03);
+      color: #94a3b8;
     }
-    .f-inner { max-width: 960px; margin: 0 auto; display: flex; flex-direction: column; gap: 36px; }
-    .f-logo {
-      font-size: 26px; font-family: var(--font-title); font-weight: 900; letter-spacing: 2px;
-      background: linear-gradient(to right, #fff, var(--muted));
-      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    .f-grid {
+      max-width: 1640px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1.2fr 1fr 1.5fr;
+      gap: 60px;
     }
-    .f-socials { display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; }
+    .f-col {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      text-align: left;
+    }
+    .f-brand-logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .f-brand-logo img {
+      height: 32px;
+      object-fit: contain;
+    }
+    .f-brand-desc {
+      font-size: 13px;
+      line-height: 1.6;
+      color: rgba(148, 163, 184, 0.65);
+    }
+    .f-col-title {
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: #fff;
+      margin-bottom: 5px;
+    }
+    .f-socials-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
     .soc-btn {
-      display: flex; align-items: center; gap: 8px; padding: 10px 22px; border-radius: 30px;
-      background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border);
-      color: #e2e8f0; font-size: 13px; font-weight: 700; transition: all 0.3s;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 20px;
+      border-radius: 99px;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      color: rgba(255, 255, 255, 0.7);
+      font-size: 13px;
+      font-weight: 600;
+      transition: all 0.25s ease;
+      width: fit-content;
     }
-    .soc-btn svg { width: 16px; height: 16px; }
-    .soc-btn:hover { background: rgba(255, 255, 255, 0.06); transform: translateY(-2px); color: #fff; }
+    .soc-btn svg { width: 14px; height: 14px; }
+    .soc-btn:hover {
+      transform: translateY(-2px);
+      color: #fff;
+    }
     
     .soc-tg:hover { background: rgba(0, 136, 204, 0.1); border-color: #0088cc; color: #0088cc; box-shadow: 0 4px 15px rgba(0, 136, 204, 0.15); }
     .soc-fb:hover { background: rgba(24, 119, 242, 0.1); border-color: #1877f2; color: #1877f2; box-shadow: 0 4px 15px rgba(24, 119, 242, 0.15); }
     .soc-ig:hover { background: rgba(225, 48, 108, 0.1); border-color: #e1306c; color: #e1306c; box-shadow: 0 4px 15px rgba(225, 48, 108, 0.15); }
     .soc-web:hover { background: rgba(229, 9, 20, 0.1); border-color: var(--red); color: var(--red); box-shadow: 0 4px 15px var(--neon-red); }
+    .soc-gh:hover { background: rgba(255, 255, 255, 0.05); border-color: #fff; color: #fff; box-shadow: 0 4px 15px rgba(255, 255, 255, 0.15); }
     
-    .f-dev { font-size: 14px; color: var(--muted); }
+    .f-dev { font-size: 13px; color: rgba(148, 163, 184, 0.6); }
     .f-dev a { color: #fff; font-weight: 700; border-bottom: 2px solid var(--red); padding-bottom: 1px; }
     .f-dev a:hover { color: var(--red); }
     
     .f-disclaimer {
-      font-size: 11.5px; line-height: 1.7; color: rgba(148, 163, 184, 0.5);
-      background: rgba(0, 0, 0, 0.3); padding: 22px 26px; border-radius: 16px;
-      border: 1px solid rgba(255, 255, 255, 0.02); text-align: justify;
+      font-size: 11.5px;
+      line-height: 1.7;
+      color: rgba(148, 163, 184, 0.4);
+      background: rgba(0, 0, 0, 0.2);
+      padding: 20px 24px;
+      border-radius: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.02);
+      text-align: justify;
     }
     .f-disclaimer strong { color: rgba(255, 255, 255, 0.7); }
-    .f-copy { font-size: 11.5px; color: rgba(148, 163, 184, 0.3); margin-top: 10px; }
+    .f-copy { font-size: 12px; color: rgba(148, 163, 184, 0.35); margin-top: 10px; }
 
     /* ── MOBILE POLISH ── */
     @media(max-width: 768px) {
@@ -695,7 +748,9 @@
       .c-name { font-size: 11px; }
       .c-sub { font-size: 8.5px; }
 
-      #footer { padding: 50px 20px 20px; margin-top: 50px; }
+      #footer { padding: 60px 20px 40px; margin-top: 50px; }
+      .f-grid { grid-template-columns: 1fr; gap: 40px; }
+      .soc-btn { width: 100%; justify-content: center; }
       .f-disclaimer { font-size: 10.5px; padding: 16px; }
     }
 
@@ -859,41 +914,55 @@
 
 <!-- Footer -->
 <footer id="footer">
-  <div class="f-inner">
-    <div class="f-logo">BUG MOHOL</div>
-    
-    <div class="f-socials">
-      <a href="https://t.me/AnonymousOrigin" target="_blank" class="soc-btn soc-tg">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
-        Telegram
-      </a>
-      <a href="https://www.facebook.com/bugmohol" target="_blank" class="soc-btn soc-fb">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path></svg>
-        Facebook
-      </a>
-      <a href="https://instagram.com/bugmohol" target="_blank" class="soc-btn soc-ig">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
-        Instagram
-      </a>
-      <a href="https://bugmohol.com" target="_blank" class="soc-btn soc-web">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
-        Website
-      </a>
-      <a href="https://github.com/bug-mohol-official" target="_blank" class="soc-btn">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path></svg>
-        GitHub
-      </a>
+  <div class="f-grid">
+    <!-- Col 1: Brand -->
+    <div class="f-col">
+      <div class="f-brand-logo">
+        <img src="./logo.png" alt="BUG TV Logo" />
+        <span style="font-size:15px; font-weight:900; color:#fff; letter-spacing:1px; font-family:var(--font-title);">BUG TV</span>
+      </div>
+      <p class="f-brand-desc">BUG TV is a next-generation open-source IPTV aggregation catalog and cinematic web player. Merging, status-checking, and indexing thousands of live streams nightly with BDIX ISP optimizations.</p>
+      <div class="f-copy">&copy; 2026 BUG MOHOL. All rights reserved. <br>
+        <span style="font-weight:400; font-size:10px; opacity:0.5; display:block; margin-top:4px;">Open Source IPTV Web Player</span>
+      </div>
     </div>
 
-    <div class="f-dev">
-      Created by <a href="https://www.facebook.com/zamantopu.official/" target="_blank">Zaman Topu</a>
+    <!-- Col 2: Connections -->
+    <div class="f-col">
+      <h3 class="f-col-title">Connect With Us</h3>
+      <div class="f-socials-list">
+        <a href="https://t.me/AnonymousOrigin" target="_blank" class="soc-btn soc-tg">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+          Telegram Channel
+        </a>
+        <a href="https://www.facebook.com/bugmohol" target="_blank" class="soc-btn soc-fb">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path></svg>
+          Facebook Page
+        </a>
+        <a href="https://instagram.com/bugmohol" target="_blank" class="soc-btn soc-ig">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
+          Instagram Profile
+        </a>
+        <a href="https://bugmohol.com" target="_blank" class="soc-btn soc-web">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+          Official Website
+        </a>
+        <a href="https://github.com/Zaman-Topu/Ip-tv-Collection" target="_blank" class="soc-btn soc-gh">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path></svg>
+          GitHub Repository
+        </a>
+      </div>
     </div>
-    
-    <div class="f-disclaimer">
-      <strong>Disclaimer:</strong> BUG TV does not host, stream, or control any of the channels provided. All streams are publicly available links collected from the internet. We do not endorse or take responsibility for the content. If you own the rights to any content and wish for it to be removed, please contact the original hosting provider.
-    </div>
-    <div class="f-copy">&copy; 2026 BUG MOHOL. All rights reserved. <br>
-      <span style="font-weight:400; font-size:10px; opacity:0.6; display:block; margin-top:4px;">Open Source IPTV Web Player</span>
+
+    <!-- Col 3: Disclaimer & Credits -->
+    <div class="f-col">
+      <h3 class="f-col-title">Legal & Credits</h3>
+      <div class="f-dev" style="margin-bottom: 5px;">
+        Created by <a href="https://www.facebook.com/zamantopu.official/" target="_blank">Zaman Topu</a>
+      </div>
+      <div class="f-disclaimer">
+        <strong>Disclaimer:</strong> BUG TV does not host, stream, or control any of the channels provided. All streams are publicly available links collected from the internet. We do not endorse or take responsibility for the content. If you own the rights to any content and wish for it to be removed, please contact the original hosting provider.
+      </div>
     </div>
   </div>
 </footer>
