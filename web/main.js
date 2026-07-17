@@ -1,27 +1,3 @@
-// ── DEBUGGING OVERLAY ────────────────────────────────────────────────────────
-const _dbg = document.createElement('div');
-_dbg.style.position = 'fixed'; _dbg.style.bottom = '10px'; _dbg.style.left = '10px';
-_dbg.style.right = '10px'; _dbg.style.background = 'rgba(0,0,0,0.95)';
-_dbg.style.color = '#10b981'; _dbg.style.padding = '15px'; _dbg.style.fontSize = '12px';
-_dbg.style.zIndex = '999999'; _dbg.style.borderRadius = '8px'; _dbg.style.maxHeight = '200px';
-_dbg.style.overflowY = 'auto'; _dbg.style.fontFamily = 'monospace';
-_dbg.style.border = '1px solid #10b981';
-_dbg.innerHTML = '<strong>BUG TV Debug Console:</strong><br>';
-document.body.appendChild(_dbg);
-
-window.dbgLog = function(msg) {
-  const p = document.createElement('div');
-  p.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
-  _dbg.appendChild(p);
-  _dbg.scrollTop = _dbg.scrollHeight;
-};
-
-window.addEventListener('error', function(e) {
-  window.dbgLog(`🔴 ERROR: ${e.message} at ${e.filename ? e.filename.split('/').pop() : 'script'}:${e.lineno}`);
-});
-dbgLog("Debug Console Initialized");
-// ─────────────────────────────────────────────────────────────────────────────
-
 // ══════════════════════════════════════════
 //  URL OBFUSCATION — XOR cipher with session key
 //  URLs are NEVER stored as plain strings in memory
@@ -723,7 +699,6 @@ function renderGrid() {
   pages.innerHTML = '';
   
   const isHomeMode = !fSearch && fCountry === 'all' && fCat === 'all' && dbKey === 'active';
-  dbgLog(`renderGrid: isHomeMode=${isHomeMode}, filtered=${filtered.length}, dbKey=${dbKey}, fSearch=${fSearch}, fCountry=${fCountry}, fCat=${fCat}`);
   
   if (isHomeMode) {
     try {
@@ -734,7 +709,6 @@ function renderGrid() {
       
       renderHomeRows();
     } catch (err) {
-      dbgLog(`🔴 Error in renderHomeRows: ${err.message}`);
       console.error("Failed to render Netflix category rows:", err);
       if (heroBanner) heroBanner.style.display = 'none';
       if (homeRows) homeRows.style.display = 'none';
@@ -752,7 +726,6 @@ function renderGrid() {
 }
 
 function renderNormalGrid() {
-  dbgLog(`renderNormalGrid: rendering ${filtered.length} channels`);
   if (!filtered.length) {
     grid.innerHTML = '<div id="loading" style="min-height:150px;color:var(--muted);font-size:12px;font-weight:600;grid-column:1/-1;display:flex;align-items:center;justify-content:center;">No channels found.</div>';
     return;
@@ -768,11 +741,7 @@ function renderNormalGrid() {
 }
 
 function renderHomeRows() {
-  if (!homeRows) {
-    dbgLog("homeRows element not found in DOM!");
-    return;
-  }
-  dbgLog("Rendering home rows...");
+  if (!homeRows) return;
   homeRows.innerHTML = '';
   
   // Defensive check on favorites array
@@ -809,9 +778,22 @@ function renderHomeRows() {
     const titleEl = document.getElementById('hero-title');
     const descEl = document.getElementById('hero-desc');
     const playBtn = document.getElementById('hero-play-btn');
+    const logoEl = document.getElementById('hero-logo');
+    
     if (titleEl) titleEl.textContent = featured.name || "Live Stream";
     if (descEl) descEl.textContent = `${featured.country || "Global"} · ${featured.group || "IPTV"} Channel. Streaming live with anti-lag and BDIX proxy support.`;
     if (playBtn) playBtn.onclick = () => openPlayer(featured);
+    
+    // Dynamically show featured channel logo inside hero banner
+    if (logoEl) {
+      if (featured.logo) {
+        logoEl.src = logoSrc(featured.logo, featured.name);
+        logoEl.style.display = 'block';
+        logoEl.onerror = () => { logoEl.style.display = 'none'; };
+      } else {
+        logoEl.style.display = 'none';
+      }
+    }
   }
   
   const categories = [
@@ -825,7 +807,6 @@ function renderHomeRows() {
   ];
   
   categories.forEach(cat => {
-    dbgLog(`Category "${cat.title}": ${cat.data.length} channels`);
     if (cat.data.length === 0) return;
     
     const row = document.createElement('div');
@@ -848,7 +829,6 @@ function renderHomeRows() {
     row.appendChild(scroller);
     homeRows.appendChild(row);
   });
-  dbgLog("Home rows render complete!");
 }
 
 function makeCard(ch) {

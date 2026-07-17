@@ -326,19 +326,35 @@
        ═══════════════════════════════════════════ */
     .hero-banner {
       position: relative; width: 100%; border-radius: 20px; overflow: hidden;
-      margin-bottom: 30px; aspect-ratio: 21/9; min-height: 280px;
+      margin-bottom: 30px; aspect-ratio: 21/9; min-height: 320px;
       display: flex; align-items: center;
-      background: linear-gradient(135deg, #100e17 0%, #060608 100%);
+      background-color: #060608;
+      background-image: url('https://images.unsplash.com/photo-1540747737956-378723c03095?q=80&w=1600&auto=format&fit=crop');
+      background-size: cover;
+      background-position: center 35%;
       box-shadow: var(--shadow-premium);
       border: 1px solid var(--border);
     }
-    /* Cyberpunk Grid Background Overlay */
     .hero-bg-overlay {
       position: absolute; inset: 0; z-index: 1;
       background: 
-        linear-gradient(to right, rgba(6, 6, 8, 0.95) 30%, rgba(6, 6, 8, 0.7) 60%, rgba(6, 6, 8, 0.4) 100%),
-        radial-gradient(circle at 80% 20%, rgba(229, 9, 20, 0.15) 0%, transparent 50%),
-        radial-gradient(circle at 90% 80%, rgba(99, 102, 241, 0.1) 0%, transparent 50%);
+        linear-gradient(to right, rgba(6, 6, 8, 0.98) 35%, rgba(6, 6, 8, 0.75) 60%, rgba(6, 6, 8, 0.3) 100%),
+        linear-gradient(to top, rgba(6, 6, 8, 1) 0%, rgba(6, 6, 8, 0) 40%);
+    }
+    .hero-badge-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 4px;
+    }
+    .hero-logo {
+      height: 32px;
+      max-width: 100px;
+      object-fit: contain;
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.05);
+      padding: 2px 6px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
     }
     .hero-content {
       position: relative; z-index: 2; max-width: 600px; padding: 40px 60px;
@@ -622,6 +638,7 @@
     .media-default-skin:hover .media-controls,
     .media-default-skin:focus-within .media-controls {
       opacity: 1 !important; pointer-events: auto !important; scale: 1 !important; filter: none !important;
+    }
   </style>
 </head>
 <body>
@@ -730,7 +747,10 @@
   <div id="hero-banner" class="hero-banner">
     <div class="hero-bg-overlay"></div>
     <div class="hero-content">
-      <div class="hero-badge">⭐ Featured Spotlight</div>
+      <div class="hero-badge-row">
+        <img id="hero-logo" class="hero-logo" src="" alt="Logo" style="display:none;" />
+        <span class="hero-badge">⭐ Featured Spotlight</span>
+      </div>
       <h1 class="hero-title" id="hero-title">Loading Featured Live Stream...</h1>
       <p class="hero-desc" id="hero-desc">Enjoy premium live TV channels, top sports leagues, and entertainment streaming 24/7 with zero lag.</p>
       <div class="hero-actions">
