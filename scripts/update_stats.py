@@ -46,23 +46,62 @@ SOURCE_URLS = [
     "https://raw.githubusercontent.com/srhady/axsports/refs/heads/main/playlist.m3u"
 ]
 
-# Keywords and regex for local Bangladeshi ISP / BDIX streams
-BDIX_KEYWORDS = ['bdix', 'samonline', 'amberit', 'link3', 'carnival', 'dotinternet', 'ksnetwork', 'dfn', 'optimax', 'circleftp', 'ftp.']
+# ─── ISP / BDIX Detection ────────────────────────────────────────────────────
+# Bangladeshi ISP hostnames and BDIX-related keywords
+BDIX_KEYWORDS = [
+    # Core BDIX / FTP markers
+    'bdix', 'ftp.', 'ftpbd', 'bdftp',
+    # Major BD ISPs
+    'link3', 'link3tech', 'amberit', 'carnival', 'samonline', 'dotinternet',
+    'ksnetwork', 'dfn', 'optimax', 'circleftp', 'agni', 'amber', 'accesstel',
+    'bracnet', 'brainstation23', 'bttb', 'btcl', 'metronet', 'mango', 'novocom',
+    'northsouth', 'online.com.bd', 'palmnet', 'primonet', 'ranks', 'revivenet',
+    'skynet', 'ssl.com.bd', 'ultranet', 'windstream', 'wifibd', 'x-net',
+    'zerionbd', 'aamra', 'brac', 'gpcdn', 'ncare.live', 'aynaott',
+    'toffeelive', 'bioscopelive', 'sonarbanglatv', 'jagobd', 'akashlive',
+    'matribhumitv', 'thelegitpro', 'bozztv',
+    # Common BD local domains
+    '.com.bd', '.net.bd', '.org.bd', '.edu.bd', '.gov.bd',
+]
+
+# Private / CGNAT IP ranges that indicate local/ISP-only streams
+_PRIVATE_IP_RE = re.compile(
+    r'^('
+    r'10\.'                              # Class A private
+    r'|192\.168\.'                       # Class C private
+    r'|172\.(1[6-9]|2[0-9]|3[0-1])\.'  # Class B private
+    r'|100\.(6[4-9]|[7-9][0-9]|1[01][0-9]|12[0-7])\.'  # CGNAT (RFC 6598)
+    r'|127\.'                            # Loopback
+    r'|169\.254\.'                       # Link-local
+    r')'
+)
+
+# Ports commonly used by BD local streaming servers
+_LOCAL_PORTS = {554, 1935, 8080, 8081, 8082, 8088, 8090, 8888, 9000, 9001, 9002,
+                1234, 4444, 6969, 7070, 7777, 8008, 8085, 8086, 8443, 9090}
 
 def is_local_isp_stream(url):
     try:
         parsed = urlparse(url)
-        host = parsed.hostname
-        if not host: return False
-        
-        # Check if hostname contains BDIX keywords
-        if any(kw in host.lower() for kw in BDIX_KEYWORDS):
+        host = parsed.hostname or ''
+        port = parsed.port
+
+        # 1. Private / CGNAT IP address
+        if _PRIVATE_IP_RE.match(host):
             return True
-            
-        # Check if it's a private IP address
-        if re.match(r'^(10\.|192\.168\.|172\.(1[6-9]|2[0-9]|3[0-1])\.)', host):
+
+        host_lower = host.lower()
+        full_url_lower = url.lower()
+
+        # 2. Hostname or URL contains a known ISP/BDIX keyword
+        if any(kw in host_lower or kw in full_url_lower for kw in BDIX_KEYWORDS):
             return True
-    except:
+
+        # 3. Public IP with a typical local-streaming port (strong signal of ISP-only)
+        if port in _LOCAL_PORTS and re.match(r'^\d+\.\d+\.\d+\.\d+$', host):
+            return True
+
+    except Exception:
         pass
     return False
 
