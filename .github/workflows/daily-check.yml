@@ -48,5 +48,6 @@ jobs:
             echo "No changes in channel status to commit."
           else
             git commit -m "docs(readme): auto-update daily channel status and cleanup dead streams"
+            git pull --rebase -X theirs
             git push
           fi

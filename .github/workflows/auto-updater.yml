@@ -47,5 +47,6 @@ jobs:
             echo "No new channels or updates found."
           else
             git commit -m "bot: auto-update playlist from sources and refresh stats"
+            git pull --rebase -X theirs
             git push
           fi
