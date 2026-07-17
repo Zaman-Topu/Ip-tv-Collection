@@ -90,6 +90,8 @@ let fCountry = 'all';
 //  DOM
 // ══════════════════════════════════════════
 const grid     = document.getElementById('grid');
+const heroBanner = document.getElementById('hero-banner');
+const homeRows   = document.getElementById('home-rows');
 const pages    = document.getElementById('pages');
 const statC    = document.getElementById('stat-c');
 const statT    = document.getElementById('stat-t');
@@ -695,18 +697,110 @@ function applyFilters() {
 function renderGrid() {
   grid.innerHTML = '';
   pages.innerHTML = '';
-  if (!filtered.length) {
-    grid.innerHTML = '<div id="loading" style="min-height:150px;color:var(--muted);font-size:12px;font-weight:600;grid-column:1/-1;display:flex;align-items:center;justify-content:center;">No channels found.</div>';
-    return;
-  }
-  const total = Math.ceil(filtered.length / PER);
-  if (page > total) page = total;
-  const slice = filtered.slice((page-1)*PER, page*PER);
+  
+  const isHomeMode = !fSearch && fCountry === 'all' && fCat === 'all' && dbKey === 'active';
+  
+  if (isHomeMode) {
+    grid.style.display = 'none';
+    pages.style.display = 'none';
+    if (heroBanner) heroBanner.style.display = 'flex';
+    if (homeRows) homeRows.style.display = 'flex';
+    
+    renderHomeRows();
+  } else {
+    if (heroBanner) heroBanner.style.display = 'none';
+    if (homeRows) homeRows.style.display = 'none';
+    grid.style.display = 'grid';
+    pages.style.display = 'flex';
+    
+    if (!filtered.length) {
+      grid.innerHTML = '<div id="loading" style="min-height:150px;color:var(--muted);font-size:12px;font-weight:600;grid-column:1/-1;display:flex;align-items:center;justify-content:center;">No channels found.</div>';
+      return;
+    }
+    const total = Math.ceil(filtered.length / PER);
+    if (page > total) page = total;
+    const slice = filtered.slice((page-1)*PER, page*PER);
 
-  const frag = document.createDocumentFragment();
-  slice.forEach(ch => frag.appendChild(makeCard(ch)));
-  grid.appendChild(frag);
-  if (total > 1) renderPages(total);
+    const frag = document.createDocumentFragment();
+    slice.forEach(ch => frag.appendChild(makeCard(ch)));
+    grid.appendChild(frag);
+    if (total > 1) renderPages(total);
+  }
+}
+
+function renderHomeRows() {
+  if (!homeRows) return;
+  homeRows.innerHTML = '';
+  
+  // A. Favorites
+  const favChannels = favorites.map(url => allCh.find(c => c._u === url)).filter(Boolean);
+  
+  // B. Sports Action
+  const sportsChannels = allCh.filter(c => c.subcat === 'Sports');
+  
+  // C. Bangladeshi Live TV
+  const bdChannels = allCh.filter(c => c.country === 'Bangladesh');
+  
+  // D. Movies & Entertainment
+  const moviesChannels = allCh.filter(c => c.subcat === 'Movies' || c.subcat === 'Natok/Drama');
+  
+  // E. News Network
+  const newsChannels = allCh.filter(c => c.subcat === 'News');
+  
+  // F. Kids Zone
+  const kidsChannels = allCh.filter(c => c.subcat === 'Kids');
+
+  // G. Religious
+  const religiousChannels = allCh.filter(c => c.subcat === 'Religious');
+  
+  // ── Featured Spotlight Spotlight ──
+  let featured = bdChannels.find(c => c.name.toLowerCase().includes('t sports') || c.name.toLowerCase().includes('tsports')) ||
+                 sportsChannels.find(c => c.name.toLowerCase().includes('star sports') || c.name.toLowerCase().includes('sony')) ||
+                 bdChannels.find(c => c.name.toLowerCase().includes('gtv') || c.name.toLowerCase().includes('somoy')) ||
+                 allCh[0];
+                 
+  if (featured) {
+    const titleEl = document.getElementById('hero-title');
+    const descEl = document.getElementById('hero-desc');
+    const playBtn = document.getElementById('hero-play-btn');
+    if (titleEl) titleEl.textContent = featured.name;
+    if (descEl) descEl.textContent = `${featured.country} · ${featured.group} Channel. Streaming live with anti-lag and BDIX proxy support.`;
+    if (playBtn) playBtn.onclick = () => openPlayer(featured);
+  }
+  
+  const categories = [
+    { title: 'My Favorites ⭐', data: favChannels },
+    { title: 'Trending Sports 🏆', data: sportsChannels },
+    { title: 'Bangladeshi Live TV 🇧🇩', data: bdChannels },
+    { title: 'Movies & Entertainment 🍿', data: moviesChannels },
+    { title: 'News Network 📰', data: newsChannels },
+    { title: 'Kids Corner 🧸', data: kidsChannels },
+    { title: 'Religious Channels 🕌', data: religiousChannels }
+  ];
+  
+  categories.forEach(cat => {
+    if (cat.data.length === 0) return;
+    
+    const row = document.createElement('div');
+    row.className = 'row-container';
+    
+    const h2 = document.createElement('h2');
+    h2.className = 'row-title';
+    h2.textContent = cat.title;
+    
+    const scroller = document.createElement('div');
+    scroller.className = 'row-scroller';
+    
+    const sortedData = [...cat.data].sort((a, b) => b._score - a._score);
+    const slice = sortedData.slice(0, 30);
+    slice.forEach(ch => {
+      scroller.appendChild(makeCard(ch));
+    });
+    
+    row.appendChild(h2);
+    row.appendChild(scroller);
+    homeRows.appendChild(row);
+  });
 }
 
 function makeCard(ch) {
@@ -736,6 +830,9 @@ function makeCard(ch) {
       e.preventDefault();
       openPlayer(ch);
     }
+  });
+  card.addEventListener('focus', () => {
+    card.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
   });
   return card;
 }
@@ -1323,73 +1420,4 @@ if (vidEl) {
   vidEl.addEventListener('play', showPlayerControls);
 }
 
-// ══════════════════════════════════════════
-//  TV REMOTE D-PAD NAVIGATION
-//  Allows navigating with arrow keys on Android TV / Smart TV remotes
-// ══════════════════════════════════════════
-document.addEventListener('keydown', (e) => {
-  const cards = Array.from(document.querySelectorAll('#grid .card'));
-  if (!cards.length) return;
-  
-  const focused = document.activeElement;
-  const idx = cards.indexOf(focused);
 
-  // If user is typing in search, don't intercept arrows
-  if (focused && focused.id === 'srch') return;
-  
-  // Get number of columns in the grid
-  const gridEl = document.getElementById('grid');
-  const cols = (gridEl && cards.length > 0)
-    ? Math.round(gridEl.offsetWidth / (cards[0].offsetWidth || 1))
-    : 4;
-  
-  let next = -1;
-  
-  if (e.key === 'ArrowRight') {
-    next = idx === -1 ? 0 : idx + 1;
-  } else if (e.key === 'ArrowLeft') {
-    next = idx - 1;
-  } else if (e.key === 'ArrowDown') {
-    if (idx === -1) { next = 0; }
-    else {
-      next = idx + cols;
-      // If past last card, go to next page
-      if (next >= cards.length) {
-        const nextBtn = document.querySelector('#pages .pgb:last-child:not(:disabled)');
-        if (nextBtn) {
-          e.preventDefault();
-          nextBtn.click();
-          setTimeout(() => {
-            const c = document.querySelectorAll('#grid .card');
-            if (c[0]) c[0].focus();
-          }, 80);
-        }
-        return;
-      }
-    }
-  } else if (e.key === 'ArrowUp') {
-    if (idx === -1) { next = 0; }
-    else if (idx - cols < 0) {
-      // Go back up to search bar
-      e.preventDefault();
-      document.getElementById('srch')?.focus();
-      return;
-    } else {
-      next = idx - cols;
-    }
-  } else if (e.key === 'Backspace' || e.key === 'GoBack') {
-    // TV back button — close player
-    const playerWrap = document.getElementById('player-wrap');
-    if (playerWrap && playerWrap.classList.contains('show')) {
-      e.preventDefault();
-      document.getElementById('p-close')?.click();
-    }
-    return;
-  }
-  
-  if (next >= 0 && next < cards.length) {
-    e.preventDefault();
-    cards[next].focus();
-    cards[next].scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-  }
-});
