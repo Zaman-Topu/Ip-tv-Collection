@@ -392,68 +392,131 @@
        FILTERS PANEL
        ═══════════════════════════════════════════ */
     #filters {
-      background: var(--bg-card); border: 1px solid var(--border);
-      border-radius: 16px; padding: 20px; margin-bottom: 30px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+      background: transparent;
+      border: none;
+      padding: 0;
+      margin-bottom: 45px;
+      box-shadow: none;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
     }
-    .f-row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-bottom: 16px; }
+    .f-row { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; }
     .f-row:last-child { margin-bottom: 0; }
 
-    .srch-w { position: relative; flex: 1; min-width: 250px; }
+    .srch-w { position: relative; flex: 1; min-width: 280px; }
     .srch-w svg {
-      position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
-      width: 16px; height: 16px; fill: var(--muted); pointer-events: none;
-      transition: fill 0.2s;
+      position: absolute; left: 16px; top: 50%; transform: translateY(-50%);
+      width: 18px; height: 18px; fill: var(--muted); pointer-events: none;
+      transition: fill 0.25s ease;
     }
     .srch-w:focus-within svg { fill: var(--red); }
     #srch {
-      width: 100%; background: rgba(0, 0, 0, 0.3); border: 1px solid var(--border);
-      color: var(--text); padding: 12px 14px 12px 42px; border-radius: 10px;
-      font-size: 14px; font-family: var(--font-text); outline: none;
-      transition: all 0.2s; font-weight: 500;
+      width: 100%; 
+      background: rgba(255, 255, 255, 0.03); 
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: #fff; 
+      padding: 12px 16px 12px 48px; 
+      border-radius: 99px;
+      font-size: 14px; 
+      font-family: var(--font-text); 
+      outline: none;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
+      font-weight: 500;
     }
-    #srch:focus { border-color: rgba(229,9,20,0.5); box-shadow: 0 0 0 3px rgba(229,9,20,0.15); }
-    #srch::placeholder { color: rgba(148, 163, 184, 0.4); }
+    #srch:focus { 
+      border-color: var(--red); 
+      box-shadow: 0 0 15px rgba(229, 9, 20, 0.25); 
+      background: rgba(255, 255, 255, 0.06); 
+    }
+    #srch::placeholder { color: rgba(255, 255, 255, 0.3); }
 
     .fsel {
-      background: rgba(0, 0, 0, 0.3); border: 1px solid var(--border); color: var(--text);
-      padding: 12px 16px; border-radius: 10px; font-size: 13px; font-family: var(--font-text);
-      font-weight: 600; outline: none; cursor: pointer; transition: all 0.2s;
+      background: rgba(255, 255, 255, 0.03); 
+      border: 1px solid rgba(255, 255, 255, 0.08); 
+      color: #fff;
+      padding: 12px 24px; 
+      border-radius: 99px; 
+      font-size: 13px; 
+      font-family: var(--font-text);
+      font-weight: 600; 
+      outline: none; 
+      cursor: pointer; 
+      transition: all 0.3s ease;
+      appearance: none;
+      -webkit-appearance: none;
+      background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+      background-repeat: no-repeat;
+      background-position: right 18px center;
+      background-size: 10px;
+      padding-right: 40px;
     }
-    .fsel:focus { border-color: rgba(229,9,20,0.5); }
-    .fsel:hover { background: rgba(255,255,255,0.03); }
+    .fsel:focus { border-color: var(--red); box-shadow: 0 0 15px rgba(229, 9, 20, 0.15); }
+    .fsel:hover { background: rgba(255, 255, 255, 0.06); }
     .fsel option { background: #0c0b11; color: #fff; }
 
     #breset {
-      background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border);
-      color: var(--muted); font-size: 12px; font-weight: 700; padding: 12px 18px;
-      border-radius: 10px; transition: all 0.2s;
+      background: rgba(229, 9, 20, 0.08); 
+      border: 1px solid rgba(229, 9, 20, 0.2);
+      color: var(--red); 
+      font-size: 13px; 
+      font-weight: 700; 
+      padding: 12px 24px;
+      border-radius: 99px; 
+      transition: all 0.3s ease;
     }
-    #breset:hover { background: rgba(229,9,20,0.1); border-color: var(--red); color: var(--red); }
+    #breset:hover { 
+      background: var(--red-gradient); 
+      border-color: transparent; 
+      color: #fff; 
+      box-shadow: 0 4px 15px var(--neon-red); 
+      transform: translateY(-1px);
+    }
 
     /* Scrollable Horizontal Pill Rows */
-    .f-row.scroll { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; }
+    .f-row.scroll { 
+      flex-wrap: nowrap; 
+      overflow-x: auto; 
+      padding-bottom: 4px; 
+      scrollbar-width: none; 
+      mask-image: linear-gradient(to right, #000 88%, transparent 100%);
+      -webkit-mask-image: linear-gradient(to right, #000 88%, transparent 100%);
+    }
     .f-row.scroll::-webkit-scrollbar { display: none; }
 
     .pill {
-      background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border); color: var(--muted);
-      font-size: 12px; font-weight: 600; padding: 8px 18px; border-radius: 99px;
-      transition: all 0.2s ease; white-space: nowrap; cursor: pointer; flex-shrink: 0;
+      background: rgba(255, 255, 255, 0.02); 
+      border: 1px solid rgba(255, 255, 255, 0.05); 
+      color: rgba(255, 255, 255, 0.55);
+      font-size: 13px; 
+      font-weight: 600; 
+      padding: 10px 22px; 
+      border-radius: 99px;
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); 
+      white-space: nowrap; 
+      cursor: pointer; 
+      flex-shrink: 0;
     }
-    .pill:hover { background: rgba(255,255,255,0.04); color: #fff; transform: translateY(-1px); }
-    .pill.on { background: var(--red-gradient); border-color: transparent; color: #fff; box-shadow: 0 4px 12px var(--neon-red); }
+    .pill:hover { background: rgba(255, 255, 255, 0.06); color: #fff; transform: translateY(-1px); }
+    .pill.on { 
+      background: var(--red-gradient); 
+      border-color: transparent; 
+      color: #fff; 
+      box-shadow: 0 4px 15px var(--neon-red); 
+    }
 
-    /* ═══════════════════════════════════════════
-       NETFLIX STYLE HORIZONTAL ROW CAROUSELS
-       ═══════════════════════════════════════════ */
-    .row-container { margin-bottom: 36px; display: flex; flex-direction: column; gap: 12px; }
+    /* ── NETFLIX STYLE HORIZONTAL ROW CAROUSELS ── */
+    .row-container { margin-bottom: 40px; display: flex; flex-direction: column; gap: 14px; }
     .row-title {
-      font-size: 20px; font-family: var(--font-title); font-weight: 800; color: #fff;
-      letter-spacing: -0.3px; padding-left: 4px;
+      font-size: 22px; font-family: var(--font-title); font-weight: 850; color: #fff;
+      letter-spacing: -0.4px; padding-left: 4px;
     }
     .row-scroller {
-      display: flex; gap: 16px; overflow-x: auto; scrollbar-width: none;
-      scroll-snap-type: x mandatory; padding: 10px 4px;
+      display: flex; gap: 18px; overflow-x: auto; scrollbar-width: none;
+      scroll-snap-type: x mandatory; padding: 12px 4px;
+      scroll-behavior: smooth;
+      mask-image: linear-gradient(to right, #000 88%, transparent 100%);
+      -webkit-mask-image: linear-gradient(to right, #000 88%, transparent 100%);
     }
     .row-scroller::-webkit-scrollbar { display: none; }
 
