@@ -90,15 +90,28 @@
     ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.08); border-radius: 99px; }
     ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.2); }
 
-    /* ── NAVBAR (Premium Glassmorphism) ── */
+    /* ── NAVBAR (Premium Floating Capsule Pill) ── */
     #nav {
-      position: fixed; top: 0; left: 0; right: 0; z-index: 300;
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 0 40px; height: 74px;
+      position: fixed;
+      top: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: calc(100% - 48px);
+      max-width: 1640px;
+      z-index: 300;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 32px;
+      height: 68px;
       background: var(--bg-glass);
-      backdrop-filter: blur(20px);
-      border-bottom: 1px solid var(--glass-border);
-      box-shadow: 0 4px 30px rgba(0, 0, 0, 0.4);
+      backdrop-filter: blur(24px);
+      border: 1px solid var(--glass-border);
+      border-radius: 99px;
+      box-shadow: 
+        0 10px 40px rgba(0, 0, 0, 0.6),
+        0 0 0 1px rgba(255, 255, 255, 0.02) inset;
+      transition: all 0.3s ease;
     }
     
     .nav-left { display: flex; align-items: center; gap: 50px; }
@@ -162,7 +175,7 @@
     #stat-c { color: var(--red); }
 
     /* ── APP LAYOUT ── */
-    #app { padding-top: 94px; min-height: 80vh; }
+    #app { padding-top: 108px; min-height: 80vh; }
     .wrap { max-width: 1720px; margin: 0 auto; padding: 0 40px 40px; }
 
     /* ═══════════════════════════════════════════
@@ -596,29 +609,6 @@
     .media-default-skin:hover .media-controls,
     .media-default-skin:focus-within .media-controls {
       opacity: 1 !important; pointer-events: auto !important; scale: 1 !important; filter: none !important;
-    }
-  </style>-img { padding: 10px; }
-      .c-img img { max-height: 45px; }
-      .c-name { font-size: 11px; }
-      .c-sub { font-size: 9px; }
-
-      /* Footer */
-      #footer { padding: 40px 16px 20px; margin-top: 40px; }
-      .f-logo { font-size: 20px; }
-      .f-disclaimer { font-size: 11px; padding: 16px; border-radius: 12px; }
-    }
-
-    /* Custom styles to prevent controls flickering/immediate hiding */
-    #vbox.user-active .media-controls,
-    #vbox:hover .media-controls,
-    .media-default-skin:hover .media-controls,
-    .media-default-skin:focus-within .media-controls {
-      opacity: 1 !important;
-      pointer-events: auto !important;
-      scale: 1 !important;
-      filter: none !important;
-    }
-
   </style>
 </head>
 <body>
