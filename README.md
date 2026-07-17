@@ -101,15 +101,15 @@ If you add a working link to this file, our automated aggregator bot will **resp
 *This repository uses a custom Python Aggregator Bot to pull from 25+ sources, merge, deduplicate, and ping the streams every single night!*
 
 <!-- STATS:START -->
-> **Last Checked:** 2026-07-17 02:22 PM (BST)
+> **Last Checked:** 2026-07-17 02:32 PM (BST)
 > *Next check scheduled for 12:00 AM tonight.*
 
 | Status | Count | Percentage | Description |
 | :--- | :---: | :---: | :--- |
-| 🟢 **Active** | **10469** | 30.9% | Online and streaming globally. |
+| 🟢 **Active** | **10465** | 30.9% | Online and streaming globally. |
 | 🔵 **Local ISP / BDIX** | **2657** | 7.8% | Local Bangladeshi ISP servers. Working perfectly if you are on that ISP. |
-| 🟡 **Geo-Blocked** | **2085** | 6.2% | Stream is online but restricted to specific countries. |
-| 🔴 **Down / Error** | **18648** | 55.1% | Server offline, timed out, or returning errors globally. |
+| 🟡 **Geo-Blocked** | **2088** | 6.2% | Stream is online but restricted to specific countries. |
+| 🔴 **Down / Error** | **18649** | 55.1% | Server offline, timed out, or returning errors globally. |
 | 📺 **Total Tested** | **33859** | 100% | Total channels in the playlist. |
 
 <details>
@@ -117,10 +117,10 @@ If you add a working link to this file, our automated aggregator bot will **resp
 
 ```mermaid
 pie title IPTV Channel Status Breakdown
-    "Active (🟢)" : 10469
+    "Active (🟢)" : 10465
     "Local ISP/BDIX (🔵)" : 2657
-    "Geo-Blocked (🟡)" : 2085
-    "Down (🔴)" : 18648
+    "Geo-Blocked (🟡)" : 2088
+    "Down (🔴)" : 18649
 ```
 </details>
 <!-- STATS:END -->

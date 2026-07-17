@@ -569,6 +569,8 @@ https://vs-cmaf-pushb-uk-live.akamaized.net/x=4/i=urn:bbc:pips:service:bbc_two_n
 https://vs-cmaf-pushb-uk-live.akamaized.net/x=4/i=urn:bbc:pips:service:bbc_two_wales_digital/iptv_hd_abr_v1.mpd
 #EXTINF:-1 tvg-id="BDN.es@SD" tvg-logo="https://i.imgur.com/ktasO33.png" http-user-agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.97 Safari/537.36 CrKey/1.44.191160" group-title="News",BDNCOM (1080p)
 https://liveingesta318.cdnmedia.tv/badalonatvlive/smil:live.smil/playlist.m3u8
+#EXTINF:-1 tvg-id="beINSportsHaber.tr@SD" tvg-logo="https://i.imgur.com/QWo0x7S.jpg" group-title="Sports",beIN Sports Haber (720p)
+https://1nyaler.streamhostingcdn.top/stream/23/index.m3u8
 #EXTINF:-1 tvg-id="BenguturkTV.tr@SD" tvg-logo="https://i.imgur.com/p3ON1oX.png" group-title="General",Benguturk TV (1080p)
 http://185.234.111.229:8000/play/a05u
 #EXTINF:-1 tvg-id="BerenteTV.hu@SD" tvg-logo="https://i.imgur.com/3H3Ct9f.png" group-title="General",Berente TV (1080p)
@@ -2189,6 +2191,8 @@ https://live1.presstv.com/live/ifilmen.m3u8
 https://live.presstv.com/ifilmlive/smil:ifilmtv.smil/playlist.m3u8
 #EXTINF:-1 tvg-id="(no tvg-id)" tvg-name="iFILM Persian 2" tvg-logo="https://fa2.ifilmtv.com/img/test-final02.png" group-title="Movies",iFILM Persian 2
 https://live1.presstv.com/live/ifilm2.m3u8
+#EXTINF:-1 tvg-id="(no tvg-id)" tvg-name="СТРК HD" tvg-logo="" group-title="Movies",СТРК HD
+http://sochinskayatrk.ru/hdtv/hls/strc_hd/playlist.m3u8
 #EXTINF:-1 tvg-id="ts40" tvg-name="&tv HD" tvg-logo="https://assets.botallen.live/images/t/CukEOZYJfm.png" group-title="Shows & Series",&tv HD
 https://botallen.live/t/40/master.m3u8?signature=d53b023bca47b6a945f053532abedea052fbdfe7&unique=bd8cea6d4e431b3c75b9fb7b720a87c0
 #EXTINF:-1 tvg-id="ts52" tvg-name="Colors HD" tvg-logo="https://assets.botallen.live/images/t/JgLheBRhKQ.png" group-title="Shows & Series",Colors HD
@@ -2469,8 +2473,6 @@ http://z5amshls.akamaized.net/andflix/tracks-v1a1/index.m3u8?@ShamimHossainOffic
 http://z5amshls.akamaized.net/zeecafehd/playlist.m3u8?@ShamimHossainOfficial
 #EXTINF:-1 tvg-id="" tvg-name="" tvg-logo="" group-title="ShamimHossainOfficial",Cartoon Network HD
 https://livecdn.fptplay.net/qnetlive/cartoonnetworkhd_hls.smil/chunklist_b2500000.m3u8?@ShamimHossainOfficial
-#EXTINF:-1 tvg-id="" tvg-name="" tvg-logo="" group-title="ShamimHossainOfficial",Disny XD
-https://www.livedoomovie.com/02_DisneyXD_720p/chunklist.m3u8?@ShamimHossainOfficial
 #EXTINF:-1 ,Times Now
 http://timesnow-lh.akamaihd.net/i/TNHD_1@129288/index_720_av-p.m3u8
 #EXTINF:-1 ,Vasantham
@@ -2505,6 +2507,8 @@ http://edge01.iptv.digijadoo.net/live/gazi_tv/chunks.m3u8
 https://edge01.iptv.digijadoo.net/live/independent_tv/chunks.m3u8
 #EXTINF:-1 ,Maasranga
 https://edge01.iptv.digijadoo.net/live/maasranga/chunks.m3u8
+#EXTINF:-1 ,Maasranga
+http://pioneer.anytv.live:8080/masranga/tracks-v1a1/mono.m3u8
 #EXTINF:-1 ,SATV
 https://edge01.iptv.digijadoo.net/live/sa_tv/playlist.m3u8
 #EXTINF:-1 ,Shomoy TV
