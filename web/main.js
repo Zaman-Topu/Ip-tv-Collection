@@ -54,7 +54,7 @@ let allCh     = [];   // channels with encoded URLs
 let filtered  = [];
 let statusMap = {};
 let page      = 1;
-const PER     = 24; // Optimized page size for lower DOM weight on 1GB RAM devices
+let pageSize  = 24; // Optimized page size for lower DOM weight on 1GB RAM devices
 let activeCh  = null;
 let hlsInst   = null;
 let srchTimer = null;
@@ -730,14 +730,14 @@ function renderNormalGrid() {
     grid.innerHTML = '<div id="loading" style="min-height:150px;color:var(--muted);font-size:12px;font-weight:600;grid-column:1/-1;display:flex;align-items:center;justify-content:center;">No channels found.</div>';
     return;
   }
-  const total = Math.ceil(filtered.length / PER);
+  const total = Math.ceil(filtered.length / pageSize);
   if (page > total) page = total;
-  const slice = filtered.slice((page-1)*PER, page*PER);
+  const slice = filtered.slice((page-1)*pageSize, page*pageSize);
 
   const frag = document.createDocumentFragment();
   slice.forEach(ch => frag.appendChild(makeCard(ch)));
   grid.appendChild(frag);
-  if (total > 1) renderPages(total);
+  if (total > 1 || pageSize > 24) renderPages(total);
 }
 
 function renderHomeRows() {
@@ -882,18 +882,40 @@ function makeCard(ch) {
 //  PAGINATION
 // ══════════════════════════════════════════
 function renderPages(total) {
-  const p = document.createElement('button');
-  p.className='pgb'; p.textContent='◄ Prev'; p.disabled=page===1;
-  p.onclick=()=>{ page--; renderGrid(); scrollUp(); };
+  const frag = document.createDocumentFragment();
+  
+  if (pageSize === 24) {
+    const p = document.createElement('button');
+    p.className='pgb'; p.textContent='◄ Prev'; p.disabled=page===1;
+    p.onclick=()=>{ page--; renderGrid(); scrollUp(); };
 
-  const info = document.createElement('span');
-  info.className='pgi'; info.textContent=`${page} / ${total}`;
+    const info = document.createElement('span');
+    info.className='pgi'; info.textContent=`${page} / ${total}`;
 
-  const n = document.createElement('button');
-  n.className='pgb'; n.textContent='Next ►'; n.disabled=page===total;
-  n.onclick=()=>{ page++; renderGrid(); scrollUp(); };
+    const n = document.createElement('button');
+    n.className='pgb'; n.textContent='Next ►'; n.disabled=page===total;
+    n.onclick=()=>{ page++; renderGrid(); scrollUp(); };
+    
+    const showAllBtn = document.createElement('button');
+    showAllBtn.className='pgb'; showAllBtn.textContent=`📺 Show All (${filtered.length})`;
+    showAllBtn.onclick=()=>{
+      pageSize = 99999;
+      page = 1;
+      renderGrid();
+    };
 
-  pages.append(p, info, n);
+    frag.append(p, info, n, showAllBtn);
+  } else {
+    const showPaginatedBtn = document.createElement('button');
+    showPaginatedBtn.className='pgb'; showPaginatedBtn.textContent='📄 Show Paginated (24 per page)';
+    showPaginatedBtn.onclick=()=>{
+      pageSize = 24;
+      page = 1;
+      renderGrid();
+    };
+    frag.append(showPaginatedBtn);
+  }
+  pages.appendChild(frag);
 }
 function scrollUp() {
   document.getElementById('filters').scrollIntoView({behavior:'smooth',block:'start'});
