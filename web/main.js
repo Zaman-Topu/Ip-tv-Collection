@@ -53,10 +53,13 @@ function isMovieGroup(group) {
 let allCh     = [];   // channels with encoded URLs
 let filtered  = [];
 let statusMap = {};
-let page      = 1;
-let pageSize  = 24; // Optimized page size for lower DOM weight on 1GB RAM devices
-let activeCh  = null;
-let hlsInst   = null;
+let page          = 1;
+let pageSize      = 24; // Optimized page size for lower DOM weight on 1GB RAM devices
+let activeCh      = null;
+let hlsInst       = null;
+let featuredIndex = 0;
+let featuredList  = [];
+let featuredTimer = null;
 let srchTimer = null;
 let dbKey     = 'active';
 const countryCache = {}; // Cache country detections
@@ -714,6 +717,12 @@ function renderGrid() {
       if (homeRows) homeRows.style.display = 'none';
       grid.style.display = 'grid';
       pages.style.display = 'flex';
+      
+      // Clear carousel cycle timer when exiting home screen
+      if (featuredTimer) {
+        clearInterval(featuredTimer);
+        featuredTimer = null;
+      }
       renderNormalGrid();
     }
   } else {
@@ -721,6 +730,12 @@ function renderGrid() {
     if (homeRows) homeRows.style.display = 'none';
     grid.style.display = 'grid';
     pages.style.display = 'flex';
+    
+    // Clear carousel cycle timer when exiting home screen
+    if (featuredTimer) {
+      clearInterval(featuredTimer);
+      featuredTimer = null;
+    }
     renderNormalGrid();
   }
 }
@@ -738,6 +753,111 @@ function renderNormalGrid() {
   slice.forEach(ch => frag.appendChild(makeCard(ch)));
   grid.appendChild(frag);
   if (total > 1 || pageSize > 24) renderPages(total);
+}
+
+function getBannerBg(ch) {
+  if (!ch) return 'https://images.unsplash.com/photo-1579546929518-9e396f3cc809?q=80&w=1600&auto=format&fit=crop';
+  const sub = (ch.subcat || '').toLowerCase();
+  const name = (ch.name || '').toLowerCase();
+  
+  if (sub === 'sports' || name.includes('sports') || name.includes('cricket') || name.includes('football') || name.includes('t sports') || name.includes('tsports')) {
+    return 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?q=80&w=1600&auto=format&fit=crop';
+  }
+  if (sub === 'news' || name.includes('news') || name.includes('somoy') || name.includes('jamuna') || name.includes('independent') || name.includes('rtv')) {
+    return 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=1600&auto=format&fit=crop';
+  }
+  if (sub === 'movies' || sub === 'natok/drama' || name.includes('movies') || name.includes('bioscope') || name.includes('cinema') || name.includes('zee bangla') || name.includes('star jalsha')) {
+    return 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?q=80&w=1600&auto=format&fit=crop';
+  }
+  if (sub === 'kids' || name.includes('cartoon') || name.includes('disney') || name.includes('nickelodeon')) {
+    return 'https://images.unsplash.com/photo-1500964757637-c85e8a162699?q=80&w=1600&auto=format&fit=crop';
+  }
+  if (sub === 'religious' || name.includes('islam') || name.includes('makkah') || name.includes('madinah') || name.includes('peace')) {
+    return 'https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=1600&auto=format&fit=crop';
+  }
+  return 'https://images.unsplash.com/photo-1579546929518-9e396f3cc809?q=80&w=1600&auto=format&fit=crop';
+}
+
+function setFeaturedChannel(ch) {
+  if (!ch) return;
+  const titleEl = document.getElementById('hero-title');
+  const descEl = document.getElementById('hero-desc');
+  const playBtn = document.getElementById('hero-play-btn');
+  const logoEl = document.getElementById('hero-logo');
+  const bannerEl = document.getElementById('hero-banner');
+  
+  if (titleEl) titleEl.textContent = ch.name || "Live Stream";
+  if (descEl) descEl.textContent = `${ch.country || "Global"} · ${ch.group || "IPTV"} Channel. Streaming live with anti-lag and BDIX proxy support.`;
+  if (playBtn) playBtn.onclick = () => openPlayer(ch);
+  
+  if (bannerEl) {
+    bannerEl.style.backgroundImage = `url('${getBannerBg(ch)}')`;
+  }
+  
+  if (logoEl) {
+    if (ch.logo) {
+      logoEl.src = logoSrc(ch.logo, ch.name);
+      logoEl.style.display = 'block';
+      logoEl.onerror = () => { logoEl.style.display = 'none'; };
+    } else {
+      logoEl.style.display = 'none';
+    }
+  }
+}
+
+function initFeaturedBanner(channels) {
+  if (featuredTimer) {
+    clearInterval(featuredTimer);
+    featuredTimer = null;
+  }
+  
+  featuredList = [];
+  
+  const bd = channels.filter(c => c && c.country === 'Bangladesh');
+  const sports = channels.filter(c => c && c.subcat === 'Sports');
+  const movies = channels.filter(c => c && (c.subcat === 'Movies' || c.subcat === 'Natok/Drama'));
+  
+  const addIfFound = (query, source) => {
+    const found = source.find(c => c && c.name && c.name.toLowerCase().includes(query));
+    if (found && !featuredList.includes(found)) featuredList.push(found);
+  };
+
+  addIfFound('t sports', bd);
+  addIfFound('gtv', bd);
+  addIfFound('somoy', bd);
+  addIfFound('star sports', sports);
+  addIfFound('sony sports', sports);
+  addIfFound('hbo', movies);
+  addIfFound('independent', bd);
+  addIfFound('cartoon network', channels);
+
+  for (let i = 0; i < channels.length && featuredList.length < 6; i++) {
+    if (channels[i] && !featuredList.includes(channels[i])) {
+      featuredList.push(channels[i]);
+    }
+  }
+  
+  if (featuredList.length === 0) return;
+  
+  featuredIndex = 0;
+  setFeaturedChannel(featuredList[featuredIndex]);
+  
+  // Auto-scroll recommendations every 8 seconds
+  featuredTimer = setInterval(() => {
+    if (featuredList.length <= 1) return;
+    featuredIndex = (featuredIndex + 1) % featuredList.length;
+    
+    const contentEl = document.querySelector('.hero-content');
+    if (contentEl) {
+      contentEl.classList.add('fade-out');
+      setTimeout(() => {
+        setFeaturedChannel(featuredList[featuredIndex]);
+        contentEl.classList.remove('fade-out');
+      }, 500);
+    } else {
+      setFeaturedChannel(featuredList[featuredIndex]);
+    }
+  }, 8000);
 }
 
 function renderHomeRows() {
@@ -768,32 +888,12 @@ function renderHomeRows() {
   // G. Religious (Safe checks)
   const religiousChannels = allCh.filter(c => c && c.subcat === 'Religious');
   
-  // ── Featured Spotlight Spotlight ──
-  let featured = bdChannels.find(c => c && c.name && (c.name.toLowerCase().includes('t sports') || c.name.toLowerCase().includes('tsports'))) ||
-                 sportsChannels.find(c => c && c.name && (c.name.toLowerCase().includes('star sports') || c.name.toLowerCase().includes('sony'))) ||
-                 bdChannels.find(c => c && c.name && (c.name.toLowerCase().includes('gtv') || c.name.toLowerCase().includes('somoy'))) ||
-                 allCh.find(c => c && c.name);
-                 
-  if (featured) {
-    const titleEl = document.getElementById('hero-title');
-    const descEl = document.getElementById('hero-desc');
-    const playBtn = document.getElementById('hero-play-btn');
-    const logoEl = document.getElementById('hero-logo');
-    
-    if (titleEl) titleEl.textContent = featured.name || "Live Stream";
-    if (descEl) descEl.textContent = `${featured.country || "Global"} · ${featured.group || "IPTV"} Channel. Streaming live with anti-lag and BDIX proxy support.`;
-    if (playBtn) playBtn.onclick = () => openPlayer(featured);
-    
-    // Dynamically show featured channel logo inside hero banner
-    if (logoEl) {
-      if (featured.logo) {
-        logoEl.src = logoSrc(featured.logo, featured.name);
-        logoEl.style.display = 'block';
-        logoEl.onerror = () => { logoEl.style.display = 'none'; };
-      } else {
-        logoEl.style.display = 'none';
-      }
-    }
+  // ── Initialize Auto-Scrolling Featured Spotlight ──
+  if (featuredList.length === 0) {
+    initFeaturedBanner(allCh);
+  } else if (!featuredTimer) {
+    // Resume cycle timer if we returned to Home screen and timer was cleared
+    initFeaturedBanner(allCh);
   }
   
   const categories = [

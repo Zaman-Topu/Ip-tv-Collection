@@ -358,7 +358,12 @@
     }
     .hero-content {
       position: relative; z-index: 2; max-width: 600px; padding: 40px 60px;
-      display: flex; flex-direction: column; gap: 14px;
+      display: flex; flex-direction: column; gap: 16px;
+      transition: opacity 0.5s ease, transform 0.5s ease;
+    }
+    .hero-content.fade-out {
+      opacity: 0;
+      transform: translateY(10px);
     }
     .hero-badge {
       font-size: 11px; font-weight: 800; letter-spacing: 2px; color: var(--red);
