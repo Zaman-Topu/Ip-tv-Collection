@@ -60,6 +60,8 @@ let hlsInst       = null;
 let featuredIndex = 0;
 let featuredList  = [];
 let featuredTimer = null;
+let heroHls       = null;
+let heroPlayTimer = null;
 let srchTimer = null;
 let dbKey     = 'active';
 const countryCache = {}; // Cache country detections
@@ -778,8 +780,89 @@ function getBannerBg(ch) {
   return 'https://images.unsplash.com/photo-1579546929518-9e396f3cc809?q=80&w=1600&auto=format&fit=crop';
 }
 
+function stopHeroVideo() {
+  if (heroPlayTimer) {
+    clearTimeout(heroPlayTimer);
+    heroPlayTimer = null;
+  }
+  const heroVid = document.getElementById('hero-video');
+  if (heroVid) {
+    heroVid.pause();
+    heroVid.classList.remove('playing');
+    heroVid.style.display = 'none';
+    heroVid.removeAttribute('src');
+    try { heroVid.load(); } catch(e){}
+  }
+  if (heroHls) {
+    try {
+      heroHls.destroy();
+    } catch(e){}
+    heroHls = null;
+  }
+}
+
+function playHeroVideo(ch) {
+  const heroVid = document.getElementById('hero-video');
+  if (!heroVid || !ch) return;
+  
+  const rawUrl = _dec(ch._u);
+  if (rawUrl.startsWith('rtmp') || rawUrl.startsWith('rtsp')) return;
+  
+  const urlPath = rawUrl.split('?')[0].toLowerCase();
+  const ext = urlPath.split('.').pop();
+  const nativeExts = new Set(['mp4', 'webm', 'ogg']);
+  const isNativeOnly = nativeExts.has(ext) && !urlPath.includes('.m3u');
+  const tryHls = !isNativeOnly && window.Hls && Hls.isSupported();
+  
+  heroVid.muted = true;
+  heroVid.playsInline = true;
+  
+  if (tryHls) {
+    heroHls = new Hls({
+      maxBufferLength: 4,               // small 4s buffer for quick, cheap loading
+      maxMaxBufferLength: 8,
+      maxBufferSize: 2 * 1024 * 1024,   // 2MB memory cap
+      enableWorker: true,
+      lowLatencyMode: true
+    });
+    heroHls.loadSource(rawUrl);
+    heroHls.attachMedia(heroVid);
+    
+    heroHls.on(Hls.Events.MANIFEST_PARSED, () => {
+      heroVid.play().then(() => {
+        heroVid.style.display = 'block';
+        setTimeout(() => {
+          if (heroVid.readyState >= 2) {
+            heroVid.classList.add('playing');
+          }
+        }, 300);
+      }).catch(() => {});
+    });
+    
+    heroHls.on(Hls.Events.ERROR, (e, data) => {
+      if (data.fatal) {
+        stopHeroVideo();
+      }
+    });
+  } else {
+    heroVid.src = rawUrl;
+    heroVid.play().then(() => {
+      heroVid.style.display = 'block';
+      setTimeout(() => {
+        heroVid.classList.add('playing');
+      }, 300);
+    }).catch(() => {
+      stopHeroVideo();
+    });
+  }
+}
+
 function setFeaturedChannel(ch) {
   if (!ch) return;
+  
+  // Clean up any background video before updating
+  stopHeroVideo();
+  
   const titleEl = document.getElementById('hero-title');
   const descEl = document.getElementById('hero-desc');
   const playBtn = document.getElementById('hero-play-btn');
@@ -803,6 +886,11 @@ function setFeaturedChannel(ch) {
       logoEl.style.display = 'none';
     }
   }
+  
+  // Delay play by 1.5s to prevent segment fetch floods on fast carousel scrolls
+  heroPlayTimer = setTimeout(() => {
+    playHeroVideo(ch);
+  }, 1500);
 }
 
 function initFeaturedBanner(channels) {
@@ -1025,6 +1113,9 @@ function scrollUp() {
 //  PLAYER — URL decoded ONLY at play time
 // ══════════════════════════════════════════
 function openPlayer(ch, viaProxy = false) {
+  // Stop and release hero background playback to avoid audio/bandwidth conflicts
+  stopHeroVideo();
+
   currentStreamProxy = viaProxy;
   activeCh = ch;
   pWrap.classList.add('show');
@@ -1265,6 +1356,9 @@ function closePlayer() {
   if (aoWarn) aoWarn.style.display = 'none';
   pWrap.classList.remove('show');
   history.pushState(null,'',location.pathname);
+  
+  // Resume background preview video playback on home banner
+  resumeHeroVideo();
 }
 
 function renderQueue(active) {
