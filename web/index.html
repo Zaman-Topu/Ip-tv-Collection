@@ -166,10 +166,17 @@
     @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); } }
     
     .nav-stat {
-      display: flex; align-items: center; gap: 8px;
-      font-size: 13px; font-weight: 600; color: var(--muted);
-      padding: 8px 16px; background: rgba(255, 255, 255, 0.02);
+      display: flex; align-items: center; gap: 10px;
+      font-size: 12px; font-weight: 600; color: var(--muted);
+      padding: 6px 14px; background: rgba(255, 255, 255, 0.03);
       border: 1px solid var(--glass-border); border-radius: 99px;
+      flex-shrink: 0;
+    }
+    .nav-stat svg {
+      width: 18px; height: 18px; stroke: var(--red); opacity: 0.85; flex-shrink: 0;
+    }
+    .nav-stat div {
+      white-space: nowrap;
     }
     .nav-stat span { color: #fff; font-weight: 800; }
     #stat-c { color: var(--red); }
@@ -564,13 +571,19 @@
 
     /* ── MOBILE POLISH ── */
     @media(max-width: 768px) {
-      #nav { padding: 0 20px; height: 64px; }
-      .logo-img { height: 28px; }
-      .live-dot { padding: 3px 8px; font-size: 9px; }
+      #nav {
+        top: 12px;
+        width: calc(100% - 24px);
+        padding: 0 16px;
+        height: 56px;
+      }
+      .logo-img { height: 24px; }
+      .live-dot { padding: 2px 6px; font-size: 8px; }
       .nav-menu { display: none; }
-      .nav-stat { font-size: 11px; padding: 5px 10px; }
-      #app { padding-top: 80px; }
-      .wrap { padding: 0 20px 20px; }
+      .nav-stat { font-size: 10px; padding: 4px 8px; }
+      .nav-stat svg { width: 14px; height: 14px; }
+      #app { padding-top: 84px; }
+      .wrap { padding: 0 16px 16px; }
       
       .hero-banner { aspect-ratio: 16/9; margin-bottom: 20px; }
       .hero-content { padding: 20px; gap: 8px; }
