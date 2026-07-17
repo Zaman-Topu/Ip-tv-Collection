@@ -701,70 +701,86 @@ function renderGrid() {
   const isHomeMode = !fSearch && fCountry === 'all' && fCat === 'all' && dbKey === 'active';
   
   if (isHomeMode) {
-    grid.style.display = 'none';
-    pages.style.display = 'none';
-    if (heroBanner) heroBanner.style.display = 'flex';
-    if (homeRows) homeRows.style.display = 'flex';
-    
-    renderHomeRows();
+    try {
+      grid.style.display = 'none';
+      pages.style.display = 'none';
+      if (heroBanner) heroBanner.style.display = 'flex';
+      if (homeRows) homeRows.style.display = 'block';
+      
+      renderHomeRows();
+    } catch (err) {
+      console.error("Failed to render Netflix category rows:", err);
+      // Fail-safe: fall back to normal grid view if anything crashes
+      if (heroBanner) heroBanner.style.display = 'none';
+      if (homeRows) homeRows.style.display = 'none';
+      grid.style.display = 'grid';
+      pages.style.display = 'flex';
+      renderNormalGrid();
+    }
   } else {
     if (heroBanner) heroBanner.style.display = 'none';
     if (homeRows) homeRows.style.display = 'none';
     grid.style.display = 'grid';
     pages.style.display = 'flex';
-    
-    if (!filtered.length) {
-      grid.innerHTML = '<div id="loading" style="min-height:150px;color:var(--muted);font-size:12px;font-weight:600;grid-column:1/-1;display:flex;align-items:center;justify-content:center;">No channels found.</div>';
-      return;
-    }
-    const total = Math.ceil(filtered.length / PER);
-    if (page > total) page = total;
-    const slice = filtered.slice((page-1)*PER, page*PER);
-
-    const frag = document.createDocumentFragment();
-    slice.forEach(ch => frag.appendChild(makeCard(ch)));
-    grid.appendChild(frag);
-    if (total > 1) renderPages(total);
+    renderNormalGrid();
   }
+}
+
+function renderNormalGrid() {
+  if (!filtered.length) {
+    grid.innerHTML = '<div id="loading" style="min-height:150px;color:var(--muted);font-size:12px;font-weight:600;grid-column:1/-1;display:flex;align-items:center;justify-content:center;">No channels found.</div>';
+    return;
+  }
+  const total = Math.ceil(filtered.length / PER);
+  if (page > total) page = total;
+  const slice = filtered.slice((page-1)*PER, page*PER);
+
+  const frag = document.createDocumentFragment();
+  slice.forEach(ch => frag.appendChild(makeCard(ch)));
+  grid.appendChild(frag);
+  if (total > 1) renderPages(total);
 }
 
 function renderHomeRows() {
   if (!homeRows) return;
   homeRows.innerHTML = '';
   
-  // A. Favorites
-  const favChannels = favorites.map(url => allCh.find(c => c._u === url)).filter(Boolean);
+  // Defensive check on favorites array
+  const favsArray = Array.isArray(favorites) ? favorites : [];
   
-  // B. Sports Action
-  const sportsChannels = allCh.filter(c => c.subcat === 'Sports');
+  // A. Favorites (Safe checks)
+  const favChannels = favsArray.map(url => allCh.find(c => c && c._u === url)).filter(Boolean);
   
-  // C. Bangladeshi Live TV
-  const bdChannels = allCh.filter(c => c.country === 'Bangladesh');
+  // B. Sports Action (Safe checks)
+  const sportsChannels = allCh.filter(c => c && c.subcat === 'Sports');
   
-  // D. Movies & Entertainment
-  const moviesChannels = allCh.filter(c => c.subcat === 'Movies' || c.subcat === 'Natok/Drama');
+  // C. Bangladeshi Live TV (Safe checks)
+  const bdChannels = allCh.filter(c => c && c.country === 'Bangladesh');
   
-  // E. News Network
-  const newsChannels = allCh.filter(c => c.subcat === 'News');
+  // D. Movies & Entertainment (Safe checks)
+  const moviesChannels = allCh.filter(c => c && (c.subcat === 'Movies' || c.subcat === 'Natok/Drama'));
   
-  // F. Kids Zone
-  const kidsChannels = allCh.filter(c => c.subcat === 'Kids');
+  // E. News Network (Safe checks)
+  const newsChannels = allCh.filter(c => c && c.subcat === 'News');
+  
+  // F. Kids Zone (Safe checks)
+  const kidsChannels = allCh.filter(c => c && c.subcat === 'Kids');
 
-  // G. Religious
-  const religiousChannels = allCh.filter(c => c.subcat === 'Religious');
+  // G. Religious (Safe checks)
+  const religiousChannels = allCh.filter(c => c && c.subcat === 'Religious');
   
   // ── Featured Spotlight Spotlight ──
-  let featured = bdChannels.find(c => c.name.toLowerCase().includes('t sports') || c.name.toLowerCase().includes('tsports')) ||
-                 sportsChannels.find(c => c.name.toLowerCase().includes('star sports') || c.name.toLowerCase().includes('sony')) ||
-                 bdChannels.find(c => c.name.toLowerCase().includes('gtv') || c.name.toLowerCase().includes('somoy')) ||
-                 allCh[0];
+  let featured = bdChannels.find(c => c && c.name && (c.name.toLowerCase().includes('t sports') || c.name.toLowerCase().includes('tsports'))) ||
+                 sportsChannels.find(c => c && c.name && (c.name.toLowerCase().includes('star sports') || c.name.toLowerCase().includes('sony'))) ||
+                 bdChannels.find(c => c && c.name && (c.name.toLowerCase().includes('gtv') || c.name.toLowerCase().includes('somoy'))) ||
+                 allCh.find(c => c && c.name);
                  
   if (featured) {
     const titleEl = document.getElementById('hero-title');
     const descEl = document.getElementById('hero-desc');
     const playBtn = document.getElementById('hero-play-btn');
-    if (titleEl) titleEl.textContent = featured.name;
-    if (descEl) descEl.textContent = `${featured.country} · ${featured.group} Channel. Streaming live with anti-lag and BDIX proxy support.`;
+    if (titleEl) titleEl.textContent = featured.name || "Live Stream";
+    if (descEl) descEl.textContent = `${featured.country || "Global"} · ${featured.group || "IPTV"} Channel. Streaming live with anti-lag and BDIX proxy support.`;
     if (playBtn) playBtn.onclick = () => openPlayer(featured);
   }
   
@@ -791,7 +807,7 @@ function renderHomeRows() {
     const scroller = document.createElement('div');
     scroller.className = 'row-scroller';
     
-    const sortedData = [...cat.data].sort((a, b) => b._score - a._score);
+    const sortedData = [...cat.data].sort((a, b) => (b._score || 0) - (a._score || 0));
     const slice = sortedData.slice(0, 30);
     slice.forEach(ch => {
       scroller.appendChild(makeCard(ch));
@@ -804,6 +820,8 @@ function renderHomeRows() {
 }
 
 function makeCard(ch) {
+  if (!ch) return document.createElement('div');
+  
   const st = getStatus(ch);
   const card = document.createElement('div');
   card.className = 'card';
@@ -817,13 +835,24 @@ function makeCard(ch) {
 
   card.innerHTML = `
     ${badge}
-    <button class="fav-btn ${isFav ? 'active' : ''}" onclick="toggleFavorite(event, '${ch._u}', this)" aria-label="Favorite" title="Add to Favorites">${isFav ? '★' : '☆'}</button>
-    <div class="c-img"><img src="${logoSrc(ch.logo, ch.name)}" alt="${ch.name}" loading="lazy" onerror="this.onerror=null; if(window.failedLogos) window.failedLogos.add('${ch.logo.replace(/'/g, "\\'")}'); this.src=getFallback('${ch.name.replace(/'/g, "\\'")}')"></div>
+    <button class="fav-btn ${isFav ? 'active' : ''}" onclick="toggleFavorite(event, '${ch._u || ''}', this)" aria-label="Favorite" title="Add to Favorites">${isFav ? '★' : '☆'}</button>
+    <div class="c-img"><img src="${logoSrc(ch.logo, ch.name)}" alt="${ch.name || 'Channel'}" loading="lazy"></div>
     <div class="c-info">
-      <div class="c-name">${ch.name}</div>
-      <div class="c-sub">${ch.country} · ${ch.group}</div>
+      <div class="c-name">${ch.name || 'Unknown Channel'}</div>
+      <div class="c-sub">${ch.country || 'Global'} · ${ch.group || 'IPTV'}</div>
     </div>`;
+    
   card.tabIndex = 0;
+
+  // Clean programmatic image load error handling
+  const img = card.querySelector('.c-img img');
+  if (img) {
+    img.addEventListener('error', () => {
+      if (window.failedLogos && ch.logo) window.failedLogos.add(ch.logo);
+      img.src = getFallback(ch.name || 'TV');
+    });
+  }
+
   card.addEventListener('click', () => openPlayer(ch));
   card.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') {
