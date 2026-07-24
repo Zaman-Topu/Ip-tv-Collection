@@ -1,0 +1,27 @@
+name: 📺 Request New Channel / Stream
+description: Request a new TV channel or M3U stream source to be added.
+title: "[CHANNEL REQUEST]: "
+labels: ["channel-request"]
+body:
+  - type: markdown
+    attributes:
+      value: Suggest new channels or playlists for BUG TV!
+  - type: input
+    id: channel_name
+    attributes:
+      label: Channel Name
+      description: Name of the channel you want added.
+      placeholder: "e.g., T Sports HD"
+    validations:
+      required: true
+  - type: input
+    id: stream_url
+    attributes:
+      label: Stream URL (Optional)
+      description: Provide an M3U8 or stream link if available.
+      placeholder: "https://..."
+  - type: textarea
+    id: additional_info
+    attributes:
+      label: Additional Context
+      placeholder: "Category, logo URL, or region details..."

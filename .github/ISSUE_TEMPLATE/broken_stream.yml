@@ -1,0 +1,40 @@
+name: 🔴 Report Broken / Dead Stream
+description: Report a channel that is offline, buffering constantly, or showing an error.
+title: "[BROKEN STREAM]: "
+labels: ["broken-stream"]
+body:
+  - type: markdown
+    attributes:
+      value: Thank you for helping us maintain active IPTV streams! Please fill out the details below.
+  - type: input
+    id: channel_name
+    attributes:
+      label: Channel Name
+      description: What is the exact name of the channel?
+      placeholder: "e.g., Somoy TV HD"
+    validations:
+      required: true
+  - type: dropdown
+    id: category
+    attributes:
+      label: Category / Group
+      options:
+        - "Bangladesh (BD)"
+        - "Indian Bangla"
+        - "India (General)"
+        - "Sports"
+        - "News"
+        - "Movies"
+        - "Cartoon & Kids"
+        - "Religion"
+        - "Other"
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: Error Details
+      description: Describe what happens when playing (e.g. 404 error, infinite loading, audio only).
+      placeholder: "Channel fails to load on Web Player and VLC..."
+    validations:
+      required: false
