@@ -17,6 +17,9 @@ README_FILE = "README.md"
 CUSTOM_FILE = "custom_playlist.m3u"
 
 SOURCE_URLS = [
+    "https://iptv-org.github.io/iptv/languages/ben.m3u",
+    "https://iptv-org.github.io/iptv/languages/eng.m3u",
+    "https://iptv-org.github.io/iptv/index.m3u",
     "https://raw.githubusercontent.com/abusaeeidx/Mrgify-BDIX-IPTV/main/playlist.m3u",
     "https://iptv-org.github.io/iptv/regions/amer.m3u",
     "https://iptv-org.github.io/iptv/regions/eur.m3u",

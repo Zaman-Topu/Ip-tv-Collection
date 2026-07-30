@@ -8,6 +8,9 @@ OUTPUT_FILE = "FINAL_IPTV_COMPLETE.m3u"
 MOVIES_OUTPUT_FILE = "FINAL_MOVIES_COMPLETE.m3u"
 
 SOURCES = [
+    "https://iptv-org.github.io/iptv/languages/ben.m3u",
+    "https://iptv-org.github.io/iptv/languages/eng.m3u",
+    "https://iptv-org.github.io/iptv/index.m3u",
     "https://raw.githubusercontent.com/Monjil404/livetv/refs/heads/main/pro",
     "https://raw.githubusercontent.com/Monjil404/TVspo/refs/heads/main/tvs",
     "https://raw.githubusercontent.com/abusaeeidx/Mrgify-BDIX-IPTV/main/playlist.m3u",
