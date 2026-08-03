@@ -132,26 +132,26 @@ https://raw.githubusercontent.com/Zaman-Topu/Ip-tv-Collection/main/epg.json
 *This repository runs automated Python status checkers to verify stream integrity every night.*
 
 <!-- STATS:START -->
-> **Last Checked:** 2026-08-03 01:38 AM (BST)
+> **Last Checked:** 2026-08-04 02:04 AM (BST)
 > *Next check scheduled for 12:00 AM tonight.*
 
 | Status | Count | Percentage | Description |
 | :--- | :---: | :---: | :--- |
-| 🟢 **Active** | **10995** | 29.3% | Online and streaming globally. |
+| 🟢 **Active** | **11018** | 29.3% | Online and streaming globally. |
 | 🔵 **Local ISP / BDIX** | **2709** | 7.2% | Local Bangladeshi ISP servers. Working perfectly if you are on that ISP. |
-| 🟡 **Geo-Blocked** | **1768** | 4.7% | Stream is online but restricted to specific countries. |
-| 🔴 **Down / Error** | **22081** | 58.8% | Server offline, timed out, or returning errors globally. |
-| 📺 **Total Tested** | **37553** | 100% | Total channels in the playlist. |
+| 🟡 **Geo-Blocked** | **1716** | 4.6% | Stream is online but restricted to specific countries. |
+| 🔴 **Down / Error** | **22104** | 58.9% | Server offline, timed out, or returning errors globally. |
+| 📺 **Total Tested** | **37547** | 100% | Total channels in the playlist. |
 
 <details>
 <summary><b>Show Visual Chart 📊</b></summary>
 
 ```mermaid
 pie title IPTV Channel Status Breakdown
-    "Active (🟢)" : 10995
+    "Active (🟢)" : 11018
     "Local ISP/BDIX (🔵)" : 2709
-    "Geo-Blocked (🟡)" : 1768
-    "Down (🔴)" : 22081
+    "Geo-Blocked (🟡)" : 1716
+    "Down (🔴)" : 22104
 ```
 </details>
 <!-- STATS:END -->
