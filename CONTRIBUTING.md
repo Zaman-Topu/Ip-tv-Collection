@@ -9,7 +9,7 @@ Thank you for your interest in contributing to **BUG TV**! We welcome contributi
 ### 1. 📺 Adding or Updating Custom Channels
 If you want to add working IPTV streams or local BDIX channels:
 - Add your channels directly to [`custom_playlist.m3u`](custom_playlist.m3u).
-- Channels added to `custom_playlist.m3u` are **protected** and will never be overwritten or deleted by automated daily crawler scripts.
+- Channels added to `custom_playlist.m3u` are **protected** and will never be overwritten or deleted by automated scan scripts.
 
 ### 2. 🐛 Reporting Dead Streams & Issues
 If a channel is offline or broken:

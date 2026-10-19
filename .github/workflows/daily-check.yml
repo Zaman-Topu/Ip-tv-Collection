@@ -1,12 +1,12 @@
-name: Daily IPTV Status Check
+name: Bi-Daily IPTV Status Check
 
 on:
   push:
     branches:
       - main
   schedule:
-    # 18:00 UTC is 12:00 AM BST (Bangladesh Standard Time)
-    - cron: '0 18 * * *'
+    # 18:00 UTC is 12:00 AM BST (Bangladesh Standard Time), runs every 2 days
+    - cron: '0 18 */2 * *'
   workflow_dispatch:
     # Allows manual trigger from the GitHub Actions tab
 
@@ -47,7 +47,7 @@ jobs:
           if git diff --staged --quiet; then
             echo "No changes in channel status to commit."
           else
-            git commit -m "docs(readme): auto-update daily channel status and cleanup dead streams"
+            git commit -m "docs(readme): auto-update bi-daily channel status and cleanup dead streams"
             git pull --rebase -X theirs
             git push
           fi
