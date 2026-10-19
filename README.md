@@ -6,7 +6,7 @@
   <br><br>
 
   [![Channels](https://img.shields.io/badge/Channels-50k+-e20914?style=for-the-badge&logo=tv)](#)
-  [![Daily Status Check](https://img.shields.io/github/actions/workflow/status/Zaman-Topu/Ip-tv-Collection/daily-check.yml?branch=main&label=Daily%20Checker&style=for-the-badge&logo=githubactions&logoColor=white)](https://github.com/Zaman-Topu/Ip-tv-Collection/actions/workflows/daily-check.yml)
+  [![Live Status Check](https://img.shields.io/github/actions/workflow/status/Zaman-Topu/Ip-tv-Collection/daily-check.yml?branch=main&label=Live%20Checker&style=for-the-badge&logo=githubactions&logoColor=white)](https://github.com/Zaman-Topu/Ip-tv-Collection/actions/workflows/daily-check.yml)
   [![Deploy Web Player](https://img.shields.io/github/actions/workflow/status/Zaman-Topu/Ip-tv-Collection/deploy.yml?branch=main&label=Web%20Deploy&style=for-the-badge&logo=googlechrome&logoColor=white)](https://github.com/Zaman-Topu/Ip-tv-Collection/actions/workflows/deploy.yml)
   [![Android TV App](https://img.shields.io/badge/Android_TV_App-Download-ff0055?style=for-the-badge&logo=android)](https://github.com/Zaman-Topu/Ip-tv-Collection/releases/download/latest/app-release.apk)
   [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](LICENSE)
@@ -14,7 +14,7 @@
 
 <br>
 
-Welcome to **BUG TV**, the ultimate dynamic IPTV aggregator and smart client player. Every single night, our automated GitHub Action connects to **25+ of the top IPTV repositories**, merges their streams, removes duplicates, physically tests thousands of streams, and generates four ultra-clean databases. 
+Welcome to **BUG TV**, the ultimate dynamic IPTV aggregator and smart client player. Every 48 hours, our automated GitHub Actions pipeline connects to **25+ of the top IPTV repositories**, merges streams, removes duplicates, checks link health, and publishes clean production-ready databases. 
 
 We feature a **Premium Web Player** with a modern layout, allowing you to stream thousands of channels directly from your browser without installing any third-party IPTV apps!
 
@@ -44,36 +44,46 @@ We feature a **Premium Web Player** with a modern layout, allowing you to stream
 ```text
 Ip-tv-Collection/
 ├── .github/
-│   ├── ISSUE_TEMPLATE/       # Automated GitHub Issue templates for stream & feature requests
+│   ├── ISSUE_TEMPLATE/       # Issue templates (broken stream + channel request)
 │   │   ├── broken_stream.yml
 │   │   └── channel_request.yml
 │   ├── PULL_REQUEST_TEMPLATE.md
-│   └── workflows/            # GitHub Actions automated workflows
-│       ├── auto-updater.yml  # Fetches & merges 25+ IPTV sources every 3 days
+│   └── workflows/            # GitHub Actions pipelines
+│       ├── auto-updater.yml  # Full source sync + merge every 2 days
 │       ├── build-apk.yml     # Compiles Flutter Android TV app
-│       ├── daily-check.yml   # Tests channel health & updates README stats nightly
+│       ├── daily-check.yml   # Bi-daily live status check + README refresh
 │       └── deploy.yml        # Builds & deploys Web Player to GitHub Pages
-├── assets/                   # Banners, logos, social previews, and README visual media
-├── bug_tv_app/               # Flutter Android App source for Smart TV & TV Box
-├── scripts/                  # Python engine scripts
-│   ├── auto_updater.py       # Crawls IPTV sources & maps channel categories
-│   ├── update_stats.py       # Async HTTP health-checker for 30k+ stream URLs
-│   ├── generate_epg.py       # JSON Electronic Program Guide aggregator
-│   └── epg_generator.py      # Compressed XMLTV EPG compiler
-├── web/                      # Vite + Video.js Premium Web Player Frontend
-├── custom_playlist.m3u       # Shielded custom channels (Preserved from crawler overwrites)
-├── FINAL_IPTV_ACTIVE.m3u     # 🟢 100% verified online global & BDIX streams
-├── FINAL_IPTV_GEO.m3u        # 🟡 Geo-restricted stream database (Requires VPN)
-├── FINAL_IPTV_COMPLETE.m3u   # 📚 Master deduplicated IPTV database
-├── FINAL_IPTV_DEAD.m3u       # 🔴 Dead / offline stream records
-├── FINAL_MOVIES_COMPLETE.m3u # 🎬 VOD movies & cinema stream database
-├── channel_status.json       # Live channel health metadata
-├── epg.json                  # Light JSON EPG matched with Active Database
-├── CONTRIBUTING.md           # Guidelines for community contributions
-├── LICENSE                   # Open-source MIT License
-├── SECURITY.md               # Security reporting guidelines
-└── README.md                 # Master project documentation
+├── assets/                   # README visuals, banner, branding assets
+├── bug_tv_app/               # Flutter Android TV application
+├── scripts/                  # Python automation engines
+│   ├── auto_updater.py       # Multi-source crawler + deduplication
+│   ├── update_stats.py       # Live URL scanner + active/geo/dead split
+│   ├── generate_epg.py       # Active playlist to epg.json mapper
+│   └── epg_generator.py      # Full EPG XMLTV archive builder
+├── web/                      # Web player (Vite + Video.js)
+├── custom_playlist.m3u       # Protected custom channels (never overwritten)
+├── FINAL_IPTV_ACTIVE.m3u     # Live + ISP/BDIX verified streams
+├── FINAL_IPTV_GEO.m3u        # Geo-restricted but reachable streams
+├── FINAL_IPTV_COMPLETE.m3u   # Master deduplicated live TV database
+├── FINAL_IPTV_DEAD.m3u       # Dead / 404 / unreachable streams
+├── FINAL_MOVIES_COMPLETE.m3u # Movies/VOD playlist output
+├── channel_status.json       # Per-URL health state map for web client
+├── epg.json                  # Program guide mapped to active channels
+└── README.md                 # Project documentation
 ```
+
+### 🔗 Quick Navigation (Key Folders & Files)
+- **Automation Workflows**
+  - [`auto-updater.yml`](.github/workflows/auto-updater.yml) — bi-daily full source sync and playlist regeneration
+  - [`daily-check.yml`](.github/workflows/daily-check.yml) — bi-daily URL live check and stats update
+- **Automation Scripts**
+  - [`scripts/auto_updater.py`](scripts/auto_updater.py)
+  - [`scripts/update_stats.py`](scripts/update_stats.py)
+  - [`scripts/generate_epg.py`](scripts/generate_epg.py)
+  - [`scripts/epg_generator.py`](scripts/epg_generator.py)
+- **Delivery Clients**
+  - [`web/`](web/) — browser player frontend
+  - [`bug_tv_app/`](bug_tv_app/) — Flutter Android TV app
 
 ---
 
@@ -81,7 +91,7 @@ Ip-tv-Collection/
 
 - **🚀 Premium Netflix-Style UI:** Beautiful glassmorphic filters, widescreen spotlight banners, horizontal rows with custom cinematic right-edge fading masks, and dynamic channel logo treatments.
 - **🎮 Spatial TV Navigation:** Fully optimized for Smart TVs and Android TV Boxes. Easily navigate the entire interface using a TV Remote D-Pad (Arrow Keys + Enter).
-- **🏷️ Automated Ingest & Checking:** Daily bots crawl 25+ repos, check HTTP response codes, flag local BDIX links vs geo-restricted vs dead channels, and generate clean playlists.
+- **🏷️ Automated Ingest & Checking:** Bi-daily bots crawl 25+ repos, check HTTP response codes, remove dead/404 links from the live database, and regenerate clean playlists.
 - **🛡️ Custom Channel Protection:** Skip automatic crawler overwrites. Any channels added to [`custom_playlist.m3u`](custom_playlist.m3u) are preserved and shielded from deduplication filters.
 - **📱 Responsive Layout:** Perfectly optimized for mobile phones (using floating capsule navigation bars), tablets, computers, and ultra-wide displays.
 
@@ -90,7 +100,7 @@ Ip-tv-Collection/
 ## ⚡ Smart TV & Low-End Device Optimizations
 
 To ensure the player runs flawlessly on older devices and low-spec Smart TVs, we implemented the following performance fixes:
-1. **Active Database by Default:** Loads the leaner `active.m3u` database by default, reducing initial JSON/HTML memory consumption by **50%**.
+1. **Active Database by Default:** Loads the leaner `FINAL_IPTV_ACTIVE.m3u` database by default, reducing initial JSON/HTML memory consumption by **50%**.
 2. **Offline Channel Pruning:** Automatically parses and discards all `dead` / `down` channels during database ingestion to prune the JS heap by **75%**.
 3. **Failed Logo Cache:** Dynamically flags broken logo URLs to instantly render fallbacks, completely preventing continuous, CPU-heavy broken image network requests during scroll.
 4. **Static Pill Filters:** Categorization pills are generated statically once. Switching categories toggles CSS classes rather than clearing/re-drawing 100+ DOM nodes, eliminating typing lag.
@@ -129,11 +139,11 @@ https://raw.githubusercontent.com/Zaman-Topu/Ip-tv-Collection/main/epg.json
 
 ## 📡 Live Ingestion Status
 
-*This repository runs automated Python status checkers to verify stream integrity every night.*
+*This repository runs automated Python status checkers every 2 days to verify stream integrity and keep the live database clean.*
 
 <!-- STATS:START -->
 > **Last Checked:** 2026-09-20 02:23 AM (BST)
-> *Next check scheduled for 12:00 AM tonight.*
+> *Next automated live scan runs every 2 days via GitHub Actions.*
 
 | Status | Count | Percentage | Description |
 | :--- | :---: | :---: | :--- |

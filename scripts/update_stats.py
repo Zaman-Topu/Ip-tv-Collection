@@ -281,7 +281,7 @@ async def main():
 
     stats_md = f"""
 > **Last Checked:** {bst_time}
-> *Next check scheduled for 12:00 AM tonight.*
+> *Next automated live scan runs every 2 days via GitHub Actions.*
 
 | Status | Count | Percentage | Description |
 | :--- | :---: | :---: | :--- |

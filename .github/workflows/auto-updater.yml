@@ -1,9 +1,9 @@
-name: Auto-Updater (Fetch & Deduplicate)
+name: Bi-Daily IPTV Source Sync
 
 on:
   schedule:
-    # Runs at 23:00 UTC (05:00 AM BST) every 3 days
-    - cron: '0 23 */3 * *'
+    # Runs at 23:00 UTC (05:00 AM BST) every 2 days
+    - cron: '0 23 */2 * *'
   workflow_dispatch:
     # Allows manual trigger
 
