@@ -44,42 +44,46 @@ We feature a **Premium Web Player** with a modern layout, allowing you to stream
 ```text
 Ip-tv-Collection/
 ├── .github/
-│   ├── ISSUE_TEMPLATE/       # Automated GitHub Issue templates for stream & feature requests
+│   ├── ISSUE_TEMPLATE/       # Issue templates (broken stream + channel request)
 │   │   ├── broken_stream.yml
 │   │   └── channel_request.yml
 │   ├── PULL_REQUEST_TEMPLATE.md
-│   └── workflows/            # GitHub Actions automated workflows
-│       ├── auto-updater.yml  # Fetches & merges 25+ IPTV sources every 2 days
+│   └── workflows/            # GitHub Actions pipelines
+│       ├── auto-updater.yml  # Full source sync + merge every 2 days
 │       ├── build-apk.yml     # Compiles Flutter Android TV app
-│       ├── daily-check.yml   # Bi-daily channel health check + README stats refresh
+│       ├── daily-check.yml   # Bi-daily live status check + README refresh
 │       └── deploy.yml        # Builds & deploys Web Player to GitHub Pages
-├── assets/                   # Banners, logos, social previews, and README visual media
-├── bug_tv_app/               # Flutter Android App source for Smart TV & TV Box
-├── scripts/                  # Python engine scripts
-│   ├── auto_updater.py       # Crawls IPTV sources & maps channel categories
-│   ├── update_stats.py       # Async HTTP health-checker for 30k+ stream URLs
-│   ├── generate_epg.py       # JSON Electronic Program Guide aggregator
-│   └── epg_generator.py      # Compressed XMLTV EPG compiler
-├── web/                      # Vite + Video.js Premium Web Player Frontend
-├── custom_playlist.m3u       # Shielded custom channels (Preserved from crawler overwrites)
-├── FINAL_IPTV_ACTIVE.m3u     # 🟢 100% verified online global & BDIX streams
-├── FINAL_IPTV_GEO.m3u        # 🟡 Geo-restricted stream database (Requires VPN)
-├── FINAL_IPTV_COMPLETE.m3u   # 📚 Master deduplicated IPTV database
-├── FINAL_IPTV_DEAD.m3u       # 🔴 Dead / offline stream records
-├── FINAL_MOVIES_COMPLETE.m3u # 🎬 VOD movies & cinema stream database
-├── channel_status.json       # Live channel health metadata
-├── epg.json                  # Light JSON EPG matched with Active Database
-├── CONTRIBUTING.md           # Guidelines for community contributions
-├── LICENSE                   # Open-source MIT License
-├── SECURITY.md               # Security reporting guidelines
-└── README.md                 # Master project documentation
+├── assets/                   # README visuals, banner, branding assets
+├── bug_tv_app/               # Flutter Android TV application
+├── scripts/                  # Python automation engines
+│   ├── auto_updater.py       # Multi-source crawler + deduplication
+│   ├── update_stats.py       # Live URL scanner + active/geo/dead split
+│   ├── generate_epg.py       # Active playlist to epg.json mapper
+│   └── epg_generator.py      # Full EPG XMLTV archive builder
+├── web/                      # Web player (Vite + Video.js)
+├── custom_playlist.m3u       # Protected custom channels (never overwritten)
+├── FINAL_IPTV_ACTIVE.m3u     # Live + ISP/BDIX verified streams
+├── FINAL_IPTV_GEO.m3u        # Geo-restricted but reachable streams
+├── FINAL_IPTV_COMPLETE.m3u   # Master deduplicated live TV database
+├── FINAL_IPTV_DEAD.m3u       # Dead / 404 / unreachable streams
+├── FINAL_MOVIES_COMPLETE.m3u # Movies/VOD playlist output
+├── channel_status.json       # Per-URL health state map for web client
+├── epg.json                  # Program guide mapped to active channels
+└── README.md                 # Project documentation
 ```
 
-### 🔗 GitHub Automation Files
-- [`/.github/workflows/auto-updater.yml`](.github/workflows/auto-updater.yml) — full-source ingest, deduplicate, and playlist regeneration (every 2 days).
-- [`/.github/workflows/daily-check.yml`](.github/workflows/daily-check.yml) — bi-daily stream validation and README/channel status refresh.
-- [`/scripts/auto_updater.py`](scripts/auto_updater.py) — source crawler and channel merger.
-- [`/scripts/update_stats.py`](scripts/update_stats.py) — link checker that updates active/geo/dead/live status outputs.
+### 🔗 Quick Navigation (Key Folders & Files)
+- **Automation Workflows**
+  - [`auto-updater.yml`](.github/workflows/auto-updater.yml) — bi-daily full source sync and playlist regeneration
+  - [`daily-check.yml`](.github/workflows/daily-check.yml) — bi-daily URL live check and stats update
+- **Automation Scripts**
+  - [`scripts/auto_updater.py`](scripts/auto_updater.py)
+  - [`scripts/update_stats.py`](scripts/update_stats.py)
+  - [`scripts/generate_epg.py`](scripts/generate_epg.py)
+  - [`scripts/epg_generator.py`](scripts/epg_generator.py)
+- **Delivery Clients**
+  - [`web/`](web/) — browser player frontend
+  - [`bug_tv_app/`](bug_tv_app/) — Flutter Android TV app
 
 ---
 
