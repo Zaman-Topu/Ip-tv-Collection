@@ -16,6 +16,12 @@ DEAD_M3U_FILE = "FINAL_IPTV_DEAD.m3u"
 README_FILE = "README.md"
 CUSTOM_FILE = "custom_playlist.m3u"
 
+PLUTO_LIVE_REGIONS = [
+    "AR", "AT", "AU", "BO", "BR", "CA", "CH", "CL", "CO", "CR", "DE", "DK",
+    "DO", "EC", "ES", "FR", "GB", "GT", "HN", "IT", "MX", "NI", "NO", "PA",
+    "PE", "PY", "SE", "SV", "US", "UY", "VE"
+]
+
 SOURCE_URLS = [
     "https://iptv-org.github.io/iptv/languages/ben.m3u",
     "https://iptv-org.github.io/iptv/languages/eng.m3u",
@@ -59,6 +65,9 @@ SOURCE_URLS = [
     "https://raw.githubusercontent.com/bugsfreeweb/LiveTVCollector/main/LiveTV/India/LiveTV.m3u",
     "https://lupael.github.io/IPTV/running.m3u",
     "https://raw.githubusercontent.com/srhady/axsports/refs/heads/main/playlist.m3u"
+] + [
+    f"https://raw.githubusercontent.com/OwnerPlugins/pluto-tv-m3u/main/pluto-live-{region}.m3u"
+    for region in PLUTO_LIVE_REGIONS
 ]
 
 # ─── ISP / BDIX Detection ────────────────────────────────────────────────────
