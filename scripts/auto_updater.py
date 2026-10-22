@@ -7,6 +7,12 @@ import urllib.parse
 OUTPUT_FILE = "FINAL_IPTV_COMPLETE.m3u"
 MOVIES_OUTPUT_FILE = "FINAL_MOVIES_COMPLETE.m3u"
 
+PLUTO_LIVE_REGIONS = [
+    "AR", "AT", "AU", "BO", "BR", "CA", "CH", "CL", "CO", "CR", "DE", "DK",
+    "DO", "EC", "ES", "FR", "GB", "GT", "HN", "IT", "MX", "NI", "NO", "PA",
+    "PE", "PY", "SE", "SV", "US", "UY", "VE"
+]
+
 SOURCES = [
     "https://iptv-org.github.io/iptv/languages/ben.m3u",
     "https://iptv-org.github.io/iptv/languages/eng.m3u",
@@ -38,6 +44,9 @@ SOURCES = [
     "https://raw.githubusercontent.com/bugsfreeweb/LiveTVCollector/main/LiveTV/India/LiveTV.m3u",
     "https://lupael.github.io/IPTV/running.m3u",
     "https://raw.githubusercontent.com/srhady/axsports/refs/heads/main/playlist.m3u"
+] + [
+    f"https://raw.githubusercontent.com/OwnerPlugins/pluto-tv-m3u/main/pluto-live-{region}.m3u"
+    for region in PLUTO_LIVE_REGIONS
 ]
 
 GROUP_MAP = {
